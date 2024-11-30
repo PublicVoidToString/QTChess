@@ -10,17 +10,23 @@ CONFIG += c++17
 
 SOURCES += \
     board.cpp \
+    chessboard.cpp \
     main.cpp \
     mainmenu.cpp
 
 HEADERS += \
     board.h \
+    chessboard.h \
     mainmenu.h
 
 FORMS += \
+    chessboard.ui \
     mainmenu.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+DISTFILES += \
+    Informacje.md
