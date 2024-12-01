@@ -7,9 +7,6 @@
 #include "queen.h"
 #include "king.h"
 
-#include <iostream>
-#include <bitset>
-
 board::board() {
     whiteMove = true;
     selected = 64;
