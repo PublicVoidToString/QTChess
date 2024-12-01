@@ -4,6 +4,8 @@
 class board
 {
 private:
+public:
+    board();
     unsigned long long whitePawns;
     unsigned long long whiteKnights;
     unsigned long long whiteRooks;
@@ -16,8 +18,6 @@ private:
     unsigned long long blackBishops;
     unsigned long long blackQueens;
     unsigned long long blackKings;
-public:
-    board();
 };
 
 #endif // BOARD_H

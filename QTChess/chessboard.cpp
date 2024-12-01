@@ -10,8 +10,8 @@ ChessBoard::ChessBoard(QWidget *parent)
 {
     chessTiles = (QPushButton**)malloc(sizeof(QPushButton*)*64);
     ui->setupUi(this);
-
     initBoard();
+    printPieces();
 }
 
 ChessBoard::~ChessBoard()
@@ -38,13 +38,9 @@ void ChessBoard::initBoard()
 
             // Kolorowanie przycisków (pola szachownicy)
             if ((row + col) % 2 == 0) {
-                chessTiles[buttonId]->setStyleSheet("background-color: white;");
+                chessTiles[buttonId]->setStyleSheet("background-color: #b9efbd;");
             } else {
-                chessTiles[buttonId]->setStyleSheet("background-color: gray;");
-                chessTiles[buttonId]->setStyleSheet(
-                    chessTiles[buttonId]->styleSheet() +
-                    "QPushButton:hover { background-color: white; }"
-                );
+                chessTiles[buttonId]->setStyleSheet("background-color: #7aad7e;");
             }
             connect(chessTiles[buttonId], &QPushButton::clicked, [this, buttonId]() {
                 handleButtonClick(buttonId);  // Przekazujemy identyfikator przycisku
@@ -60,7 +56,8 @@ void ChessBoard::initBoard()
 
 void ChessBoard::handleButtonClick(int buttonId)
 {
-    QMessageBox::information(this, "Button Clicked", QString("Button ID: %1 clicked").arg(buttonId));
+    Click();
+    printPieces();
 }
 
 void ChessBoard::resizeEvent(QResizeEvent *event)
@@ -73,21 +70,40 @@ void ChessBoard::resizeEvent(QResizeEvent *event)
 }
 
 void ChessBoard::printPieces(){
-
     for (int i = 0; i < 64; ++i) {
-        // Ładujemy obrazek "figura.png" jako QPixmap
-        QPixmap piecePixmap(":/images/figura.png");  // Zakładając, że obrazek jest w folderze zasobów
+        // Zmienna przechowująca nazwę figury do przypisania
+        QString pieceName;
 
-        // Sprawdzamy, czy obrazek został poprawnie załadowany
-        if (!piecePixmap.isNull()) {
-            // Ustawiamy obrazek jako ikonę przycisku
-            chessTiles[i]->setIcon(QIcon(piecePixmap));
+        // Sprawdzenie obecności figury białej
+        if (board.whitePawns & (1ULL << i)) pieceName = "WhitePawn.png";
+        else if (board.whiteRooks & (1ULL << i)) pieceName = "WhiteRook.png";
+        else if (board.whiteKnights & (1ULL << i)) pieceName = "WhiteKnight.png";
+        else if (board.whiteBishops & (1ULL << i)) pieceName = "WhiteBishop.png";
+        else if (board.whiteQueens & (1ULL << i)) pieceName = "WhiteQueen.png";
+        else if (board.whiteKings & (1ULL << i)) pieceName = "WhiteKing.png";
 
-            // Opcjonalnie, dostosowujemy rozmiar ikony, aby pasowała do rozmiaru przycisku
-            chessTiles[i]->setIconSize(chessTiles[i]->size());  // Ustawiamy ikonę na rozmiar przycisku
+        // Sprawdzenie obecności figury czarnej
+        else if (board.blackPawns & (1ULL << i)) pieceName = "Pawn.png";
+        else if (board.blackRooks & (1ULL << i)) pieceName = "Rook.png";
+        else if (board.blackKnights & (1ULL << i)) pieceName = "Knight.png";
+        else if (board.blackBishops & (1ULL << i)) pieceName = "Bishop.png";
+        else if (board.blackQueens & (1ULL << i)) pieceName = "Queen.png";
+        else if (board.blackKings & (1ULL << i)) pieceName = "King.png";
+
+        // Jeżeli znalazł się obrazek do przypisania, ustawiamy ikonę
+        if (!pieceName.isEmpty()) {
+            QPixmap piecePixmap(":/images/" + pieceName);
+            if (!piecePixmap.isNull()) {
+                piecePixmap = piecePixmap.scaled(100, 100, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                chessTiles[i]->setIcon(QIcon(piecePixmap));
+                chessTiles[i]->setIconSize(QSize(100, 100));
+            } else {
+                qWarning() << "Nie udało się załadować obrazka figury: " << pieceName;
+            }
         } else {
-            // Obsługuje sytuację, gdy obrazek nie zostanie załadowany
-            qWarning() << "Nie udało się załadować obrazka figury.";
+            // Jeśli nie ma figury na danym polu, zostawiamy ikonę pustą
+            chessTiles[i]->setIcon(QIcon());
+            chessTiles[i]->setIconSize(QSize(100, 100));
         }
     }
 }

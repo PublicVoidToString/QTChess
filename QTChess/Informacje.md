@@ -23,3 +23,11 @@ A1 = 1 ... H1 = 128 ... H8 = 2^63
 00 01 02 03 04 05 06 07
 
 ### In short 2^(button ID) = bitboard
+
+# Image Sources:
+https://www.flaticon.com/free-icon/queen_1626844?related_id=1626879&origin=search <br/>
+https://www.flaticon.com/free-icon/chess_11497350?term=chess+pieces&related_id=11497350 <br/>
+https://www.flaticon.com/free-icon/rook_1626848?related_id=1626883&origin=search <br/>
+https://www.flaticon.com/free-icon/pawn_657487?related_id=657588&origin=search <br/>
+https://www.flaticon.com/free-icon/king_3522646?related_id=3522656&origin=search <br/>
+https://www.flaticon.com/free-icon/bishop_5077021?term=bishop&page=1&position=1&origin=search&related_id=5077021 </br>
