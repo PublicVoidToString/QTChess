@@ -11,7 +11,6 @@
 
 #include <QtCore/QVariant>
 #include <QtWidgets/QApplication>
-#include <QtWidgets/QPushButton>
 #include <QtWidgets/QWidget>
 
 QT_BEGIN_NAMESPACE
@@ -19,16 +18,12 @@ QT_BEGIN_NAMESPACE
 class Ui_ChessBoard
 {
 public:
-    QPushButton *pushButton;
 
     void setupUi(QWidget *ChessBoard)
     {
         if (ChessBoard->objectName().isEmpty())
             ChessBoard->setObjectName("ChessBoard");
-        ChessBoard->resize(990, 725);
-        pushButton = new QPushButton(ChessBoard);
-        pushButton->setObjectName("pushButton");
-        pushButton->setGeometry(QRect(0, 0, 71, 71));
+        ChessBoard->resize(900, 900);
 
         retranslateUi(ChessBoard);
 
@@ -38,7 +33,6 @@ public:
     void retranslateUi(QWidget *ChessBoard)
     {
         ChessBoard->setWindowTitle(QCoreApplication::translate("ChessBoard", "Form", nullptr));
-        pushButton->setText(QCoreApplication::translate("ChessBoard", "PushButton", nullptr));
     } // retranslateUi
 
 };
