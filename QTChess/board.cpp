@@ -1,4 +1,7 @@
 #include "board.h"
+#include "pawn.h"
+#include <iostream>
+#include <bitset>
 
 board::board() {
     whiteMove = true;
@@ -21,9 +24,33 @@ board::board() {
     blackKings   = 0b0001000000000000000000000000000000000000000000000000000000000000;
 }
 
+bool board::isWhiteMove() const {
+    return whiteMove;
+}
+
+bool board::isOccupied(int buttonId) const {
+    return (whitePawns | whiteKnights | whiteRooks | whiteBishops | whiteQueens | whiteKings |
+                blackPawns | blackKnights | blackRooks | blackBishops | blackQueens | blackKings) & (1ULL << buttonId);
+}
+
+bool board::isEnemyOccupied(int buttonId) const {
+    if(whiteMove) {
+        return (blackPawns | blackKnights | blackRooks | blackBishops | blackQueens | blackKings) & (1ULL << buttonId);
+    } else {
+        return (whitePawns | whiteKnights | whiteRooks | whiteBishops | whiteQueens | whiteKings) & (1ULL << buttonId);
+    }
+}
+
 void board::pressedButton(int buttonId)
 {
-    // Sprawdzenie obecności figury białej
+
+    //// do testowania legalności ruchów (wypisany bitboard w konsoli)
+    unsigned long long legal = Pawn::legalMoves(buttonId, *this);
+    std::bitset<64> bitset(legal);
+    std::string legalMovesStr = bitset.to_string();
+    std::cout << "Legal moves bitmap: " << legalMovesStr << std::endl;
+    ////
+
     clearSelected = selected;
     if (whitePawns & (1ULL << buttonId)) {
         selected = buttonId;
