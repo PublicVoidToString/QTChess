@@ -7,6 +7,7 @@ board::board() {
     whiteMove = true;
     selected = 64;
     clearSelected = 64;
+    clearMoves   = 0b0000000000000000000000000000000000000000000000000000000000000000;
     moves        = 0b0000000000000000000000000000000000000000000000000000000000000000;
 
     whitePawns   = 0b0000000000000000000000000000000000000000000000001111111100000000;
@@ -45,13 +46,16 @@ void board::pressedButton(int buttonId)
 {
 
     //// do testowania legalności ruchów (wypisany bitboard w konsoli)
-    unsigned long long legal = Pawn::legalMoves(buttonId, *this);
-    std::bitset<64> bitset(legal);
-    std::string legalMovesStr = bitset.to_string();
-    std::cout << "Legal moves bitmap: " << legalMovesStr << std::endl;
     ////
 
     clearSelected = selected;
+    clearMoves = moves;
+    moves = Pawn::legalMoves(buttonId, *this);
+
+    std::bitset<64> bitset(moves);
+    std::string legalMovesStr = bitset.to_string();
+    std::cout << "Legal moves bitmap: " << legalMovesStr << std::endl;
+
     if (whitePawns & (1ULL << buttonId)) {
         selected = buttonId;
     }
@@ -102,10 +106,12 @@ void board::pressedButton(int buttonId)
     // Gdy zostało wciśnięte puste pole
     else {
         selected = 64; // Resetowanie zaznaczenia, jeśli pole jest puste
+        moves = 0b0000000000000000000000000000000000000000000000000000000000000000;
     }
 
     // Sprawdzanie, czy zmieniła się pozycja, i resetowanie zaznaczenia, jeśli nie
     if (selected == clearSelected) {
         selected = 64; // Resetowanie, gdy nie zmieniono pozycji
+        moves = 0b0000000000000000000000000000000000000000000000000000000000000000;
     }
 }

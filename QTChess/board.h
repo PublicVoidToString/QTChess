@@ -10,6 +10,7 @@ public:
     bool whiteMove;
     unsigned char clearSelected;
     unsigned char selected;
+    unsigned long long clearMoves;
     unsigned long long moves;
 
     unsigned long long whitePawns;

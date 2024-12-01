@@ -58,6 +58,7 @@ void ChessBoard::initBoard()
 void ChessBoard::handleButtonClick(int buttonId)
 {
     board.pressedButton(buttonId);
+    printPieces();
 }
 
 void ChessBoard::resizeEvent(QResizeEvent *event)
@@ -70,22 +71,37 @@ void ChessBoard::resizeEvent(QResizeEvent *event)
 }
 
 void ChessBoard::printPieces(){
-    for (int i = 0; i < 64; ++i) {
-        // Zmienna przechowująca nazwę figury do przypisania
-        QString pieceName;
-        if(board.selected!=64) {
-            chessTiles[board.selected]->setStyleSheet("background-color: #f59e9e;");
+    if(board.selected!=64) {
+        chessTiles[board.selected]->setStyleSheet("background-color: #76b5ff;");
+
+    }
+    if(board.clearSelected!=64){
+        int row = board.clearSelected / 8;
+        int col = board.clearSelected % 8;
+
+        // Zmieniamy kolor tła na podstawie naprzemiennych kolorów na planszy szachowej
+        if ((row + col) % 2 == 0) {
+            chessTiles[board.clearSelected]->setStyleSheet("background-color: #7aad7e;");
+        } else {
+            chessTiles[board.clearSelected]->setStyleSheet("background-color: #b9efbd;");
         }
-        if(board.clearSelected!=64){
-            int row = board.clearSelected / 8;
-            int col = board.clearSelected % 8;
+    }
+    for (int i = 0; i < 64; ++i) {
+        QString pieceName;
+        if(board.moves & (1ULL << i)) {
+            chessTiles[i]->setStyleSheet("background-color: #f59e9e;");
+        }
+        if (board.clearMoves & (1ULL << i)) {
+            int row = i / 8;
+            int col = i % 8;
 
             // Zmieniamy kolor tła na podstawie naprzemiennych kolorów na planszy szachowej
             if ((row + col) % 2 == 0) {
-                chessTiles[board.clearSelected]->setStyleSheet("background-color: #7aad7e;");
+                chessTiles[i]->setStyleSheet("background-color: #7aad7e;");
             } else {
-                chessTiles[board.clearSelected]->setStyleSheet("background-color: #b9efbd;");
+                chessTiles[i]->setStyleSheet("background-color: #b9efbd;");
             }
+
         }
         // Sprawdzenie obecności figury białej
         if (board.whitePawns & (1ULL << i)) pieceName = "WhitePawn.png";
