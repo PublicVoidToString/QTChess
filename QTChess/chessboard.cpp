@@ -1,5 +1,6 @@
 #include "chessboard.h"
 #include "ui_chessboard.h"
+#include "board.h"
 #include <QResizeEvent>
 #include <QMessageBox>
 #include <QIcon>
@@ -56,7 +57,7 @@ void ChessBoard::initBoard()
 
 void ChessBoard::handleButtonClick(int buttonId)
 {
-    Click();
+    board.pressedButton(buttonId);
     printPieces();
 }
 
@@ -73,7 +74,20 @@ void ChessBoard::printPieces(){
     for (int i = 0; i < 64; ++i) {
         // Zmienna przechowująca nazwę figury do przypisania
         QString pieceName;
+        if(board.selected!=64) {
+            chessTiles[board.selected]->setStyleSheet("background-color: #f59e9e;");
+        }
+        if(board.clearSelected!=64){
+            int row = board.clearSelected / 8;
+            int col = board.clearSelected % 8;
 
+            // Zmieniamy kolor tła na podstawie naprzemiennych kolorów na planszy szachowej
+            if ((row + col) % 2 == 0) {
+                chessTiles[board.clearSelected]->setStyleSheet("background-color: #7aad7e;");
+            } else {
+                chessTiles[board.clearSelected]->setStyleSheet("background-color: #b9efbd;");
+            }
+        }
         // Sprawdzenie obecności figury białej
         if (board.whitePawns & (1ULL << i)) pieceName = "WhitePawn.png";
         else if (board.whiteRooks & (1ULL << i)) pieceName = "WhiteRook.png";
@@ -105,5 +119,6 @@ void ChessBoard::printPieces(){
             chessTiles[i]->setIcon(QIcon());
             chessTiles[i]->setIconSize(QSize(100, 100));
         }
+
     }
 }

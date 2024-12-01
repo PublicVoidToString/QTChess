@@ -4,8 +4,14 @@
 class board
 {
 private:
+
 public:
     board();
+    bool whiteMove;
+    unsigned char clearSelected;
+    unsigned char selected;
+    unsigned long long moves;
+
     unsigned long long whitePawns;
     unsigned long long whiteKnights;
     unsigned long long whiteRooks;
@@ -18,6 +24,8 @@ public:
     unsigned long long blackBishops;
     unsigned long long blackQueens;
     unsigned long long blackKings;
+
+    void pressedButton(int buttonId);
 };
 
 #endif // BOARD_H

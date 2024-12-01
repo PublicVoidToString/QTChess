@@ -1,5 +1,11 @@
 #include "board.h"
+
 board::board() {
+    whiteMove = true;
+    selected = 64;
+    clearSelected = 64;
+    moves        = 0b0000000000000000000000000000000000000000000000000000000000000000;
+
     whitePawns   = 0b0000000000000000000000000000000000000000000000001111111100000000;
     whiteRooks   = 0b0000000000000000000000000000000000000000000000000000000010000001;
     whiteKnights = 0b0000000000000000000000000000000000000000000000000000000001000010;
@@ -15,3 +21,64 @@ board::board() {
     blackKings   = 0b0001000000000000000000000000000000000000000000000000000000000000;
 }
 
+void board::pressedButton(int buttonId)
+{
+    // Sprawdzenie obecności figury białej
+    clearSelected = selected;
+    if (whitePawns & (1ULL << buttonId)) {
+        selected = buttonId;
+    }
+    else if (whiteRooks & (1ULL << buttonId)) {
+        selected = buttonId; // TODO: Rozważ rozgrywkę wieżami
+    }
+    else if (whiteKnights & (1ULL << buttonId)) {
+        selected = buttonId;
+    }
+    else if (whiteBishops & (1ULL << buttonId)) {
+        selected = buttonId;
+    }
+    else if (whiteQueens & (1ULL << buttonId)) {
+        selected = buttonId;
+    }
+    else if (whiteKings & (1ULL << buttonId)) {
+        selected = buttonId; // TODO: Rozgrywka królem (np. roszada)
+    }
+
+    // Sprawdzenie obecności figury czarnej
+    else if (blackPawns & (1ULL << buttonId)) {
+        selected = buttonId;
+    }
+    else if (blackRooks & (1ULL << buttonId)) {
+        selected = buttonId; // TODO: Rozgrywka wieżami
+    }
+    else if (blackKnights & (1ULL << buttonId)) {
+        selected = buttonId;
+    }
+    else if (blackBishops & (1ULL << buttonId)) {
+        selected = buttonId;
+    }
+    else if (blackQueens & (1ULL << buttonId)) {
+        selected = buttonId;
+    }
+    else if (blackKings & (1ULL << buttonId)) {
+        selected = buttonId; // TODO: Rozgrywka królem (np. roszada)
+    }
+
+    // Gdy zostało wciśnięte pole z tablicy ruchu
+    else if (selected != 64 && (moves & (1ULL << buttonId))) {
+        // Logika dla ruchu figury na wybrane pole
+        // Możesz dodać odpowiednią funkcję, która zaktualizuje stan gry
+        // Przykład:
+        selected = 64; // Resetowanie zaznaczenia po wykonaniu ruchu
+    }
+
+    // Gdy zostało wciśnięte puste pole
+    else {
+        selected = 64; // Resetowanie zaznaczenia, jeśli pole jest puste
+    }
+
+    // Sprawdzanie, czy zmieniła się pozycja, i resetowanie zaznaczenia, jeśli nie
+    if (selected == clearSelected) {
+        selected = 64; // Resetowanie, gdy nie zmieniono pozycji
+    }
+}
