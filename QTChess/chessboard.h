@@ -29,7 +29,7 @@ protected:
 private:
     Ui::ChessBoard *ui;
     QPushButton **chessTiles;
-    board **board;
+    board board;
 };
 
 #endif // CHESSBOARD_H

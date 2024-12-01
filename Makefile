@@ -274,7 +274,8 @@ Makefile: QTChess/QTChess.pro ../../../../Qt/6.8.0/mingw_64/mkspecs/features/spe
 		../../../../Qt/6.8.0/mingw_64/lib/Qt6Gui.prl \
 		../../../../Qt/6.8.0/mingw_64/lib/Qt6Core.prl \
 		../../../../Qt/6.8.0/mingw_64/lib/Qt6EntryPoint.prl \
-		../../../../Qt/6.8.0/mingw_64/mkspecs/features/build_pass.prf
+		../../../../Qt/6.8.0/mingw_64/mkspecs/features/build_pass.prf \
+		QTChess/resources.qrc
 	$(QMAKE) -o Makefile QTChess\QTChess.pro -spec win32-g++ "CONFIG+=debug" "CONFIG+=qml_debug"
 ../../../../Qt/6.8.0/mingw_64/mkspecs/features/spec_pre.prf:
 ../../../../Qt/6.8.0/mingw_64/mkspecs/features/device_config.prf:
@@ -481,6 +482,7 @@ QTChess/QTChess.pro:
 ../../../../Qt/6.8.0/mingw_64/lib/Qt6Core.prl:
 ../../../../Qt/6.8.0/mingw_64/lib/Qt6EntryPoint.prl:
 ../../../../Qt/6.8.0/mingw_64/mkspecs/features/build_pass.prf:
+QTChess/resources.qrc:
 qmake: FORCE
 	@$(QMAKE) -o Makefile QTChess\QTChess.pro -spec win32-g++ "CONFIG+=debug" "CONFIG+=qml_debug"
 
