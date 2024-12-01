@@ -58,7 +58,6 @@ void ChessBoard::initBoard()
 void ChessBoard::handleButtonClick(int buttonId)
 {
     board.pressedButton(buttonId);
-    printPieces();
 }
 
 void ChessBoard::resizeEvent(QResizeEvent *event)

@@ -25,7 +25,11 @@ public:
     unsigned long long blackQueens;
     unsigned long long blackKings;
 
+    bool isWhiteMove() const;
+
     void pressedButton(int buttonId);
+    bool isOccupied(int buttonId) const;
+    bool isEnemyOccupied(int buttonId) const;
 };
 
 #endif // BOARD_H

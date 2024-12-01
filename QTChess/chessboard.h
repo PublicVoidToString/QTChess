@@ -16,6 +16,7 @@ class ChessBoard : public QWidget
 
 public:
     explicit ChessBoard(QWidget *parent = nullptr);
+    QString convertBitmaskToString(unsigned long long legalMovesBitmap);
     ~ChessBoard();
 
 private slots:
