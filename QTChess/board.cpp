@@ -1,5 +1,12 @@
 #include "board.h"
+//pieces
 #include "pawn.h"
+#include "bishop.h"
+#include "knight.h"
+#include "rook.h"
+#include "queen.h"
+#include "king.h"
+
 #include <iostream>
 #include <bitset>
 
@@ -44,55 +51,58 @@ bool board::isEnemyOccupied(int buttonId) const {
 
 void board::pressedButton(int buttonId)
 {
-
-    //// do testowania legalności ruchów (wypisany bitboard w konsoli)
-    ////
-
     clearSelected = selected;
     clearMoves = moves;
-    moves = Pawn::legalMoves(buttonId, *this);
 
-    std::bitset<64> bitset(moves);
-    std::string legalMovesStr = bitset.to_string();
-    std::cout << "Legal moves bitmap: " << legalMovesStr << std::endl;
-
-    if (whitePawns & (1ULL << buttonId)) {
+    // Sprawdzanie obecności figury białej
+    if (whitePawns & (1ULL << buttonId) && whiteMove) {
         selected = buttonId;
+        moves = Pawn::legalMoves(buttonId, *this);
     }
-    else if (whiteRooks & (1ULL << buttonId)) {
+    else if (whiteRooks & (1ULL << buttonId) && whiteMove) {
         selected = buttonId; // TODO: Rozważ rozgrywkę wieżami
+        moves = Rook::legalMoves(buttonId, *this);
     }
-    else if (whiteKnights & (1ULL << buttonId)) {
+    else if (whiteKnights & (1ULL << buttonId) && whiteMove) {
         selected = buttonId;
+        moves = Knight::legalMoves(buttonId, *this);
     }
-    else if (whiteBishops & (1ULL << buttonId)) {
+    else if (whiteBishops & (1ULL << buttonId) && whiteMove) {
         selected = buttonId;
+        moves = Bishop::legalMoves(buttonId, *this);
     }
-    else if (whiteQueens & (1ULL << buttonId)) {
+    else if (whiteQueens & (1ULL << buttonId) && whiteMove) {
         selected = buttonId;
+        moves = Queen::legalMoves(buttonId, *this);
     }
-    else if (whiteKings & (1ULL << buttonId)) {
+    else if (whiteKings & (1ULL << buttonId) && whiteMove) {
         selected = buttonId; // TODO: Rozgrywka królem (np. roszada)
+        moves = King::legalMoves(buttonId, *this);
     }
-
     // Sprawdzenie obecności figury czarnej
-    else if (blackPawns & (1ULL << buttonId)) {
+    else if (blackPawns & (1ULL << buttonId) && !whiteMove) {
         selected = buttonId;
+        moves = Pawn::legalMoves(buttonId, *this);
     }
-    else if (blackRooks & (1ULL << buttonId)) {
+    else if (blackRooks & (1ULL << buttonId) && !whiteMove) {
         selected = buttonId; // TODO: Rozgrywka wieżami
+        moves = Rook::legalMoves(buttonId, *this);
     }
-    else if (blackKnights & (1ULL << buttonId)) {
+    else if (blackKnights & (1ULL << buttonId) && !whiteMove) {
         selected = buttonId;
+        moves = Knight::legalMoves(buttonId, *this);
     }
-    else if (blackBishops & (1ULL << buttonId)) {
+    else if (blackBishops & (1ULL << buttonId) && !whiteMove) {
         selected = buttonId;
+        moves = Bishop::legalMoves(buttonId, *this);
     }
-    else if (blackQueens & (1ULL << buttonId)) {
+    else if (blackQueens & (1ULL << buttonId) && !whiteMove) {
         selected = buttonId;
+        moves = Queen::legalMoves(buttonId, *this);
     }
-    else if (blackKings & (1ULL << buttonId)) {
+    else if (blackKings & (1ULL << buttonId) && !whiteMove) {
         selected = buttonId; // TODO: Rozgrywka królem (np. roszada)
+        moves = King::legalMoves(buttonId, *this);
     }
 
     // Gdy zostało wciśnięte pole z tablicy ruchu
