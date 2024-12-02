@@ -29,6 +29,16 @@ board::board() {
     blackKings   = 0b0001000000000000000000000000000000000000000000000000000000000000;
 }
 
+bool board::isEnPassantEligible(int buttonId) const {
+    //TODO unimplemented method - now only checks if opponents pawn is there
+
+    if(board::isWhiteMove()) {
+        return blackPawns & (1ULL << buttonId);
+    } else {
+        return whitePawns & (1ULL << buttonId);
+    }
+}
+
 bool board::isWhiteMove() const {
     return whiteMove;
 }
