@@ -1,6 +1,6 @@
 #ifndef BISHOP_H
 #define BISHOP_H
-#import "board.h"
+#include "board.h"
 
 class Bishop
 {

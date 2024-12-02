@@ -1,6 +1,6 @@
 #ifndef PAWN_H
 #define PAWN_H
-#import "board.h"
+#include "board.h"
 
 class Pawn
 {

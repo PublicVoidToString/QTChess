@@ -1,6 +1,6 @@
 #ifndef KING_H
 #define KING_H
-#import "board.h"
+#include "board.h"
 
 class King
 {

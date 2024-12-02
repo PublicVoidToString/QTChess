@@ -123,16 +123,16 @@ void ChessBoard::printPieces(){
         if (!pieceName.isEmpty()) {
             QPixmap piecePixmap(":/images/" + pieceName);
             if (!piecePixmap.isNull()) {
-                piecePixmap = piecePixmap.scaled(100, 100, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                piecePixmap = piecePixmap.scaled(80, 80, Qt::KeepAspectRatio, Qt::SmoothTransformation);
                 chessTiles[i]->setIcon(QIcon(piecePixmap));
-                chessTiles[i]->setIconSize(QSize(100, 100));
+                chessTiles[i]->setIconSize(QSize(80, 80));
             } else {
                 qWarning() << "Nie udało się załadować obrazka figury: " << pieceName;
             }
         } else {
             // Jeśli nie ma figury na danym polu, zostawiamy ikonę pustą
             chessTiles[i]->setIcon(QIcon());
-            chessTiles[i]->setIconSize(QSize(100, 100));
+            chessTiles[i]->setIconSize(QSize(80, 80));
         }
 
     }

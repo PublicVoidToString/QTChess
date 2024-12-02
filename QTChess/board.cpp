@@ -35,7 +35,7 @@ bool board::isWhiteMove() const {
 
 bool board::isOccupied(int buttonId) const {
     return (whitePawns | whiteKnights | whiteRooks | whiteBishops | whiteQueens | whiteKings |
-                blackPawns | blackKnights | blackRooks | blackBishops | blackQueens | blackKings) & (1ULL << buttonId);
+            blackPawns | blackKnights | blackRooks | blackBishops | blackQueens | blackKings) & (1ULL << buttonId);
 }
 
 bool board::isEnemyOccupied(int buttonId) const {
@@ -50,75 +50,114 @@ void board::pressedButton(int buttonId)
 {
     clearSelected = selected;
     clearMoves = moves;
+    if(isOccupied(buttonId) && !isEnemyOccupied(buttonId)){
+        selected = buttonId;
+        if(whiteMove){
+            if (whitePawns  & 1ULL << selected)   moves = Pawn::legalMoves(buttonId, *this);
+            else if (whiteRooks  & 1ULL << selected)   moves = Rook::legalMoves(buttonId, *this);
+            else if (whiteKnights  & 1ULL << selected) moves = Knight::legalMoves(buttonId, *this);
+            else if (whiteBishops  & 1ULL << selected) moves = Bishop::legalMoves(buttonId, *this);
+            else if (whiteQueens  & 1ULL << selected)  moves = Queen::legalMoves(buttonId, *this);
+            else if (whiteKings  & 1ULL << selected)   moves = King::legalMoves(buttonId, *this);
+        }
+        else {
+            if (blackPawns & 1ULL << selected)   moves = Pawn::legalMoves(buttonId, *this);
+            else if (blackRooks & 1ULL << selected)   moves = Rook::legalMoves(buttonId, *this);
+            else if (blackKnights & 1ULL << selected) moves = Knight::legalMoves(buttonId, *this);
+            else if (blackBishops & 1ULL << selected) moves = Bishop::legalMoves(buttonId, *this);
+            else if (blackQueens & 1ULL << selected)  moves = Queen::legalMoves(buttonId, *this);
+            else if (blackKings & 1ULL << selected)   moves = King::legalMoves(buttonId, *this);
+        }
+    } else{
+        // Gdy zostało wciśnięte pole z tablicy ruchu
+        if (moves & (1ULL << buttonId)) {
+            move(selected, buttonId);
+            selected = 64;
+            whiteMove = !whiteMove;
+        }
 
-    // Sprawdzanie obecności figury białej
-    if (whitePawns & (1ULL << buttonId) && whiteMove) {
-        selected = buttonId;
-        moves = Pawn::legalMoves(buttonId, *this);
-    }
-    else if (whiteRooks & (1ULL << buttonId) && whiteMove) {
-        selected = buttonId; // TODO: Rozważ rozgrywkę wieżami
-        moves = Rook::legalMoves(buttonId, *this);
-    }
-    else if (whiteKnights & (1ULL << buttonId) && whiteMove) {
-        selected = buttonId;
-        moves = Knight::legalMoves(buttonId, *this);
-    }
-    else if (whiteBishops & (1ULL << buttonId) && whiteMove) {
-        selected = buttonId;
-        moves = Bishop::legalMoves(buttonId, *this);
-    }
-    else if (whiteQueens & (1ULL << buttonId) && whiteMove) {
-        selected = buttonId;
-        moves = Queen::legalMoves(buttonId, *this);
-    }
-    else if (whiteKings & (1ULL << buttonId) && whiteMove) {
-        selected = buttonId; // TODO: Rozgrywka królem (np. roszada)
-        moves = King::legalMoves(buttonId, *this);
-    }
-    // Sprawdzenie obecności figury czarnej
-    else if (blackPawns & (1ULL << buttonId) && !whiteMove) {
-        selected = buttonId;
-        moves = Pawn::legalMoves(buttonId, *this);
-    }
-    else if (blackRooks & (1ULL << buttonId) && !whiteMove) {
-        selected = buttonId; // TODO: Rozgrywka wieżami
-        moves = Rook::legalMoves(buttonId, *this);
-    }
-    else if (blackKnights & (1ULL << buttonId) && !whiteMove) {
-        selected = buttonId;
-        moves = Knight::legalMoves(buttonId, *this);
-    }
-    else if (blackBishops & (1ULL << buttonId) && !whiteMove) {
-        selected = buttonId;
-        moves = Bishop::legalMoves(buttonId, *this);
-    }
-    else if (blackQueens & (1ULL << buttonId) && !whiteMove) {
-        selected = buttonId;
-        moves = Queen::legalMoves(buttonId, *this);
-    }
-    else if (blackKings & (1ULL << buttonId) && !whiteMove) {
-        selected = buttonId; // TODO: Rozgrywka królem (np. roszada)
-        moves = King::legalMoves(buttonId, *this);
-    }
-
-    // Gdy zostało wciśnięte pole z tablicy ruchu
-    else if (selected != 64 && (moves & (1ULL << buttonId))) {
-        // Logika dla ruchu figury na wybrane pole
-        // Możesz dodać odpowiednią funkcję, która zaktualizuje stan gry
-        // Przykład:
-        selected = 64; // Resetowanie zaznaczenia po wykonaniu ruchu
-    }
-
-    // Gdy zostało wciśnięte puste pole
-    else {
-        selected = 64; // Resetowanie zaznaczenia, jeśli pole jest puste
-        moves = 0b0000000000000000000000000000000000000000000000000000000000000000;
+        // Gdy zostało wciśnięte puste pole
+        else {
+            selected = 64;
+            moves = 0b0000000000000000000000000000000000000000000000000000000000000000;
+        }
     }
 
     // Sprawdzanie, czy zmieniła się pozycja, i resetowanie zaznaczenia, jeśli nie
     if (selected == clearSelected) {
-        selected = 64; // Resetowanie, gdy nie zmieniono pozycji
+        selected = 64;
         moves = 0b0000000000000000000000000000000000000000000000000000000000000000;
+    }
+}
+
+void board::move(int from, int to)
+{
+    if (moves & (1ULL << to)) {
+        // Sprawdź, czy figura należy do białych czy czarnych
+        bool isWhitePiece = false;
+
+        // Sprawdź, do której zmiennej należy figura na polu "from"
+        if (whitePawns & (1ULL << from)) {
+            whitePawns &= ~(1ULL << from); // Usuwanie figury z poprzedniego pola
+            whitePawns |= (1ULL << to);    // Przesunięcie figury na nowe pole
+            isWhitePiece = true;
+        } else if (whiteRooks & (1ULL << from)) {
+            whiteRooks &= ~(1ULL << from);
+            whiteRooks |= (1ULL << to);
+            isWhitePiece = true;
+        } else if (whiteKnights & (1ULL << from)) {
+            whiteKnights &= ~(1ULL << from);
+            whiteKnights |= (1ULL << to);
+            isWhitePiece = true;
+        } else if (whiteBishops & (1ULL << from)) {
+            whiteBishops &= ~(1ULL << from);
+            whiteBishops |= (1ULL << to);
+            isWhitePiece = true;
+        } else if (whiteQueens & (1ULL << from)) {
+            whiteQueens &= ~(1ULL << from);
+            whiteQueens |= (1ULL << to);
+            isWhitePiece = true;
+        } else if (whiteKings & (1ULL << from)) {
+            whiteKings &= ~(1ULL << from);
+            whiteKings |= (1ULL << to);
+            isWhitePiece = true;
+        } else if (blackPawns & (1ULL << from)) {
+            blackPawns &= ~(1ULL << from);
+            blackPawns |= (1ULL << to);
+        } else if (blackRooks & (1ULL << from)) {
+            blackRooks &= ~(1ULL << from);
+            blackRooks |= (1ULL << to);
+        } else if (blackKnights & (1ULL << from)) {
+            blackKnights &= ~(1ULL << from);
+            blackKnights |= (1ULL << to);
+        } else if (blackBishops & (1ULL << from)) {
+            blackBishops &= ~(1ULL << from);
+            blackBishops |= (1ULL << to);
+        } else if (blackQueens & (1ULL << from)) {
+            blackQueens &= ~(1ULL << from);
+            blackQueens |= (1ULL << to);
+        } else if (blackKings & (1ULL << from)) {
+            blackKings &= ~(1ULL << from);
+            blackKings |= (1ULL << to);
+        }
+
+        // Usunięcie figury przeciwnika z docelowego pola, jeśli tam była
+        if (isWhitePiece) {
+            // Czarna figura na docelowym polu
+            blackPawns &= ~(1ULL << to);
+            blackRooks &= ~(1ULL << to);
+            blackKnights &= ~(1ULL << to);
+            blackBishops &= ~(1ULL << to);
+            blackQueens &= ~(1ULL << to);
+            blackKings &= ~(1ULL << to);
+        } else {
+            // Biała figura na docelowym polu
+            whitePawns &= ~(1ULL << to);
+            whiteRooks &= ~(1ULL << to);
+            whiteKnights &= ~(1ULL << to);
+            whiteBishops &= ~(1ULL << to);
+            whiteQueens &= ~(1ULL << to);
+            whiteKings &= ~(1ULL << to);
+        }
     }
 }

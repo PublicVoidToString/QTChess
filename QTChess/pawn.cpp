@@ -46,6 +46,3 @@ unsigned long long Pawn::legalMoves(int positionId, const board& board) {
 
     return legalMovesBitmap;
 }
-
-
-

@@ -1,6 +1,6 @@
 #ifndef QUEEN_H
 #define QUEEN_H
-#import "board.h"
+#include "board.h"
 
 class Queen
 {

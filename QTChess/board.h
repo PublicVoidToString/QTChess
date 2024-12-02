@@ -31,6 +31,7 @@ public:
     void pressedButton(int buttonId);
     bool isOccupied(int buttonId) const;
     bool isEnemyOccupied(int buttonId) const;
+    void move(int from, int to);
 };
 
 #endif // BOARD_H
