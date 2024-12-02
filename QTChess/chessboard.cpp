@@ -73,7 +73,6 @@ void ChessBoard::resizeEvent(QResizeEvent *event)
 void ChessBoard::printPieces(){
     if(board.selected!=64) {
         chessTiles[board.selected]->setStyleSheet("background-color: #76b5ff;");
-
     }
     if(board.clearSelected!=64){
         int row = board.clearSelected / 8;
@@ -88,9 +87,6 @@ void ChessBoard::printPieces(){
     }
     for (int i = 0; i < 64; ++i) {
         QString pieceName;
-        if(board.moves & (1ULL << i)) {
-            chessTiles[i]->setStyleSheet("background-color: #f59e9e;");
-        }
         if (board.clearMoves & (1ULL << i)) {
             int row = i / 8;
             int col = i % 8;
@@ -101,7 +97,10 @@ void ChessBoard::printPieces(){
             } else {
                 chessTiles[i]->setStyleSheet("background-color: #b9efbd;");
             }
+        }
 
+        if(board.moves & (1ULL << i)) {
+            chessTiles[i]->setStyleSheet("background-color: #f59e9e;");
         }
         // Sprawdzenie obecności figury białej
         if (board.whitePawns & (1ULL << i)) pieceName = "WhitePawn.png";

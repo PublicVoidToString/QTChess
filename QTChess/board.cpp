@@ -57,7 +57,7 @@ void board::pressedButton(int buttonId)
             else if (whiteRooks  & 1ULL << selected)   moves = Rook::legalMoves(buttonId, *this);
             else if (whiteKnights  & 1ULL << selected) moves = Knight::legalMoves(buttonId, *this);
             else if (whiteBishops  & 1ULL << selected) moves = Bishop::legalMoves(buttonId, *this);
-            else if (whiteQueens  & 1ULL << selected)  moves = Queen::legalMoves(buttonId, *this);
+            else if (whiteQueens  & 1ULL << selected)  moves = Bishop::legalMoves(buttonId, *this) | Rook::legalMoves(buttonId, *this);
             else if (whiteKings  & 1ULL << selected)   moves = King::legalMoves(buttonId, *this);
         }
         else {
@@ -65,13 +65,14 @@ void board::pressedButton(int buttonId)
             else if (blackRooks & 1ULL << selected)   moves = Rook::legalMoves(buttonId, *this);
             else if (blackKnights & 1ULL << selected) moves = Knight::legalMoves(buttonId, *this);
             else if (blackBishops & 1ULL << selected) moves = Bishop::legalMoves(buttonId, *this);
-            else if (blackQueens & 1ULL << selected)  moves = Queen::legalMoves(buttonId, *this);
+            else if (blackQueens & 1ULL << selected)  moves = Bishop::legalMoves(buttonId, *this) | Rook::legalMoves(buttonId, *this);
             else if (blackKings & 1ULL << selected)   moves = King::legalMoves(buttonId, *this);
         }
     } else{
         // Gdy zostało wciśnięte pole z tablicy ruchu
         if (moves & (1ULL << buttonId)) {
             move(selected, buttonId);
+            moves = 0b0000000000000000000000000000000000000000000000000000000000000000;
             selected = 64;
             whiteMove = !whiteMove;
         }
