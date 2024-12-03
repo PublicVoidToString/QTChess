@@ -11,6 +11,8 @@ board::board() {
     whiteMove = true;
     selected = 64;
     clearSelected = 64;
+    lastMove[0] = 64; // FROM; zainicjowane poza szachownicą;
+    lastMove[1] = 64; // TO; zainicjowane poza szachownicą;
     clearMoves   = 0b0000000000000000000000000000000000000000000000000000000000000000;
     moves        = 0b0000000000000000000000000000000000000000000000000000000000000000;
 
@@ -30,12 +32,13 @@ board::board() {
 }
 
 bool board::isEnPassantEligible(int buttonId) const {
-    //TODO unimplemented method - now only checks if opponents pawn is there
+
+    // Sprawdza czy ostatni ruch był wyjściem o dwa pola do przodu
 
     if(board::isWhiteMove()) {
-        return blackPawns & (1ULL << buttonId);
+        return (blackPawns & (1ULL << buttonId)) && lastMove[0] == buttonId+16 && lastMove[1] == buttonId;
     } else {
-        return whitePawns & (1ULL << buttonId);
+        return (whitePawns & (1ULL << buttonId)) && lastMove[0] == buttonId-16 && lastMove[1] == buttonId;
     }
 }
 
@@ -82,6 +85,8 @@ void board::pressedButton(int buttonId)
         // Gdy zostało wciśnięte pole z tablicy ruchu
         if (moves & (1ULL << buttonId)) {
             move(selected, buttonId);
+            lastMove[0] = selected; // ustawienie ostatniego ruchu (do sprawdzania en passant)
+            lastMove[1] = buttonId;
             moves = 0b0000000000000000000000000000000000000000000000000000000000000000;
             selected = 64;
             whiteMove = !whiteMove;
@@ -106,12 +111,22 @@ void board::move(int from, int to)
     if (moves & (1ULL << to)) {
         // Sprawdź, czy figura należy do białych czy czarnych
         bool isWhitePiece = false;
+        bool isEnPassant = false;
+        unsigned char capturedPawnPosition = -1; // zmienna na wypadek en passant, przechowująca jego lokalizację
 
         // Sprawdź, do której zmiennej należy figura na polu "from"
         if (whitePawns & (1ULL << from)) {
             whitePawns &= ~(1ULL << from); // Usuwanie figury z poprzedniego pola
             whitePawns |= (1ULL << to);    // Przesunięcie figury na nowe pole
             isWhitePiece = true;
+
+            if ((to - from) == 9 || (to - from) == 7) { // Sprawdzenie - czy nastąpiło En Passant
+                if (!this->isEnemyOccupied(to)) {
+                    isEnPassant = true;
+                    capturedPawnPosition = to - 8;
+                }
+            }
+
         } else if (whiteRooks & (1ULL << from)) {
             whiteRooks &= ~(1ULL << from);
             whiteRooks |= (1ULL << to);
@@ -135,6 +150,14 @@ void board::move(int from, int to)
         } else if (blackPawns & (1ULL << from)) {
             blackPawns &= ~(1ULL << from);
             blackPawns |= (1ULL << to);
+
+            if ((from - to) == 9 || (from - to) == 7) {
+                if (!this->isEnemyOccupied(to)) {
+                    isEnPassant = true;
+                    capturedPawnPosition = to + 8;
+                }
+            }
+
         } else if (blackRooks & (1ULL << from)) {
             blackRooks &= ~(1ULL << from);
             blackRooks |= (1ULL << to);
@@ -153,22 +176,30 @@ void board::move(int from, int to)
         }
 
         // Usunięcie figury przeciwnika z docelowego pola, jeśli tam była
-        if (isWhitePiece) {
-            // Czarna figura na docelowym polu
-            blackPawns &= ~(1ULL << to);
-            blackRooks &= ~(1ULL << to);
-            blackKnights &= ~(1ULL << to);
-            blackBishops &= ~(1ULL << to);
-            blackQueens &= ~(1ULL << to);
-            blackKings &= ~(1ULL << to);
+        if (isEnPassant) {
+            if (isWhitePiece) {
+                blackPawns &= ~(1ULL << capturedPawnPosition);
+            } else {
+                whitePawns &= ~(1ULL << capturedPawnPosition);
+            }
         } else {
-            // Biała figura na docelowym polu
-            whitePawns &= ~(1ULL << to);
-            whiteRooks &= ~(1ULL << to);
-            whiteKnights &= ~(1ULL << to);
-            whiteBishops &= ~(1ULL << to);
-            whiteQueens &= ~(1ULL << to);
-            whiteKings &= ~(1ULL << to);
+            if (isWhitePiece) {
+                // Czarna figura na docelowym polu
+                blackPawns &= ~(1ULL << to);
+                blackRooks &= ~(1ULL << to);
+                blackKnights &= ~(1ULL << to);
+                blackBishops &= ~(1ULL << to);
+                blackQueens &= ~(1ULL << to);
+                blackKings &= ~(1ULL << to);
+            } else {
+                // Biała figura na docelowym polu
+                whitePawns &= ~(1ULL << to);
+                whiteRooks &= ~(1ULL << to);
+                whiteKnights &= ~(1ULL << to);
+                whiteBishops &= ~(1ULL << to);
+                whiteQueens &= ~(1ULL << to);
+                whiteKings &= ~(1ULL << to);
+            }
         }
     }
 }

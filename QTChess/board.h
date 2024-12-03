@@ -8,8 +8,9 @@ private:
 public:
     board();
     bool whiteMove;
-    unsigned char clearSelected;
     unsigned char selected;
+    unsigned char clearSelected;
+    unsigned char lastMove[2];
     unsigned long long clearMoves;
     unsigned long long moves;
 
@@ -19,6 +20,7 @@ public:
     unsigned long long whiteBishops;
     unsigned long long whiteQueens;
     unsigned long long whiteKings;
+
     unsigned long long blackPawns;
     unsigned long long blackKnights;
     unsigned long long blackRooks;
