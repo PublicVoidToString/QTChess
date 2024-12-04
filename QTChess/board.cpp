@@ -16,6 +16,11 @@ board::board() {
     clearMoves   = 0b0000000000000000000000000000000000000000000000000000000000000000;
     moves        = 0b0000000000000000000000000000000000000000000000000000000000000000;
 
+    whiteLongCastlePossible = true;
+    whiteShortCastlePossible = true;
+    blackLongCastlePossible = true;
+    blackShortCastlePossible = true;
+
     whitePawns   = 0b0000000000000000000000000000000000000000000000001111111100000000;
     whiteRooks   = 0b0000000000000000000000000000000000000000000000000000000010000001;
     whiteKnights = 0b0000000000000000000000000000000000000000000000000000000001000010;
@@ -29,6 +34,19 @@ board::board() {
     blackBishops = 0b0010010000000000000000000000000000000000000000000000000000000000;
     blackQueens  = 0b0000100000000000000000000000000000000000000000000000000000000000;
     blackKings   = 0b0001000000000000000000000000000000000000000000000000000000000000;
+}
+
+bool board::getWhiteLongCastlePossible() const {
+    return whiteLongCastlePossible;
+}
+bool board::getWhiteShortCastlePossible() const {
+    return whiteShortCastlePossible;
+}
+bool board::getBlackLongCastlePossible() const {
+    return blackLongCastlePossible;
+}
+bool board::getBlackShortCastlePossible() const {
+    return blackShortCastlePossible;
 }
 
 bool board::isEnPassantEligible(int buttonId) const {
@@ -146,6 +164,20 @@ void board::move(int from, int to)
         } else if (whiteKings & (1ULL << from)) {
             whiteKings &= ~(1ULL << from);
             whiteKings |= (1ULL << to);
+
+            // Roszady dla białych
+            if (from == 4 && to == 6 && whiteShortCastlePossible) { // Krótka roszada białych
+                whiteRooks &= ~(1ULL << 7);
+                whiteRooks |= (1ULL << 5);
+                whiteShortCastlePossible = false;
+                whiteLongCastlePossible = false;
+            } else if (from == 4 && to == 2 && whiteLongCastlePossible) { // Długa roszada białych
+                whiteRooks &= ~(1ULL << 0);
+                whiteRooks |= (1ULL << 3);
+                whiteShortCastlePossible = false;
+                whiteLongCastlePossible = false;
+            }
+
             isWhitePiece = true;
         } else if (blackPawns & (1ULL << from)) {
             blackPawns &= ~(1ULL << from);
@@ -173,6 +205,18 @@ void board::move(int from, int to)
         } else if (blackKings & (1ULL << from)) {
             blackKings &= ~(1ULL << from);
             blackKings |= (1ULL << to);
+
+            if (from == 60 && to == 62 && blackShortCastlePossible) { // Krótka roszada czarnych
+                blackRooks &= ~(1ULL << 63);
+                blackRooks |= (1ULL << 61);
+                blackShortCastlePossible = false;
+                blackLongCastlePossible = false;
+            } else if (from == 60 && to == 58 && blackLongCastlePossible) { // Długa roszada czarnych
+                blackRooks &= ~(1ULL << 56);
+                blackRooks |= (1ULL << 59);
+                blackShortCastlePossible = false;
+                blackLongCastlePossible = false;
+            }
         }
 
         // Usunięcie figury przeciwnika z docelowego pola, jeśli tam była

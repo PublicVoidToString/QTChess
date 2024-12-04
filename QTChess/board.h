@@ -14,6 +14,16 @@ public:
     unsigned long long clearMoves;
     unsigned long long moves;
 
+    bool whiteLongCastlePossible;
+    bool whiteShortCastlePossible;
+    bool blackLongCastlePossible;
+    bool blackShortCastlePossible;
+
+    bool getWhiteLongCastlePossible() const;
+    bool getWhiteShortCastlePossible() const;
+    bool getBlackLongCastlePossible() const;
+    bool getBlackShortCastlePossible() const;
+
     unsigned long long whitePawns;
     unsigned long long whiteKnights;
     unsigned long long whiteRooks;

@@ -40,7 +40,28 @@ unsigned long long King::legalMoves(int positionId, const board& board) {
         legalMovesBitmap |= (1ULL << newPosition);
     }
 
-    // TODO roszada
+    if (board.getWhiteLongCastlePossible() && positionId == 4) {
+        if (!board.isOccupied(1) && !board.isOccupied(2) && !board.isOccupied(3)) {
+            legalMovesBitmap |= (1ULL << 2); // Długa roszada białego
+        }
+    }
+
+    if (board.getWhiteShortCastlePossible() && positionId == 4) {
+        if (!board.isOccupied(5) && !board.isOccupied(6)) {
+            legalMovesBitmap |= (1ULL << 6); // Krótka roszada białego
+        }
+    }
+    if (board.getBlackLongCastlePossible() && positionId == 60) {
+        if (!board.isOccupied(57) && !board.isOccupied(58) && !board.isOccupied(59)) {
+            legalMovesBitmap |= (1ULL << 58);
+        }
+    }
+    if (board.getBlackShortCastlePossible() && positionId == 60) {
+        if (!board.isOccupied(61) && !board.isOccupied(62)) {
+            legalMovesBitmap |= (1ULL << 62);
+        }
+    }
+
 
     return legalMovesBitmap;
 }
