@@ -146,6 +146,13 @@ void board::move(int from, int to)
             }
 
         } else if (whiteRooks & (1ULL << from)) {
+
+            if (from == 0) {
+                whiteLongCastlePossible = false;
+            } else if (from == 7) {
+                whiteShortCastlePossible = false;
+            }
+
             whiteRooks &= ~(1ULL << from);
             whiteRooks |= (1ULL << to);
             isWhitePiece = true;
@@ -169,14 +176,14 @@ void board::move(int from, int to)
             if (from == 4 && to == 6 && whiteShortCastlePossible) { // Krótka roszada białych
                 whiteRooks &= ~(1ULL << 7);
                 whiteRooks |= (1ULL << 5);
-                whiteShortCastlePossible = false;
-                whiteLongCastlePossible = false;
             } else if (from == 4 && to == 2 && whiteLongCastlePossible) { // Długa roszada białych
                 whiteRooks &= ~(1ULL << 0);
                 whiteRooks |= (1ULL << 3);
-                whiteShortCastlePossible = false;
-                whiteLongCastlePossible = false;
             }
+
+            // Po ruchu króla roszada przestaje być legalna
+            whiteShortCastlePossible = false;
+            whiteLongCastlePossible = false;
 
             isWhitePiece = true;
         } else if (blackPawns & (1ULL << from)) {
@@ -191,6 +198,13 @@ void board::move(int from, int to)
             }
 
         } else if (blackRooks & (1ULL << from)) {
+
+            if (from == 56) {
+                blackLongCastlePossible = false;
+            } else if (from == 63) {
+                blackShortCastlePossible = false;
+            }
+
             blackRooks &= ~(1ULL << from);
             blackRooks |= (1ULL << to);
         } else if (blackKnights & (1ULL << from)) {
@@ -209,14 +223,12 @@ void board::move(int from, int to)
             if (from == 60 && to == 62 && blackShortCastlePossible) { // Krótka roszada czarnych
                 blackRooks &= ~(1ULL << 63);
                 blackRooks |= (1ULL << 61);
-                blackShortCastlePossible = false;
-                blackLongCastlePossible = false;
             } else if (from == 60 && to == 58 && blackLongCastlePossible) { // Długa roszada czarnych
                 blackRooks &= ~(1ULL << 56);
                 blackRooks |= (1ULL << 59);
-                blackShortCastlePossible = false;
-                blackLongCastlePossible = false;
             }
+            blackShortCastlePossible = false;
+            blackLongCastlePossible = false;
         }
 
         // Usunięcie figury przeciwnika z docelowego pola, jeśli tam była
