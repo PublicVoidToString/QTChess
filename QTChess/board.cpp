@@ -1,18 +1,19 @@
-#include "board.h"
+#include "Board.h"
 //pieces
 #include "pawn.h"
 #include "bishop.h"
 #include "knight.h"
 #include "rook.h"
-#include "queen.h"
 #include "king.h"
+#include <cstddef>
+#include <QMessageBox>
 
-board::board() {
-    whiteMove = true;
+Board::Board() {
+    whiteMove = true; //TODO: Zmienić na numer rundy %2 i masz ruch
     selected = 64;
     clearSelected = 64;
-    clearMoves   = 0b0000000000000000000000000000000000000000000000000000000000000000;
     moves        = 0b0000000000000000000000000000000000000000000000000000000000000000;
+    clearMoves   = 0b0000000000000000000000000000000000000000000000000000000000000000;
 
     whitePawns   = 0b0000000000000000000000000000000000000000000000001111111100000000;
     whiteRooks   = 0b0000000000000000000000000000000000000000000000000000000010000001;
@@ -27,18 +28,50 @@ board::board() {
     blackBishops = 0b0010010000000000000000000000000000000000000000000000000000000000;
     blackQueens  = 0b0000100000000000000000000000000000000000000000000000000000000000;
     blackKings   = 0b0001000000000000000000000000000000000000000000000000000000000000;
+
+    prev = NULL;
+    right = NULL;
+    left = NULL;
+    //next = NULL //miłego szukania errora
 }
 
-bool board::isWhiteMove() const {
+Board::Board(Board* previousBoard) {
+    whiteMove = !previousBoard->whiteMove; //TODO: Zmienić na numer rundy %2 i masz ruch
+    selected = 64;
+    clearSelected = 64;
+    moves        = 0b0000000000000000000000000000000000000000000000000000000000000000;
+    clearMoves   = 0b0000000000000000000000000000000000000000000000000000000000000000;
+
+    whitePawns   = previousBoard->whitePawns;
+    whiteRooks   = previousBoard->whiteRooks;
+    whiteKnights = previousBoard->whiteKnights;
+    whiteBishops = previousBoard->whiteBishops;
+    whiteQueens  = previousBoard->whiteQueens;
+    whiteKings   = previousBoard->whiteKings;
+
+    blackPawns   = previousBoard->blackPawns;
+    blackRooks   = previousBoard->blackRooks;
+    blackKnights = previousBoard->blackKnights;
+    blackBishops = previousBoard->blackBishops;
+    blackQueens  = previousBoard->blackQueens;
+    blackKings   = previousBoard->blackKings;
+
+    prev = previousBoard;
+    right = NULL;
+    left = NULL;
+    //next = NULL //miłego szukania errora
+}
+
+bool Board::isWhiteMove() const {
     return whiteMove;
 }
 
-bool board::isOccupied(int buttonId) const {
+bool Board::isOccupied(int buttonId) const {
     return (whitePawns | whiteKnights | whiteRooks | whiteBishops | whiteQueens | whiteKings |
             blackPawns | blackKnights | blackRooks | blackBishops | blackQueens | blackKings) & (1ULL << buttonId);
 }
 
-bool board::isEnemyOccupied(int buttonId) const {
+bool Board::isEnemyOccupied(int buttonId) const {
     if(whiteMove) {
         return (blackPawns | blackKnights | blackRooks | blackBishops | blackQueens | blackKings) & (1ULL << buttonId);
     } else {
@@ -46,7 +79,7 @@ bool board::isEnemyOccupied(int buttonId) const {
     }
 }
 
-void board::pressedButton(int buttonId)
+bool Board::pressedButton(int buttonId)
 {
     clearSelected = selected;
     clearMoves = moves;
@@ -71,10 +104,10 @@ void board::pressedButton(int buttonId)
     } else{
         // Gdy zostało wciśnięte pole z tablicy ruchu
         if (moves & (1ULL << buttonId)) {
-            move(selected, buttonId);
+            nextMove(selected, buttonId);
             moves = 0b0000000000000000000000000000000000000000000000000000000000000000;
             selected = 64;
-            whiteMove = !whiteMove;
+            return true;
         }
 
         // Gdy zostało wciśnięte puste pole
@@ -89,11 +122,17 @@ void board::pressedButton(int buttonId)
         selected = 64;
         moves = 0b0000000000000000000000000000000000000000000000000000000000000000;
     }
+    return false;
 }
 
-void board::move(int from, int to)
+void Board::nextMove(int from, int to)
 {
-    if (moves & (1ULL << to)) {
+    next = new Board(this);
+    next->move(from,to);
+}
+
+void Board::move(int from, int to)
+{
         // Sprawdź, czy figura należy do białych czy czarnych
         bool isWhitePiece = false;
 
@@ -160,5 +199,4 @@ void board::move(int from, int to)
             whiteQueens &= ~(1ULL << to);
             whiteKings &= ~(1ULL << to);
         }
-    }
 }

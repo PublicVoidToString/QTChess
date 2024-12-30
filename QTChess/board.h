@@ -1,12 +1,13 @@
-#ifndef BOARD_H
-#define BOARD_H
+#ifndef Board_H
+#define Board_H
 
-class board
+class Board
 {
 private:
 
 public:
-    board();
+    Board();
+    Board(Board* previousBoard);
     bool whiteMove;
     unsigned char clearSelected;
     unsigned char selected;
@@ -26,12 +27,18 @@ public:
     unsigned long long blackQueens;
     unsigned long long blackKings;
 
+    Board* prev;
+    Board* left;
+    Board* right;
+    Board* next;
+
     bool isWhiteMove() const;
 
-    void pressedButton(int buttonId);
+    bool pressedButton(int buttonId);
     bool isOccupied(int buttonId) const;
     bool isEnemyOccupied(int buttonId) const;
+    void nextMove(int from, int to);
     void move(int from, int to);
 };
 
-#endif // BOARD_H
+#endif // Board_H

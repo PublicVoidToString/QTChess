@@ -1,6 +1,6 @@
 #include "bishop.h"
 
-unsigned long long Bishop::legalMoves(int positionId, const board& board) {
+unsigned long long Bishop::legalMoves(int positionId, const Board& board) {
     unsigned long long legalMovesBitmap = 0; // Bitboard dla możliwych ruchów
 
     // Kierunki ruchu gońca: na cztery przekątne
