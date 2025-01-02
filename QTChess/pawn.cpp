@@ -22,6 +22,14 @@ unsigned long long Pawn::legalMoves(int positionId, const Board& board) {
             legalMovesBitmap |= (1ULL << (positionId + 9));
         }
 
+        // **En passant capture**
+        if (positionId >= 32 && positionId < 40 && board.isEnPassantEligible(positionId - 1)) { // Left en passant
+            legalMovesBitmap |= (1ULL << (positionId + 7));
+        }
+        if (positionId >= 32 && positionId < 40 && board.isEnPassantEligible(positionId + 1)) { // Right en passant
+            legalMovesBitmap |= (1ULL << (positionId + 9));
+        }
+
     } else {
         // to samo dla czarnych figur
         if (positionId - 8 >= 0 && !board.isOccupied(positionId - 8)) {
@@ -39,6 +47,14 @@ unsigned long long Pawn::legalMoves(int positionId, const Board& board) {
 
         // Bicie po prawej przekątnej (z perspektywy białego)
         if ((positionId + 1) % 8 != 0 && positionId - 8 >= 0 && board.isEnemyOccupied(positionId - 7)) {
+            legalMovesBitmap |= (1ULL << (positionId - 7));
+        }
+
+        // **En passant capture**
+        if (positionId >= 24 && positionId < 32 && board.isEnPassantEligible(positionId - 1)) { // Left en passant
+            legalMovesBitmap |= (1ULL << (positionId - 9));
+        }
+        if (positionId >= 24 && positionId < 32 && board.isEnPassantEligible(positionId + 1)) { // Right en passant
             legalMovesBitmap |= (1ULL << (positionId - 7));
         }
 
