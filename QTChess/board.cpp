@@ -297,3 +297,78 @@ void Board::move(int from, int to)
             }
         }
 }
+
+bool board::isDraw() const {
+    return false;
+}
+
+bool board::isBlackMated() const {
+    return false;
+}
+
+bool board::isWhiteMated() const {
+    return false;
+}
+
+unsigned char board::sumBits(unsigned long long variable) const {
+    unsigned char sum = 0;
+    unsigned long long buffer = variable;
+    for (sum = 0; buffer; sum++)
+    {
+        buffer &= buffer - 1; // Usunięcie najmniej znaczącego bitu
+    }
+
+    return sum;
+}
+
+
+long long board::sumWhiteMaterial() const {
+    long long score = 0;
+    score += sumBits(whitePawns);
+    score += sumBits(whiteBishops)*3;
+    score += sumBits(whiteKnights)*3;
+    score += sumBits(whiteRooks)*5;
+    score += sumBits(whiteQueens)*9;
+
+    return score;
+}
+
+long long board::sumBlackMaterial() const {
+    long long score = 0;
+    score += sumBits(blackPawns);
+    score += sumBits(blackBishops)*3;
+    score += sumBits(blackKnights)*3;
+    score += sumBits(blackRooks)*5;
+    score += sumBits(blackQueens)*9;
+
+    return score;
+}
+
+
+long long board::evaluatePosition() const {
+    long long finalScore = 0;
+
+    // Sprawdzenie czy nastąpił mat, pat TODO
+
+    if(isDraw()) {
+        return 0;
+    }
+
+    if(isBlackMated()) {
+        return 1000;
+    }
+
+    if(isWhiteMated()) {
+        return -1000;
+    }
+
+    // Policzenie materiału
+
+    finalScore += sumWhiteMaterial();
+    finalScore -= sumBlackMaterial();
+
+    // Wzięcie pod uwagę lokalizację materiału TODO
+
+
+    return finalScore;
+}
