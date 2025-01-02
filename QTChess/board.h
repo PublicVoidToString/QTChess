@@ -1,12 +1,13 @@
-#ifndef BOARD_H
-#define BOARD_H
+#ifndef Board_H
+#define Board_H
 
-class board
+class Board
 {
 private:
 
 public:
-    board();
+    Board();
+    Board(Board* previousBoard);
     bool whiteMove;
     unsigned char selected;
     unsigned char clearSelected;
@@ -38,6 +39,11 @@ public:
     unsigned long long blackQueens;
     unsigned long long blackKings;
 
+    Board* prev;
+    Board* left;
+    Board* right;
+    Board* next;
+
     bool isWhiteMove() const;
 
     // TODO
@@ -48,6 +54,7 @@ public:
     void pressedButton(int buttonId);
     bool isOccupied(int buttonId) const;
     bool isEnemyOccupied(int buttonId) const;
+    void nextMove(int from, int to);
     void move(int from, int to);
 
     unsigned char sumBits(unsigned long long variable) const;
@@ -59,4 +66,4 @@ public:
     bool isEnPassantEligible(int buttonId) const;
 };
 
-#endif // BOARD_H
+#endif // Board_H

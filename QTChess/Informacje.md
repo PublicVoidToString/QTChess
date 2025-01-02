@@ -24,6 +24,11 @@ A1 = 1 ... H1 = 128 ... H8 = 2^63
 
 ### In short 2^(button ID) = bitboard
 
+Current board is stored inside chessboard pointer Board* board
+
+//After you go back there is no coming back
+
+
 # Image Sources:
 https://www.flaticon.com/free-icon/queen_1626844?related_id=1626879&origin=search <br/>
 https://www.flaticon.com/free-icon/chess_11497350?term=chess+pieces&related_id=11497350 <br/>
