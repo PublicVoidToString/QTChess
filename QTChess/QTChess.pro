@@ -17,7 +17,6 @@ SOURCES += \
     main.cpp \
     mainmenu.cpp \
     pawn.cpp \
-    queen.cpp \
     rook.cpp
 
 HEADERS += \
@@ -28,7 +27,6 @@ HEADERS += \
     knight.h \
     mainmenu.h \
     pawn.h \
-    queen.h \
     rook.h
 
 FORMS += \

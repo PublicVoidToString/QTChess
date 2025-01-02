@@ -1,7 +1,7 @@
 #ifndef CHESSBOARD_H
 #define CHESSBOARD_H
 
-#include "board.h"
+#include "Board.h"
 #include <QWidget>
 #include <QPushButton>
 #include <QGridLayout>
@@ -21,16 +21,19 @@ public:
 
 private slots:
     void initBoard();  // Slot, który będzie uruchamiał ChessBoard
+    void undoMove();
     void handleButtonClick(int buttonId);
-    void printPieces();
+    void printSelection();
+    void clearSelectedFromBoard();
+    void printAllPieces();
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
 
 private:
-    Ui::ChessBoard *ui;
-    QPushButton **chessTiles;
-    board board;
+    Ui::ChessBoard* ui;
+    QPushButton** chessTiles;
+    Board* board; //TO JEST NASZ AKTUALNY BOARD
 };
 
 #endif // CHESSBOARD_H
