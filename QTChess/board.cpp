@@ -69,31 +69,31 @@ Board::Board(Board* previousBoard) {
     //next = NULL //miłego szukania errora
 }
 
-bool board::getWhiteLongCastlePossible() const {
+bool Board::getWhiteLongCastlePossible() const {
     return whiteLongCastlePossible;
 }
-bool board::getWhiteShortCastlePossible() const {
+bool Board::getWhiteShortCastlePossible() const {
     return whiteShortCastlePossible;
 }
-bool board::getBlackLongCastlePossible() const {
+bool Board::getBlackLongCastlePossible() const {
     return blackLongCastlePossible;
 }
-bool board::getBlackShortCastlePossible() const {
+bool Board::getBlackShortCastlePossible() const {
     return blackShortCastlePossible;
 }
 
-bool board::isEnPassantEligible(int buttonId) const {
+bool Board::isEnPassantEligible(int buttonId) const {
 
     // Sprawdza czy ostatni ruch był wyjściem o dwa pola do przodu
 
-    if(board::isWhiteMove()) {
+    if(Board::isWhiteMove()) {
         return (blackPawns & (1ULL << buttonId)) && lastMove[0] == buttonId+16 && lastMove[1] == buttonId;
     } else {
         return (whitePawns & (1ULL << buttonId)) && lastMove[0] == buttonId-16 && lastMove[1] == buttonId;
     }
 }
 
-bool board::isWhiteMove() const {
+bool Board::isWhiteMove() const {
     return whiteMove;
 }
 
@@ -298,19 +298,19 @@ void Board::move(int from, int to)
         }
 }
 
-bool board::isDraw() const {
+bool Board::isDraw() const {
     return false;
 }
 
-bool board::isBlackMated() const {
+bool Board::isBlackMated() const {
     return false;
 }
 
-bool board::isWhiteMated() const {
+bool Board::isWhiteMated() const {
     return false;
 }
 
-unsigned char board::sumBits(unsigned long long variable) const {
+unsigned char Board::sumBits(unsigned long long variable) const {
     unsigned char sum = 0;
     unsigned long long buffer = variable;
     for (sum = 0; buffer; sum++)
@@ -322,7 +322,7 @@ unsigned char board::sumBits(unsigned long long variable) const {
 }
 
 
-long long board::sumWhiteMaterial() const {
+long long Board::sumWhiteMaterial() const {
     long long score = 0;
     score += sumBits(whitePawns);
     score += sumBits(whiteBishops)*3;
@@ -333,7 +333,7 @@ long long board::sumWhiteMaterial() const {
     return score;
 }
 
-long long board::sumBlackMaterial() const {
+long long Board::sumBlackMaterial() const {
     long long score = 0;
     score += sumBits(blackPawns);
     score += sumBits(blackBishops)*3;
@@ -345,7 +345,7 @@ long long board::sumBlackMaterial() const {
 }
 
 
-long long board::evaluatePosition() const {
+long long Board::evaluatePosition() const {
     long long finalScore = 0;
 
     // Sprawdzenie czy nastąpił mat, pat TODO

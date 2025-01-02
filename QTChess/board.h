@@ -51,7 +51,7 @@ public:
     bool isBlackMated() const;
     bool isWhiteMated() const;
 
-    void pressedButton(int buttonId);
+    bool pressedButton(int buttonId);
     bool isOccupied(int buttonId) const;
     bool isEnemyOccupied(int buttonId) const;
     void nextMove(int from, int to);
