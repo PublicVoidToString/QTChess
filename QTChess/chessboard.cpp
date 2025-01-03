@@ -123,20 +123,20 @@ void ChessBoard::printAllPieces(){
     for (int i = 0; i < 64; ++i) {
         QString pieceName;
         // Sprawdzenie obecności figury białej
-        if (board->whitePawns & (1ULL << i)) pieceName = "WhitePawn.png";
-        else if (board->whiteRooks & (1ULL << i)) pieceName = "WhiteRook.png";
-        else if (board->whiteKnights & (1ULL << i)) pieceName = "WhiteKnight.png";
-        else if (board->whiteBishops & (1ULL << i)) pieceName = "WhiteBishop.png";
-        else if (board->whiteQueens & (1ULL << i)) pieceName = "WhiteQueen.png";
-        else if (board->whiteKings & (1ULL << i)) pieceName = "WhiteKing.png";
+        if (board->getWhitePawns() & (1ULL << i)) pieceName = "WhitePawn.png";
+        else if (board->getWhiteRooks() & (1ULL << i)) pieceName = "WhiteRook.png";
+        else if (board->getWhiteKnights() & (1ULL << i)) pieceName = "WhiteKnight.png";
+        else if (board->getWhiteBishops() & (1ULL << i)) pieceName = "WhiteBishop.png";
+        else if (board->getWhiteQueens() & (1ULL << i)) pieceName = "WhiteQueen.png";
+        else if (board->getWhiteKings() & (1ULL << i)) pieceName = "WhiteKing.png";
 
         // Sprawdzenie obecności figury czarnej
-        else if (board->blackPawns & (1ULL << i)) pieceName = "Pawn.png";
-        else if (board->blackRooks & (1ULL << i)) pieceName = "Rook.png";
-        else if (board->blackKnights & (1ULL << i)) pieceName = "Knight.png";
-        else if (board->blackBishops & (1ULL << i)) pieceName = "Bishop.png";
-        else if (board->blackQueens & (1ULL << i)) pieceName = "Queen.png";
-        else if (board->blackKings & (1ULL << i)) pieceName = "King.png";
+        else if (board->getBlackPawns() & (1ULL << i)) pieceName = "Pawn.png";
+        else if (board->getBlackRooks() & (1ULL << i)) pieceName = "Rook.png";
+        else if (board->getBlackKnights() & (1ULL << i)) pieceName = "Knight.png";
+        else if (board->getBlackBishops() & (1ULL << i)) pieceName = "Bishop.png";
+        else if (board->getBlackQueens() & (1ULL << i)) pieceName = "Queen.png";
+        else if (board->getBlackKings() & (1ULL << i)) pieceName = "King.png";
 
         // Jeżeli znalazł się obrazek do przypisania, ustawiamy ikonę
         if (!pieceName.isEmpty()) {
@@ -157,23 +157,23 @@ void ChessBoard::printAllPieces(){
 }
 
 void ChessBoard::printSelection(){
-    if(board->selected!=64) {
-        chessTiles[board->selected]->setStyleSheet("background-color: #76b5ff;");
+    if(board->getSelected()!=64) {
+        chessTiles[board->getSelected()]->setStyleSheet("background-color: #76b5ff;");
     }
-    if(board->clearSelected!=64){
-        int row = board->clearSelected / 8;
-        int col = board->clearSelected % 8;
+    if(board->getClearSelected()!=64){
+        int row = board->getClearSelected() / 8;
+        int col = board->getClearSelected() % 8;
 
         // Zmieniamy kolor tła na podstawie naprzemiennych kolorów na planszy szachowej
         if ((row + col) % 2 == 0) {
-            chessTiles[board->clearSelected]->setStyleSheet("background-color: #7aad7e;");
+            chessTiles[board->getClearSelected()]->setStyleSheet("background-color: #7aad7e;");
         } else {
-            chessTiles[board->clearSelected]->setStyleSheet("background-color: #b9efbd;");
+            chessTiles[board->getClearSelected()]->setStyleSheet("background-color: #b9efbd;");
         }
     }
     for (int i = 0; i < 64; ++i) {
         QString pieceName;
-        if (board->clearMoves & (1ULL << i)) {
+        if (board->getClearMoves() & (1ULL << i)) {
             int row = i / 8;
             int col = i % 8;
 
@@ -185,7 +185,7 @@ void ChessBoard::printSelection(){
             }
         }
 
-        if(board->moves & (1ULL << i)) {
+        if(board->getMoves() & (1ULL << i)) {
             chessTiles[i]->setStyleSheet("background-color: #f59e9e;");
         }
     }

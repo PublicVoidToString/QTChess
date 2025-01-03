@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <QPushButton>
-#include <QVBoxLayout>  // Dodajemy layout
+#include <QVBoxLayout>
 #include "chessboard.h"
 
 QT_BEGIN_NAMESPACE
@@ -21,11 +21,11 @@ public:
     ~MainMenu();
 
 private slots:
-    void openChessBoard();  // Slot, który będzie uruchamiał ChessBoard
+    void openChessBoard();
 
 private:
     Ui::MainMenu *ui;
-    QPushButton *pushButton;  // Deklaracja przycisku
+    QPushButton *pushButton;
     ChessBoard *chessBoard;
 };
 
