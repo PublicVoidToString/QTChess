@@ -34,7 +34,7 @@ private:
     unsigned char lastMove[2];
 
     // Functions
-    void move(int from, int to); // Function making moving figure from->to on current board
+    void move(unsigned char from, unsigned char to); // Function making moving figure from->to on current board
 
     // Evaluation functions
     unsigned char sumBits(unsigned long long variable) const;
@@ -67,7 +67,7 @@ public:
 
 
     // Engine Functions
-    void nextMove(int from, int to); // Function creating new Board instance on next and perfoming move on it
+    void nextMove(unsigned char from, unsigned char to); // Function creating new Board instance on next and perfoming move on it
 
     // Getters
     bool isWhiteMove() const;
@@ -91,8 +91,8 @@ public:
     long long getBlackQueens() const;
     long long getBlackKings() const;
 
-    char getSelected() const;
-    char getClearSelected() const;
+    unsigned char getSelected() const;
+    unsigned char getClearSelected() const;
     long long getMoves() const;
     long long getClearMoves() const;
 
