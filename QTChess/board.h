@@ -65,7 +65,6 @@ public:
     bool isBlackMated() const;
     bool isWhiteMated() const;
 
-
     // Engine Functions
     void nextMove(int from, int to); // Function creating new Board instance on next and perfoming move on it
 
