@@ -25,10 +25,10 @@ void ChessBoard::initBoard()
 {
     board = new Board();
 
-    // Główny layout w formie poziomego układu
+    // Main layout (where later the grid is added)
     QHBoxLayout *mainLayout = new QHBoxLayout(this);
 
-    // Layout dla szachownicy
+    // Chessboard grid
     QGridLayout *gridLayout = new QGridLayout();
     gridLayout->setSpacing(0); // Usuwamy odstępy między przyciskami
 
@@ -37,36 +37,37 @@ void ChessBoard::initBoard()
             int buttonId = (7 - row) * 8 + col;
             chessTiles[buttonId] = new QPushButton(this);
 
-            // Ustawiamy politykę rozmiaru, aby przyciski rozciągały się w ramach dostępnej przestrzeni
+            // Expanding policy - allow only for much shrinking as content allows for
             chessTiles[buttonId]->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-            // Kolorowanie przycisków (pola szachownicy)
+            // Painting the chessboard
             if ((row + col) % 2 == 0) {
                 chessTiles[buttonId]->setStyleSheet("background-color: #b9efbd;");
             } else {
                 chessTiles[buttonId]->setStyleSheet("background-color: #7aad7e;");
             }
 
+            // QT slot action - event based
             connect(chessTiles[buttonId], &QPushButton::clicked, [this, buttonId]() {
-                handleButtonClick(buttonId); // Przekazujemy identyfikator przycisku
+                handleButtonClick(buttonId);
             });
 
-            // Dodajemy przycisk do layoutu w odpowiedniej pozycji
+            // Adding buttons to the grid layout
             gridLayout->addWidget(chessTiles[buttonId], row, col);
         }
     }
 
-    // Tworzymy przycisk "Cofnij ruch"
+    // Button "Cofnij ruch"
     QPushButton *undoButton = new QPushButton("Cofnij ruch", this);
     undoButton->setStyleSheet("background-color: black; color: white;");
     undoButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     connect(undoButton, &QPushButton::clicked, this, &ChessBoard::undoMove);
 
-    // Dodajemy layout szachownicy i przycisk do głównego layoutu
-    mainLayout->addLayout(gridLayout);       // Dodajemy szachownicę
-    mainLayout->addWidget(undoButton);      // Dodajemy przycisk z prawej strony
+    // Adding chessbouard and additional buttons to the background
+    mainLayout->addLayout(gridLayout);
+    mainLayout->addWidget(undoButton);
 
-    // Ustawiamy główny layout dla widgetu
+    // Setting main layout
     this->setLayout(mainLayout);
 }
 

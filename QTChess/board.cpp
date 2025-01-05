@@ -10,21 +10,20 @@
 
 // PRIVATE:
 
-// Functions //TODO from and to change to char maybe?
-void Board::move(int from, int to) // Function making moving figure from->to on current board
+// Functions
+void Board::move(unsigned char from, unsigned char to) // Function making moving figure from->to on current board
 {
-    // Sprawdź, czy figura należy do białych czy czarnych
     bool isWhitePiece = false;
     bool isEnPassant = false;
-    unsigned char capturedPawnPosition = -1; // zmienna na wypadek en passant, przechowująca jego lokalizację
+    unsigned char capturedPawnPosition = -1; // variable used in case of enPassant
 
-    // Sprawdź, do której zmiennej należy figura na polu "from"
+    // Checking move type by piece and from location
     if (whitePawns & (1ULL << from)) {
-        whitePawns &= ~(1ULL << from); // Usuwanie figury z poprzedniego pola
-        whitePawns |= (1ULL << to);    // Przesunięcie figury na nowe pole
+        whitePawns &= ~(1ULL << from); // remove a piece from old location
+        whitePawns |= (1ULL << to);    // adding a piece to a new location
         isWhitePiece = true;
 
-        if ((to - from) == 9 || (to - from) == 7) { // Sprawdzenie - czy nastąpiło En Passant
+        if ((to - from) == 9 || (to - from) == 7) { // checking special move - en passant
             if (!this->isEnemyOccupied(to)) {
                 isEnPassant = true;
                 capturedPawnPosition = to - 8;
@@ -58,16 +57,16 @@ void Board::move(int from, int to) // Function making moving figure from->to on 
         whiteKings &= ~(1ULL << from);
         whiteKings |= (1ULL << to);
 
-        // Roszady dla białych
-        if (from == 4 && to == 6 && whiteShortCastlePossible) { // Krótka roszada białych
+        // Castles
+        if (from == 4 && to == 6 && whiteShortCastlePossible) { // 0-0 short castles
             whiteRooks &= ~(1ULL << 7);
             whiteRooks |= (1ULL << 5);
-        } else if (from == 4 && to == 2 && whiteLongCastlePossible) { // Długa roszada białych
+        } else if (from == 4 && to == 2 && whiteLongCastlePossible) { // 0-0-0 long castles
             whiteRooks &= ~(1ULL << 0);
             whiteRooks |= (1ULL << 3);
         }
 
-        // Po ruchu króla roszada przestaje być legalna
+        // Updating castling legality after moving
         whiteShortCastlePossible = false;
         whiteLongCastlePossible = false;
 
@@ -106,10 +105,10 @@ void Board::move(int from, int to) // Function making moving figure from->to on 
         blackKings &= ~(1ULL << from);
         blackKings |= (1ULL << to);
 
-        if (from == 60 && to == 62 && blackShortCastlePossible) { // Krótka roszada czarnych
+        if (from == 60 && to == 62 && blackShortCastlePossible) {
             blackRooks &= ~(1ULL << 63);
             blackRooks |= (1ULL << 61);
-        } else if (from == 60 && to == 58 && blackLongCastlePossible) { // Długa roszada czarnych
+        } else if (from == 60 && to == 58 && blackLongCastlePossible) {
             blackRooks &= ~(1ULL << 56);
             blackRooks |= (1ULL << 59);
         }
@@ -151,7 +150,7 @@ unsigned char Board::sumBits(unsigned long long variable) const {
     unsigned long long buffer = variable;
     for (sum = 0; buffer; sum++)
     {
-        buffer &= buffer - 1; // Usunięcie najmniej znaczącego bitu
+        buffer &= buffer - 1; // Removing least significant bit
     }
 
     return sum;
@@ -183,8 +182,8 @@ Board::Board() {
     whiteMove = true; //TODO: Zmienić na numer rundy %2 i masz ruch
     selected = 64;
     clearSelected = 64;
-    lastMove[0] = 64; // FROM; zainicjowane poza szachownicą;
-    lastMove[1] = 64; // TO; zainicjowane poza szachownicą;
+    lastMove[0] = 64; // initiated out of the chessboard
+    lastMove[1] = 64;
     moves        = 0b0000000000000000000000000000000000000000000000000000000000000000;
     clearMoves   = 0b0000000000000000000000000000000000000000000000000000000000000000;
 
@@ -219,6 +218,11 @@ Board::Board(Board* previousBoard) {
     moves        = 0b0000000000000000000000000000000000000000000000000000000000000000;
     clearMoves   = 0b0000000000000000000000000000000000000000000000000000000000000000;
 
+    whiteShortCastlePossible = previousBoard->whiteShortCastlePossible;
+    whiteLongCastlePossible = previousBoard->whiteLongCastlePossible;
+    blackShortCastlePossible = previousBoard->blackShortCastlePossible;
+    blackLongCastlePossible = previousBoard->blackLongCastlePossible;
+
     whitePawns   = previousBoard->whitePawns;
     whiteRooks   = previousBoard->whiteRooks;
     whiteKnights = previousBoard->whiteKnights;
@@ -232,6 +236,8 @@ Board::Board(Board* previousBoard) {
     blackBishops = previousBoard->blackBishops;
     blackQueens  = previousBoard->blackQueens;
     blackKings   = previousBoard->blackKings;
+
+
 
     prev = previousBoard;
     right = NULL;
@@ -350,7 +356,7 @@ bool Board::isWhiteMated() const {
 
 
 // Engine Functions
-void Board::nextMove(int from, int to) { // Function creating new Board instance on next and perfoming move on it
+void Board::nextMove(unsigned char from, unsigned char to) { // Function creating new Board instance on next and perfoming move on it
     next = new Board(this);
     next->move(from,to);
 }
@@ -377,7 +383,7 @@ long long Board::getBlackBishops() const { return blackBishops; }
 long long Board::getBlackQueens() const { return blackQueens; }
 long long Board::getBlackKings() const { return blackKings; }
 
-char Board::getSelected() const { return selected; }
-char Board::getClearSelected() const { return clearSelected; }
+unsigned char Board::getSelected() const { return selected; }
+unsigned char Board::getClearSelected() const { return clearSelected; }
 long long Board::getMoves() const { return moves; }
 long long Board::getClearMoves() const { return clearMoves; }

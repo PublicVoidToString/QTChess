@@ -26,8 +26,10 @@ A1 = 1 ... H1 = 128 ... H8 = 2^63
 
 Current board is stored inside chessboard pointer Board* board
 
-//After you go back there is no coming back
+//After you go back there is no coming back <br/>
 
+Move representation <br/>
+promotion as 4 different moves
 
 # Image Sources:
 https://www.flaticon.com/free-icon/queen_1626844?related_id=1626879&origin=search <br/>

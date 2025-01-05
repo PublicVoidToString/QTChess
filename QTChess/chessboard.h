@@ -16,24 +16,28 @@ class ChessBoard : public QWidget
 
 public:
     explicit ChessBoard(QWidget *parent = nullptr);
-    QString convertBitmaskToString(unsigned long long legalMovesBitmap);
     ~ChessBoard();
 
 private slots:
-    void initBoard();  // Slot, który będzie uruchamiał ChessBoard
+    // Slots are QT environment specific functions
+    // that can be connected to signals
     void undoMove();
     void handleButtonClick(int buttonId);
-    void printSelection();
-    void clearSelectedFromBoard();
-    void printAllPieces();
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
 
 private:
     Ui::ChessBoard* ui;
+    // Array of chess tiles used for display
     QPushButton** chessTiles;
-    Board* board; //TO JEST NASZ AKTUALNY BOARD
+    // Reference to the current board
+    Board* board;
+
+    void initBoard();
+    void printAllPieces();
+    void printSelection();
+    void clearSelectedFromBoard();
 };
 
 #endif // CHESSBOARD_H
