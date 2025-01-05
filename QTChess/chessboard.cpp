@@ -98,10 +98,10 @@ void ChessBoard::handleButtonClick(int buttonId)
 
 void ChessBoard::resizeEvent(QResizeEvent *event)
 {
-    // Obliczamy mniejszy z dwóch wymiarów okna
+    // calculate size
     int size = qMin(event->size().width(), event->size().height());
 
-    // Ustawiamy nowy rozmiar okna, aby było kwadratowe
+    // resizing
     this->resize(size, size);
 }
 
@@ -110,7 +110,7 @@ void ChessBoard::clearSelectedFromBoard(){
         int row = i / 8;
         int col = i % 8;
 
-        // Zmieniamy kolor tła na podstawie naprzemiennych kolorów na planszy szachowej
+        // changing colors - board TODO - changing colors multiple times, should be a function
         if ((row + col) % 2 == 0) {
             chessTiles[i]->setStyleSheet("background-color: #7aad7e;");
         } else {
@@ -123,15 +123,14 @@ void ChessBoard::clearSelectedFromBoard(){
 void ChessBoard::printAllPieces(){
     for (int i = 0; i < 64; ++i) {
         QString pieceName;
-        // Sprawdzenie obecności figury białej
+        // checking white piece presence
         if (board->getWhitePawns() & (1ULL << i)) pieceName = "WhitePawn.png";
         else if (board->getWhiteRooks() & (1ULL << i)) pieceName = "WhiteRook.png";
         else if (board->getWhiteKnights() & (1ULL << i)) pieceName = "WhiteKnight.png";
         else if (board->getWhiteBishops() & (1ULL << i)) pieceName = "WhiteBishop.png";
         else if (board->getWhiteQueens() & (1ULL << i)) pieceName = "WhiteQueen.png";
         else if (board->getWhiteKings() & (1ULL << i)) pieceName = "WhiteKing.png";
-
-        // Sprawdzenie obecności figury czarnej
+        // checking black piece presence
         else if (board->getBlackPawns() & (1ULL << i)) pieceName = "Pawn.png";
         else if (board->getBlackRooks() & (1ULL << i)) pieceName = "Rook.png";
         else if (board->getBlackKnights() & (1ULL << i)) pieceName = "Knight.png";
@@ -139,7 +138,7 @@ void ChessBoard::printAllPieces(){
         else if (board->getBlackQueens() & (1ULL << i)) pieceName = "Queen.png";
         else if (board->getBlackKings() & (1ULL << i)) pieceName = "King.png";
 
-        // Jeżeli znalazł się obrazek do przypisania, ustawiamy ikonę
+        // Setting correct icon
         if (!pieceName.isEmpty()) {
             QPixmap piecePixmap(":/images/" + pieceName);
             if (!piecePixmap.isNull()) {
@@ -150,7 +149,7 @@ void ChessBoard::printAllPieces(){
                 qWarning() << "Nie udało się załadować obrazka figury: " << pieceName;
             }
         } else {
-            // Jeśli nie ma figury na danym polu, zostawiamy ikonę pustą
+            // In case of empty
             chessTiles[i]->setIcon(QIcon());
             chessTiles[i]->setIconSize(QSize(80, 80));
         }
@@ -165,7 +164,6 @@ void ChessBoard::printSelection(){
         int row = board->getClearSelected() / 8;
         int col = board->getClearSelected() % 8;
 
-        // Zmieniamy kolor tła na podstawie naprzemiennych kolorów na planszy szachowej
         if ((row + col) % 2 == 0) {
             chessTiles[board->getClearSelected()]->setStyleSheet("background-color: #7aad7e;");
         } else {
@@ -178,7 +176,6 @@ void ChessBoard::printSelection(){
             int row = i / 8;
             int col = i % 8;
 
-            // Zmieniamy kolor tła na podstawie naprzemiennych kolorów na planszy szachowej
             if ((row + col) % 2 == 0) {
                 chessTiles[i]->setStyleSheet("background-color: #7aad7e;");
             } else {
