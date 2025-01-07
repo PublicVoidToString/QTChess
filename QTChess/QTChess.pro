@@ -12,6 +12,8 @@ SOURCES += \
     bishop.cpp \
     board.cpp \
     chessboard.cpp \
+    engine.cpp \
+    evaluation.cpp \
     king.cpp \
     knight.cpp \
     main.cpp \
@@ -23,6 +25,8 @@ HEADERS += \
     bishop.h \
     board.h \
     chessboard.h \
+    engine.h \
+    evaluation.h \
     king.h \
     knight.h \
     mainmenu.h \

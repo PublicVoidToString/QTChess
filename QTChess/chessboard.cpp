@@ -5,10 +5,15 @@
 #include <QMessageBox>
 #include <QIcon>
 
+
 ChessBoard::ChessBoard(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::ChessBoard)
 {
+    selected = 64;
+    clearSelected = 64;
+    moves        = 0b0000000000000000000000000000000000000000000000000000000000000000;
+    clearMoves   = 0b0000000000000000000000000000000000000000000000000000000000000000;
     chessTiles = (QPushButton**)malloc(sizeof(QPushButton*)*64);
     ui->setupUi(this);
     initBoard();
@@ -72,8 +77,26 @@ void ChessBoard::initBoard()
 }
 
 void ChessBoard::undoMove(){
-    if(board->prev!=nullptr){
+    // TODO change true value to variable "IsAgainstEngine"
+    bool succed=false;
+    if(true){
+        if(board->prev!=nullptr && board->prev->prev!=nullptr){
+            Board* toDelete1 = board;
+            Board* toDelete2 = board->prev;
+            board=board->prev->prev;
+            delete toDelete2;
+            delete toDelete1;
+            succed=true;
+        }
+    }
+    else if(board->prev!=nullptr){
+        Board* del = board;
         board=board->prev;
+        delete del;
+        board->next=nullptr;
+        succed=true;
+    }
+    if(succed){
         printAllPieces();
         clearSelectedFromBoard();
     }
@@ -81,12 +104,19 @@ void ChessBoard::undoMove(){
 
 void ChessBoard::handleButtonClick(int buttonId)
 {
-    bool moved = board->pressedButton(buttonId);
+    // TODO change true value to variable "IsAgainstEngine"
+    if(true){
+
+    } else{
+
+    }
+    bool moved = Engine::pressedButton(board,buttonId,&selected,&clearSelected,&moves,&clearMoves);
     if(moved) {
         if (board->next != nullptr) {
             board = board->next;
             printAllPieces();
             clearSelectedFromBoard();
+            //Engine::engineNextMove(board);
         } else {
             QMessageBox::warning(nullptr, "Warning", "No next board available!");
         }
@@ -158,23 +188,23 @@ void ChessBoard::printAllPieces(){
 }
 
 void ChessBoard::printSelection(){
-    if(board->getSelected()!=64) {
-        chessTiles[board->getSelected()]->setStyleSheet("background-color: #76b5ff;");
+    if(selected!=64) {
+        chessTiles[selected]->setStyleSheet("background-color: #76b5ff;");
     }
-    if(board->getClearSelected()!=64){
-        int row = board->getClearSelected() / 8;
-        int col = board->getClearSelected() % 8;
+    if(clearSelected!=64){
+        int row = clearSelected / 8;
+        int col = clearSelected % 8;
 
         // Zmieniamy kolor tła na podstawie naprzemiennych kolorów na planszy szachowej
         if ((row + col) % 2 == 0) {
-            chessTiles[board->getClearSelected()]->setStyleSheet("background-color: #7aad7e;");
+            chessTiles[clearSelected]->setStyleSheet("background-color: #7aad7e;");
         } else {
-            chessTiles[board->getClearSelected()]->setStyleSheet("background-color: #b9efbd;");
+            chessTiles[clearSelected]->setStyleSheet("background-color: #b9efbd;");
         }
     }
     for (int i = 0; i < 64; ++i) {
         QString pieceName;
-        if (board->getClearMoves() & (1ULL << i)) {
+        if (clearMoves & (1ULL << i)) {
             int row = i / 8;
             int col = i % 8;
 
@@ -186,7 +216,7 @@ void ChessBoard::printSelection(){
             }
         }
 
-        if(board->getMoves() & (1ULL << i)) {
+        if(moves & (1ULL << i)) {
             chessTiles[i]->setStyleSheet("background-color: #f59e9e;");
         }
     }

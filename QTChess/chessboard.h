@@ -1,7 +1,8 @@
 #ifndef CHESSBOARD_H
 #define CHESSBOARD_H
 
-#include "Board.h"
+#include "board.h"
+#include "engine.h"
 #include <QWidget>
 #include <QPushButton>
 #include <QGridLayout>
@@ -28,6 +29,11 @@ protected:
     void resizeEvent(QResizeEvent *event) override;
 
 private:
+    // TODO Move Selected/ClearSelected/Moves/ClearMoves to chessboard cpp (they only need to be remembered once not in every instance
+    unsigned char selected; //Selected tile on the board remembered after clicked
+    unsigned char clearSelected; //Previous selected tile to be cleared in next move
+    unsigned long long moves; //Moves bitboard of all possible moves of figure on selected tile
+    unsigned long long clearMoves; //Previous Moves bitboard to be cleared in next move
     Ui::ChessBoard* ui;
     // Array of chess tiles used for display
     QPushButton** chessTiles;
