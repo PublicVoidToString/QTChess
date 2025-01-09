@@ -17,6 +17,7 @@ class ChessBoard : public QWidget
 
 public:
     explicit ChessBoard(QWidget *parent = nullptr);
+    void setDepth(char level);
     ~ChessBoard();
 
 private slots:
@@ -29,7 +30,7 @@ protected:
     void resizeEvent(QResizeEvent *event) override;
 
 private:
-    // TODO Move Selected/ClearSelected/Moves/ClearMoves to chessboard cpp (they only need to be remembered once not in every instance
+    unsigned char botDepth; //Depth level of chess engine, 0=against player
     unsigned char selected; //Selected tile on the board remembered after clicked
     unsigned char clearSelected; //Previous selected tile to be cleared in next move
     unsigned long long moves; //Moves bitboard of all possible moves of figure on selected tile

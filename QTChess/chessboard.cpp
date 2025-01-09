@@ -19,6 +19,9 @@ ChessBoard::ChessBoard(QWidget *parent)
     initBoard();
     printAllPieces();
 }
+void ChessBoard::setDepth(char level){
+    botDepth = level*2;
+}
 
 ChessBoard::~ChessBoard()
 {
@@ -77,13 +80,16 @@ void ChessBoard::initBoard()
 }
 
 void ChessBoard::undoMove(){
-    // TODO change true value to variable "IsAgainstEngine"
     bool succed=false;
-    if(true){
+    if(botDepth!=0){
         if(board->prev!=nullptr && board->prev->prev!=nullptr){
             Board* toDelete1 = board;
             Board* toDelete2 = board->prev;
             board=board->prev->prev;
+            toDelete2->next=nullptr;
+            if(toDelete2==toDelete1){
+                qWarning() << "To jest to SAMO";
+            }
             delete toDelete2;
             delete toDelete1;
             succed=true;
@@ -104,20 +110,20 @@ void ChessBoard::undoMove(){
 
 void ChessBoard::handleButtonClick(int buttonId)
 {
-    // TODO change true value to variable "IsAgainstEngine"
-    if(true){
-
-    } else{
-
-    }
     bool moved = Engine::pressedButton(board,buttonId,&selected,&clearSelected,&moves,&clearMoves);
     if(moved) {
         if (board->next != nullptr) {
-            board = board->next;
+            if(botDepth==0){
+                board = board->next;
+            } else{
+                board = board->next;
+                board->next = Engine::engineNextMove(board,botDepth);
+                board=board->next;
+            }
             printAllPieces();
             clearSelectedFromBoard();
-            //Engine::engineNextMove(board);
-        } else {
+        }
+        else {
             QMessageBox::warning(nullptr, "Warning", "No next board available!");
         }
     } else{

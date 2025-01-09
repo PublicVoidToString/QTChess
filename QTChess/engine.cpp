@@ -2,17 +2,46 @@
 
 Engine::Engine() {}
 
+long count=0;
 // Engine Functions
 void Engine::nextMove(Board* board, unsigned char from, unsigned char to) { // Function creating new Board instance on next and perfoming move on it
     board->next = new Board(board);
-    board->next->move(from,to);
+    board->next -> move(from,to);
 }
 
-void Engine::engineNextMove(Board* board){ // Function playing the move calculated as best by the engine
+Board* Engine::engineNextMove(Board* board,char botDepth){ // Function playing the move calculated as best by the engine
     //TODO change parameter to a variable and make it easier to adjust, this parameter is the depth of the algorithm //Should be divisible by 2
-    Engine::buildFutureGameTree(board, 2);
-    Board* best = Evaluation::calcEvalFromBranchTips(board);
-    qWarning() << "BoardEval: " << best->getBoardEval();
+    Engine::buildFutureGameTree(board, botDepth);
+    qWarning() << "count: " << count;
+    Evaluation::calcEvalFromBranchTips(board);
+    Board* best = Engine::getBestMove(board);
+
+
+    //Board* iHateMyMemory;
+    //for(long i=0;i<300000000;i++) iHateMyMemory=new Board(board);
+
+    return best;
+}
+
+Board* Engine::getBestMove(Board* startingBoard){
+    Board* best=nullptr;
+    if (startingBoard->next == nullptr) {
+        QMessageBox::critical(nullptr, "Error", "The next board is null. The application will close.");
+        QCoreApplication::quit();
+    }
+    for(Board* current=startingBoard->next;current->right!=nullptr;current=current->right){
+        if(best==nullptr) best=current;
+        else if(startingBoard->isWhiteMove()){
+            if(best->getBoardEval()<current->getBoardEval()){
+                best=current;
+            }
+        }else{
+            if(best->getBoardEval()>current->getBoardEval()){
+                best=current;
+            }
+        }
+    }
+    return best;
 }
 
 //TODO Maybe add a chance to incease n number on branches with small amounts of moves, idk we'll see how it goes
@@ -45,6 +74,7 @@ void Engine::buildFutureGameTree(Board* startingBoard, int n) {
             short to = __builtin_ctzll(moves);
             moves &= ~(1LL << to);
             Board* temp = new Board(startingBoard);
+            count++;
             temp->move(from, to);
             if (current == startingBoard) {
                 current = current->next = temp;

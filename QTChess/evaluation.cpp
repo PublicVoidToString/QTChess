@@ -41,6 +41,7 @@ long long Evaluation::sumWhiteMaterial(Board* board)  {
     score += sumBits(board->getWhiteKnights())*3;
     score += sumBits(board->getWhiteRooks())*5;
     score += sumBits(board->getWhiteQueens())*9;
+    score += sumBits(board->getWhiteKings())*1000;
     return score;
 }
 
@@ -51,6 +52,7 @@ long long Evaluation::sumBlackMaterial(Board* board)  {
     score += sumBits(board->getBlackKnights())*3;
     score += sumBits(board->getBlackRooks())*5;
     score += sumBits(board->getBlackQueens())*9;
+    score += sumBits(board->getBlackKings())*1000;
     return score;
 }
 

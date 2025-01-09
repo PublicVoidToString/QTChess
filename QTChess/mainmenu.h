@@ -22,8 +22,10 @@ public:
 
 private slots:
     void openChessBoard();
+    void openChessBoardBot();
 
 private:
+    char level;
     Ui::MainMenu *ui;
     QPushButton *pushButton;
     ChessBoard *chessBoard;

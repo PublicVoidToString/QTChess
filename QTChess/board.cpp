@@ -257,6 +257,5 @@ double Board::getBoardEval() const { return boardEval; }
 void Board::setBoardEval(double eval) { boardEval=eval; }
 
 Board::~Board() {
-    delete next;
-    delete right;
+    if (this->next!=nullptr) delete next;
 }
