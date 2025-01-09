@@ -5,10 +5,6 @@
 class Evaluation
 {
 private:
-    // Evaluation functions
-    static unsigned char sumBits(unsigned long long variable) ;
-    static double sumWhiteMaterial(Board* board);
-    static double sumBlackMaterial(Board* board);
 
     // basic piece evaluation
     static const constexpr double mg_pawn_value = 0.82;
@@ -22,6 +18,8 @@ private:
     static const constexpr double eg_bishop_value = 2.97;
     static const constexpr double eg_rook_value = 5.12;
     static const constexpr double eg_queen_value = 9.36;
+
+    static const constexpr double king_value = 1000;
 
     // PST - piece-square-tables + different evaulations for midgame and endgame
     // these values get tapered - more towards the endgame as it moves away from the opening

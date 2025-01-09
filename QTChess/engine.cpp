@@ -16,7 +16,7 @@ Board* Engine::engineNextMove(Board* board,char botDepth){ // Function playing t
     Evaluation::calcEvalFromBranchTips(board);
     Board* best = Engine::getBestMove(board);
 
-
+    qWarning() << "Eva " <<board->getBoardEval();
     //Board* iHateMyMemory;
     //for(long i=0;i<300000000;i++) iHateMyMemory=new Board(board);
 

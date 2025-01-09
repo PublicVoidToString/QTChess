@@ -15,13 +15,12 @@ double Evaluation::evaluatePosition(Board* board) { // Main eval function, calcu
     else if(board->isWhiteMated()) board->setBoardEval(-1000);
     else if(board->isDraw()) board->setBoardEval(0);
     else {
-        int mg_white = 0;
-        int eg_white = 0;
-        int mg_black = 0;
-        int eg_black = 0;
+        double mg_white = 0;
+        double eg_white = 0;
+        double mg_black = 0;
+        double eg_black = 0;
         int gamePhase = 0;
 
-        double eval = 0;
         //Material Points and basic positional heuristics
         for (int square = 0; square < 64; square++) {
             if (board->getWhitePawns() & (1ULL << square)) {
@@ -55,8 +54,8 @@ double Evaluation::evaluatePosition(Board* board) { // Main eval function, calcu
                 continue;
             }
             if (board->getWhiteKings() & (1ULL << square)) {
-                mg_white += mg_king_table[square];
-                eg_white += eg_king_table[square];
+                mg_white += mg_king_table[square] + king_value;
+                eg_white += eg_king_table[square] + king_value;
                 continue;
             }
 
@@ -93,8 +92,8 @@ double Evaluation::evaluatePosition(Board* board) { // Main eval function, calcu
                 continue;
             }
             if (board->getBlackKings() & (1ULL << square)) {
-                mg_black += mg_king_table[flippedSquare];
-                eg_black += eg_king_table[flippedSquare];
+                mg_black += mg_king_table[flippedSquare] + king_value;
+                eg_black += eg_king_table[flippedSquare] + king_value;
             }
         }
 
@@ -102,60 +101,21 @@ double Evaluation::evaluatePosition(Board* board) { // Main eval function, calcu
 
         // tapered evaluation - based on gamephase
 
-        int mgScore;
-        int egScore;
-        if(board->isWhiteMove()) {
-            mgScore = mg_white - mg_black;
-            egScore = eg_white - eg_black;
-        } else {
-            mgScore = mg_black - mg_white;
-            egScore = eg_black - eg_white;
-        }
+        double mgScore;
+        double egScore;
+
+        mgScore = mg_white - mg_black;
+        egScore = eg_white - eg_black;
 
         int mgPhase = gamePhase;
         if (mgPhase > 24) mgPhase = 24; /* in case of early promotion */
         int egPhase = 24 - mgPhase;
-        return (mgScore * mgPhase + egScore * egPhase) / 24;
 
-        board->setBoardEval(eval);
+        board->setBoardEval((mgScore * mgPhase + egScore * egPhase) / 24.0);
     }
 
     return board->getBoardEval();
 }
-
-// Evaluation functions
-unsigned char Evaluation::sumBits(unsigned long long variable)  {
-    unsigned char sum = 0;
-    unsigned long long buffer = variable;
-    for (sum = 0; buffer; sum++)
-    {
-        buffer &= buffer - 1; // Removing least significant bit
-    }
-    return sum;
-}
-
-double Evaluation::sumWhiteMaterial(Board* board)  {
-    long long score = 0;
-    score += sumBits(board->getWhitePawns());
-    score += sumBits(board->getWhiteBishops())*3;
-    score += sumBits(board->getWhiteKnights())*3;
-    score += sumBits(board->getWhiteRooks())*5;
-    score += sumBits(board->getWhiteQueens())*9;
-    score += sumBits(board->getWhiteKings())*1000;
-    return score;
-}
-
-double Evaluation::sumBlackMaterial(Board* board)  {
-    long long score = 0;
-    score += sumBits(board->getBlackPawns());
-    score += sumBits(board->getBlackBishops())*3;
-    score += sumBits(board->getBlackKnights())*3;
-    score += sumBits(board->getBlackRooks())*5;
-    score += sumBits(board->getBlackQueens())*9;
-    score += sumBits(board->getBlackKings())*1000;
-    return score;
-}
-
 
 Board* Evaluation::calcEvalFromBranchTips(Board* startingBoard) {
 
