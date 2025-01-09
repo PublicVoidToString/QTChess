@@ -38,3 +38,13 @@ https://www.flaticon.com/free-icon/rook_1626848?related_id=1626883&origin=search
 https://www.flaticon.com/free-icon/pawn_657487?related_id=657588&origin=search <br/>
 https://www.flaticon.com/free-icon/king_3522646?related_id=3522656&origin=search <br/>
 https://www.flaticon.com/free-icon/bishop_5077021?term=bishop&page=1&position=1&origin=search&related_id=5077021 </br>
+
+# Evaluation
+PeSTO's Evaluation Function based on Pawel Koziol's implementation in TSCP by Tom Kerrigan 
+https://rofchade.nl/?p=307
+https://www.chessprogramming.org/PeSTO's_Evaluation_Function
+https://adamberent.com/chess-board-evaluation/
+https://adamberent.com/piece-square-table/
+
+# General algorithms, board representation and ideas
+https://www.youtube.com/watch?v=w4FFX_otR-4&t=308s
