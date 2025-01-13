@@ -68,9 +68,6 @@ Board::Board(Board* previousBoard) {
     existingBranches+=1;
     turnNumber = previousBoard->turnNumber+1;
 
-    lastMove[0] = previousBoard->lastMove[0];
-    lastMove[1] = previousBoard->lastMove[1];
-
     whiteShortCastlePossible = previousBoard->whiteShortCastlePossible;
     whiteLongCastlePossible = previousBoard->whiteLongCastlePossible;
     blackShortCastlePossible = previousBoard->blackShortCastlePossible;
@@ -106,14 +103,17 @@ void Board::move(unsigned char from, unsigned char to) // Function making moving
 
     if (whitePawns & (1ULL << from)) {
         whitePawns &= ~(1ULL << from);
-        whitePawns |= (1ULL << to);
         isWhitePiece = true;
         if ((to - from) == 9 || (to - from) == 7) {
-            if (!isEnemyOccupied(to)) {
+            // Stay focused here;
+            // isEnemyOccupied when searching for move on the current board - correct color;
+            // when executing a move - done on a new board (uses the wrong color
+            if (!isOccupied(to)) {
                 isEnPassant = true;
                 capturedPawnPosition = to - 8;
             }
         }
+        whitePawns |= (1ULL << to);
     } else if (whiteRooks & (1ULL << from)) {
 
         if (from == 0) {
@@ -153,13 +153,13 @@ void Board::move(unsigned char from, unsigned char to) // Function making moving
         isWhitePiece = true;
     } else if (blackPawns & (1ULL << from)) {
         blackPawns &= ~(1ULL << from);
-        blackPawns |= (1ULL << to);
         if ((from - to) == 9 || (from - to) == 7) {
-            if (!isEnemyOccupied(to)) {
+            if (!isOccupied(to)) {
                 isEnPassant = true;
                 capturedPawnPosition = to + 8;
             }
         }
+        blackPawns |= (1ULL << to);
     } else if (blackRooks & (1ULL << from)) {
 
         if (from == 56) {
@@ -215,6 +215,11 @@ void Board::move(unsigned char from, unsigned char to) // Function making moving
             whiteKings &= ~(1ULL << to);
         }
     }
+
+
+    lastMove[0] = from;
+    lastMove[1] = to;
+
 }
 
 
@@ -232,12 +237,12 @@ bool Board::isEnemyOccupied(int buttonId) const { // Is enemy on buttonID tile
 }
 bool Board::isEnPassantEligible(int buttonId) const {
 
-    // Sprawdza czy ostatni ruch był wyjściem o dwa pola do przodu
+    // checks if last move was a 2 forward advance
 
     if(Board::isWhiteMove()) {
-        return (blackPawns & (1ULL << buttonId)) && lastMove[0] == buttonId+16 && lastMove[1] == buttonId;
+        return (blackPawns & (1ULL << buttonId)) && this->prev->lastMove[0] == buttonId+16 && this->prev->lastMove[1] == buttonId;
     } else {
-        return (whitePawns & (1ULL << buttonId)) && lastMove[0] == buttonId-16 && lastMove[1] == buttonId;
+        return (whitePawns & (1ULL << buttonId)) && this->prev->lastMove[0] == buttonId-16 && this->prev->lastMove[1] == buttonId;
     }
 }
 
