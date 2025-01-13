@@ -1,15 +1,40 @@
 #include "Board.h"
 //pieces
-#include "evaluation.h"
 #include <cstddef>
 #include <QMessageBox>
+#include "pawn.h"
+#include "bishop.h"
+#include "knight.h"
+#include "rook.h"
+#include "king.h"
 
 // PRIVATE:
 
 // Functions
 // PUBLIC:
 
+unsigned long Board::existingBranches=0;
+
+bool Board::operator == (const Board &b)
+{
+    if(whitePawns != b.whitePawns) return false;
+    if(whiteRooks != b.whiteRooks) return false;
+    if(whiteKnights != b.whiteKnights) return false;
+    if(whiteBishops != b.whiteBishops) return false;
+    if(whiteQueens != b.whiteQueens) return false;
+    if(whiteKings != b.whiteKings) return false;
+
+    if(blackPawns != b.blackPawns) return false;
+    if(blackRooks != b.blackRooks) return false;
+    if(blackKnights != b.blackKnights) return false;
+    if(blackBishops != b.blackBishops) return false;
+    if(blackQueens != b.blackQueens) return false;
+    if(blackKings != b.blackKings) return false;
+    return true;
+}
+
 Board::Board() {
+    existingBranches+=1;
     turnNumber = 0;
     boardEval=0;
     lastMove[0] = 64; // initiated out of the chessboard
@@ -40,6 +65,7 @@ Board::Board() {
     next = NULL;
 }
 Board::Board(Board* previousBoard) {
+    existingBranches+=1;
     turnNumber = previousBoard->turnNumber+1;
 
     lastMove[0] = previousBoard->lastMove[0];
@@ -214,6 +240,31 @@ bool Board::isEnPassantEligible(int buttonId) const {
         return (whitePawns & (1ULL << buttonId)) && lastMove[0] == buttonId-16 && lastMove[1] == buttonId;
     }
 }
+
+bool Board::isAttacked(int tileId, bool isWhite) const {
+    long long moves = 0;
+    for (short from = 0; from < 64; from++) {
+        if (isWhite) {
+            if (getBlackPawns() >> from & 1) moves |= Pawn::legalMoves(from, *this, false);
+            else if (getBlackRooks() >> from & 1) moves |= Rook::legalMoves(from, *this);
+            else if (getBlackKnights() >> from & 1) moves |= Knight::legalMoves(from, *this);
+            else if (getBlackBishops() >> from & 1) moves |= Bishop::legalMoves(from, *this);
+            else if (getBlackQueens() >> from & 1) moves |= Rook::legalMoves(from, *this) | Bishop::legalMoves(from, *this);
+            else if (getBlackKings() >> from & 1) moves |= King::legalMoves(from, *this);
+        }
+        else {
+            if (getWhitePawns() >> from & 1) moves |= Pawn::legalMoves(from, *this, true);
+            else if (getWhiteRooks() >> from & 1) moves |= Rook::legalMoves(from, *this);
+            else if (getWhiteKnights() >> from & 1) moves |= Knight::legalMoves(from, *this);
+            else if (getWhiteBishops() >> from & 1) moves |= Bishop::legalMoves(from, *this);
+            else if (getWhiteQueens() >> from & 1) moves |= Rook::legalMoves(from, *this) | Bishop::legalMoves(from, *this);
+            else if (getWhiteKings() >> from & 1) moves |= King::legalMoves(from, *this);
+        }
+    }
+    if (((tileId+1) & moves) != 0) return true;
+    return false;
+}
+
 //TODO
 bool Board::isDraw() const {
     return false;
@@ -256,6 +307,63 @@ long long Board::getBlackKings() const { return blackKings; }
 double Board::getBoardEval() const { return boardEval; }
 void Board::setBoardEval(double eval) { boardEval=eval; }
 
-Board::~Board() {
-    if (this->next!=nullptr) delete next;
+void Board::printRootLength() const {
+    int size = 0;
+    for (const Board* cur = this; cur->prev != nullptr; cur = cur->prev) {
+        size++;
+    }
+    qWarning() << "Root size:" << size;
 }
+
+void Board::cutSideBranches() {
+    if(right!=nullptr) {
+        right->cutRightBranches();
+        delete right;
+    }
+    if(left!=nullptr) {
+        left->cutLeftBranches();
+        delete left;
+    }
+}
+
+void Board::cutRightBranches() {
+    if(right!=nullptr) {
+        right->cutRightBranches();
+        delete right;
+    }
+    if(next!=nullptr) {
+        next->cutAllBranches();
+        delete next;
+    }
+}
+
+void Board::cutLeftBranches() {
+    if(left!=nullptr) {
+        left->cutLeftBranches();
+        delete left;
+    }
+    if(next!=nullptr) {
+        next->cutAllBranches();
+        delete next;
+    }
+}
+
+void Board::cutAllBranches() {
+    if(right!=nullptr) {
+        right->cutRightBranches();
+        delete right;
+    }
+    if(left!=nullptr) {
+        left->cutLeftBranches();
+        delete left;
+    }
+    if(next!=nullptr) {
+        next->cutAllBranches();
+        delete next;
+    }
+}
+
+Board::~Board() {
+    existingBranches-=1;
+}
+

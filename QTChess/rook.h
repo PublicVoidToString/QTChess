@@ -1,6 +1,6 @@
 #ifndef ROOK_H
 #define ROOK_H
-#include "Board.h"
+#include "board.h"
 
 class Rook
 {

@@ -1,6 +1,6 @@
 #include "chessboard.h"
 #include "ui_chessboard.h"
-#include "Board.h"
+#include "engine.h"
 #include <QResizeEvent>
 #include <QMessageBox>
 #include <QIcon>

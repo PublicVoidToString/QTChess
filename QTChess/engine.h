@@ -1,12 +1,6 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 #include "board.h"
-#include "evaluation.h"
-#include "pawn.h"
-#include "bishop.h"
-#include "knight.h"
-#include "rook.h"
-#include "king.h"
 #include <QMessageBox>
 #include <QCoreApplication>
 

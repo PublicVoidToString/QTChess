@@ -1,4 +1,9 @@
 #include "king.h"
+#include "bishop.h"
+#include "pawn.h"
+#include "rook.h"
+#include "knight.h"
+
 
 unsigned long long King::legalMoves(int positionId, const Board& board) {
 
@@ -64,4 +69,27 @@ unsigned long long King::legalMoves(int positionId, const Board& board) {
 
 
     return legalMovesBitmap;
+
+}
+
+bool King::isInCheck(int positionId, const Board& board, bool isWhite){
+    long long moves;
+
+    moves = Rook::legalMoves(positionId,board);
+    if((moves & (isWhite ? (board.getBlackRooks()|board.getBlackQueens()) : (board.getWhiteRooks()|board.getWhiteQueens()))) != 0) return true;
+
+    moves = Bishop::legalMoves(positionId,board);
+    if((moves & (isWhite ? (board.getBlackBishops()|board.getBlackQueens()) : (board.getWhiteBishops()|board.getWhiteQueens()))) != 0) return true;
+
+    moves = Knight::legalMoves(positionId,board);
+    if((moves & (isWhite ? board.getBlackKnights() : board.getWhiteKnights())) != 0) return true;
+
+    long long pawnAttacks = isWhite
+                               ? ((1ULL << positionId >> 7) & ~0x0101010101010101ULL) |  ((1ULL << positionId >> 9) & ~0x8080808080808080ULL)
+                               : ((1ULL << positionId << 7) & ~0x8080808080808080ULL) |  ((1ULL << positionId << 9) & ~0x0101010101010101ULL);
+    if ((pawnAttacks & (isWhite ? board.getBlackPawns() : board.getWhitePawns())) != 0) {
+        return true;
+    }
+
+    return false;
 }

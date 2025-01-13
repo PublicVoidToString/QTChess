@@ -29,13 +29,14 @@ private:
 
 
 public:
+    bool operator == (const Board &c);
+    static unsigned long existingBranches;
     Board();
     Board(Board* previousBoard);
     ~Board();
 
     unsigned char lastMove[2];
     void move(unsigned char from, unsigned char to); // Function making moving figure from->to on current board
-
     // GAME TREE (Current is stored by Chessboard class, therefore those pointers are made public)
     Board* prev; //Pointer to previous move (empty if first)
     Board* next; //Pointer to next move (can be also pointing at the first move that needs to be calculated by engine)
@@ -47,6 +48,7 @@ public:
     bool isOccupied(int buttonId) const; // Is any figure on buttonID tile
     bool isEnemyOccupied(int buttonId) const; // Is enemy on buttonID tile
     bool isEnPassantEligible(int buttonId) const;
+    bool isAttacked(int tileId, bool isWhite) const;
     // TODO
     bool isDraw() const;
     bool isBlackMated() const;
@@ -80,6 +82,12 @@ public:
     double getBoardEval() const;
     void setBoardEval(double eval);
 
-};
+    void printRootLength() const;
 
+    void cutSideBranches(); //Recursive delete of all "next"/"right" boards
+    void cutRightBranches(); //Recursive delete of all "next"/"left" boards
+    void cutLeftBranches(); //Recursive delete of all "next"/"left" boards
+    void cutAllBranches(); //Recursive delete of all "next"/"left" boards
+};
 #endif // Board_H
+

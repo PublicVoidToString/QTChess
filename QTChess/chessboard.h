@@ -2,7 +2,6 @@
 #define CHESSBOARD_H
 
 #include "board.h"
-#include "engine.h"
 #include <QWidget>
 #include <QPushButton>
 #include <QGridLayout>

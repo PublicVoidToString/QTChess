@@ -1,6 +1,6 @@
 #ifndef KNIGHT_H
 #define KNIGHT_H
-#include "Board.h"
+#include "board.h"
 
 class Knight
 {

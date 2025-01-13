@@ -1,25 +1,50 @@
 #include "engine.h"
+#include "evaluation.h"
+#include "pawn.h"
+#include "bishop.h"
+#include "knight.h"
+#include "rook.h"
+#include "king.h"
 
 Engine::Engine() {}
 
+long prevcount=0;
 long count=0;
 // Engine Functions
 void Engine::nextMove(Board* board, unsigned char from, unsigned char to) { // Function creating new Board instance on next and perfoming move on it
-    board->next = new Board(board);
-    board->next -> move(from,to);
+    if(board->next!=nullptr){
+        Board *comp = new Board(board);
+        comp->move(from,to);
+        for(Board *nextMove=board->next;nextMove!=nullptr;nextMove=nextMove->right){
+            if(*nextMove==*comp){
+                board->next=nextMove;
+                board->next->cutSideBranches();
+                delete comp;
+                return;
+            }
+            if(nextMove->right==nullptr) qWarning()<< "Somethings wrong Engine.cpp line 27";
+        }
+    }
+    else {
+        board->next = new Board(board);
+        board->next -> move(from,to);
+    }
 }
 
 Board* Engine::engineNextMove(Board* board,char botDepth){ // Function playing the move calculated as best by the engine
-    //TODO change parameter to a variable and make it easier to adjust, this parameter is the depth of the algorithm //Should be divisible by 2
+    count = 0;
     Engine::buildFutureGameTree(board, botDepth);
-    qWarning() << "count: " << count;
+    prevcount+=count;
     Evaluation::calcEvalFromBranchTips(board);
     Board* best = Engine::getBestMove(board);
+    best->cutSideBranches();
 
-    qWarning() << "Eva " <<board->getBoardEval();
-    //Board* iHateMyMemory;
-    //for(long i=0;i<300000000;i++) iHateMyMemory=new Board(board);
-
+    qWarning() << "All calculated boards: " << prevcount;
+    qWarning() << "New calculated boards: " << count;
+    qWarning() << "Boards in memory: " << board->existingBranches;
+    board->printRootLength();
+    qWarning() << "Current board evaluation " <<board->getBoardEval();
+    qWarning() << "-------------------------------";
     return best;
 }
 
@@ -47,8 +72,15 @@ Board* Engine::getBestMove(Board* startingBoard){
 //TODO Maybe add a chance to incease n number on branches with small amounts of moves, idk we'll see how it goes
 void Engine::buildFutureGameTree(Board* startingBoard, int n) {
     if (n <= 0) return;
-
     Board* current = startingBoard;
+
+    if (current->next!=nullptr){
+        for(current=current->next;current!=nullptr;current=current->right){
+            buildFutureGameTree(current, n - 1);
+        }
+        return;
+    }
+
 
     for (short from = 0; from < 64; from++) {
         long long moves = 0;
@@ -87,7 +119,6 @@ void Engine::buildFutureGameTree(Board* startingBoard, int n) {
         }
     }
 }
-
 
 // Main Functions
 bool Engine::pressedButton(Board* board, int buttonId, unsigned char* selected, unsigned char* clearSelected, unsigned long long* moves, unsigned long long* clearMoves ) // Reads input and calls most of other functions

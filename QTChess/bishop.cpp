@@ -47,3 +47,4 @@ unsigned long long Bishop::legalMoves(int positionId, const Board& board) {
 
     return legalMovesBitmap; // Zwróć bitboard możliwych ruchów
 }
+
