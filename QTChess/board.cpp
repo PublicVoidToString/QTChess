@@ -311,6 +311,9 @@ long long Board::getBlackKings() const { return blackKings; }
 
 double Board::getBoardEval() const { return boardEval; }
 void Board::setBoardEval(double eval) { boardEval=eval; }
+unsigned int Board::getTurnNumber() const { return turnNumber; }
+void Board::setTurnNumber(unsigned int n) {turnNumber = n; }
+
 
 void Board::printRootLength() const {
     int size = 0;
@@ -366,6 +369,11 @@ void Board::cutAllBranches() {
         next->cutAllBranches();
         delete next;
     }
+}
+
+void Board::removeKing(bool isWhite){
+    if(isWhite) whiteKings=0;
+    else blackKings=0;
 }
 
 Board::~Board() {

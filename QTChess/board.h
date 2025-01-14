@@ -81,6 +81,8 @@ public:
     long long getBlackKings() const;
     double getBoardEval() const;
     void setBoardEval(double eval);
+    void setTurnNumber(unsigned int n);
+    unsigned int getTurnNumber() const;
 
     void printRootLength() const;
 
@@ -88,6 +90,8 @@ public:
     void cutRightBranches(); //Recursive delete of all "next"/"left" boards
     void cutLeftBranches(); //Recursive delete of all "next"/"left" boards
     void cutAllBranches(); //Recursive delete of all "next"/"left" boards
+
+    void removeKing(bool isWhite);
 };
 #endif // Board_H
 

@@ -121,6 +121,15 @@ Board* Evaluation::calcEvalFromBranchTips(Board* startingBoard) {
 
     if (startingBoard == nullptr)
         return nullptr;
+    if (startingBoard->getWhiteKings()==0 ) {
+        startingBoard->setBoardEval(-10000);
+        return startingBoard;
+    } else if (startingBoard->getBlackKings()==0){
+        startingBoard->setBoardEval(10000);
+        return startingBoard;
+    }
+
+
 
     if (startingBoard->next != nullptr) {
         if (startingBoard->isWhiteMove()) {

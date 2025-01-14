@@ -1,6 +1,5 @@
 #include "king.h"
 #include "bishop.h"
-#include "pawn.h"
 #include "rook.h"
 #include "knight.h"
 
@@ -42,28 +41,33 @@ unsigned long long King::legalMoves(int positionId, const Board& board) {
         }
 
         // Pole jest wolne
-        legalMovesBitmap |= (1ULL << newPosition);
+        if (!isInCheck(newPosition,board,board.isWhiteMove()))
+            legalMovesBitmap |= (1ULL << newPosition);
     }
 
     if (board.getWhiteLongCastlePossible() && positionId == 4) {
         if (!board.isOccupied(1) && !board.isOccupied(2) && !board.isOccupied(3)) {
-            legalMovesBitmap |= (1ULL << 2); // Długa roszada białego
+            if(!isInCheck(2,board,true) && !isInCheck(3,board,true) && !isInCheck(4,board,true))
+                legalMovesBitmap |= (1ULL << 2);
         }
     }
 
     if (board.getWhiteShortCastlePossible() && positionId == 4) {
         if (!board.isOccupied(5) && !board.isOccupied(6)) {
-            legalMovesBitmap |= (1ULL << 6); // Krótka roszada białego
+            if(!isInCheck(4,board,true) && !isInCheck(5,board,true) && !isInCheck(6,board,true))
+                legalMovesBitmap |= (1ULL << 6);
         }
     }
     if (board.getBlackLongCastlePossible() && positionId == 60) {
         if (!board.isOccupied(57) && !board.isOccupied(58) && !board.isOccupied(59)) {
-            legalMovesBitmap |= (1ULL << 58);
+            if(!isInCheck(58,board,false) && !isInCheck(59,board,false) && !isInCheck(60,board,false))
+                legalMovesBitmap |= (1ULL << 58);
         }
     }
     if (board.getBlackShortCastlePossible() && positionId == 60) {
         if (!board.isOccupied(61) && !board.isOccupied(62)) {
-            legalMovesBitmap |= (1ULL << 62);
+            if(!isInCheck(60,board,false) && !isInCheck(61,board,false) && !isInCheck(62,board,false))
+                legalMovesBitmap |= (1ULL << 62);
         }
     }
 
@@ -72,24 +76,61 @@ unsigned long long King::legalMoves(int positionId, const Board& board) {
 
 }
 
-bool King::isInCheck(int positionId, const Board& board, bool isWhite){
+bool King::isInCheck(int positionId, const Board& board, bool isWhite) {
+    Board* noKingBoard = new Board(board);
+    noKingBoard->removeKing(isWhite);
+    noKingBoard->setTurnNumber(board.getTurnNumber());
     long long moves;
 
-    moves = Rook::legalMoves(positionId,board);
-    if((moves & (isWhite ? (board.getBlackRooks()|board.getBlackQueens()) : (board.getWhiteRooks()|board.getWhiteQueens()))) != 0) return true;
-
-    moves = Bishop::legalMoves(positionId,board);
-    if((moves & (isWhite ? (board.getBlackBishops()|board.getBlackQueens()) : (board.getWhiteBishops()|board.getWhiteQueens()))) != 0) return true;
-
-    moves = Knight::legalMoves(positionId,board);
-    if((moves & (isWhite ? board.getBlackKnights() : board.getWhiteKnights())) != 0) return true;
-
-    long long pawnAttacks = isWhite
-                               ? ((1ULL << positionId >> 7) & ~0x0101010101010101ULL) |  ((1ULL << positionId >> 9) & ~0x8080808080808080ULL)
-                               : ((1ULL << positionId << 7) & ~0x8080808080808080ULL) |  ((1ULL << positionId << 9) & ~0x0101010101010101ULL);
-    if ((pawnAttacks & (isWhite ? board.getBlackPawns() : board.getWhitePawns())) != 0) {
+    moves = Rook::legalMoves(positionId, *noKingBoard);
+    if ((moves & (isWhite ? (noKingBoard->getBlackRooks() | noKingBoard->getBlackQueens())
+                          : (noKingBoard->getWhiteRooks() | noKingBoard->getWhiteQueens()))) != 0) {
+        delete noKingBoard;
         return true;
     }
 
+    moves = Bishop::legalMoves(positionId, *noKingBoard);
+    if ((moves & (isWhite ? (noKingBoard->getBlackBishops() | noKingBoard->getBlackQueens())
+                          : (noKingBoard->getWhiteBishops() | noKingBoard->getWhiteQueens()))) != 0) {
+        delete noKingBoard;
+        return true;
+    }
+
+    moves = Knight::legalMoves(positionId, *noKingBoard);
+    if ((moves & (isWhite ? noKingBoard->getBlackKnights() : noKingBoard->getWhiteKnights())) != 0) {
+        delete noKingBoard;
+        return true;
+    }
+
+    long long kingPos = 1ULL << positionId;
+    if (isWhite) {
+        if ((noKingBoard->getBlackPawns() & (kingPos << 7)) != 0 || (noKingBoard->getBlackPawns() & (kingPos << 9)) != 0) {
+            delete noKingBoard;
+            return true;
+        }
+    } else {
+        if ((noKingBoard->getWhitePawns() & (kingPos >> 7)) != 0 || (noKingBoard->getWhitePawns() & (kingPos >> 9)) != 0) {
+            delete noKingBoard;
+            return true;
+        }
+    }
+
+    long long kingAttacks = 0;
+    kingAttacks |= (kingPos << 8);
+    kingAttacks |= (kingPos >> 8);
+    kingAttacks |= (kingPos << 1) & ~0x0101010101010101ULL;
+    kingAttacks |= (kingPos >> 1) & ~0x8080808080808080ULL;
+    kingAttacks |= (kingPos << 9) & ~0x0101010101010101ULL;
+    kingAttacks |= (kingPos << 7) & ~0x8080808080808080ULL;
+    kingAttacks |= (kingPos >> 9) & ~0x8080808080808080ULL;
+    kingAttacks |= (kingPos >> 7) & ~0x0101010101010101ULL;
+
+    if ((kingAttacks & (isWhite ? noKingBoard->getBlackKings() : noKingBoard->getWhiteKings())) != 0) {
+        delete noKingBoard;
+        return true;
+    }
+
+    delete noKingBoard;
     return false;
 }
+
