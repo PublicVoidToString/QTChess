@@ -31,6 +31,20 @@ Current board is stored inside chessboard pointer Board* board
 Move representation <br/>
 promotion as 4 different moves
 
+Board lastMove explanation:
+000000 00 0000 0000 00000 00 0 0000000      0
+|||||| || |||| |||| ||||| || | |||||||      |
+moved   moved  QRBN PRNBQ SL E empty flags  starting board
+from      to   prom capt  
+
+QRBN - promotion
+PRKNQ - capture
+SL - short/long castle
+e - en passant
+starting board = if starting board leave as 0, otherwise 1
+               
+
+
 # Image Sources:
 https://www.flaticon.com/free-icon/queen_1626844?related_id=1626879&origin=search <br/>
 https://www.flaticon.com/free-icon/chess_11497350?term=chess+pieces&related_id=11497350 <br/>

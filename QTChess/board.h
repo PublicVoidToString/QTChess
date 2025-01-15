@@ -1,5 +1,6 @@
 #ifndef Board_H
 #define Board_H
+#include <stdint.h>
 
 class Board
 {
@@ -7,10 +8,7 @@ private:
     unsigned int turnNumber;
     double boardEval; // + White, - Black, Calculated when creating board, making a move, or when Engine is calculating Moves
 
-    bool whiteLongCastlePossible;
-    bool whiteShortCastlePossible;
-    bool blackLongCastlePossible;
-    bool blackShortCastlePossible;
+    uint32_t lastMove;
     // Bitboards representing figure positions
     unsigned long long whitePawns;
     unsigned long long whiteKnights;
@@ -35,8 +33,8 @@ public:
     Board(Board* previousBoard);
     ~Board();
 
-    unsigned char lastMove[2];
     void move(unsigned char from, unsigned char to); // Function making moving figure from->to on current board
+    void capture(unsigned char to, bool isWhitePiece);
     // GAME TREE (Current is stored by Chessboard class, therefore those pointers are made public)
     Board* prev; //Pointer to previous move (empty if first)
     Board* next; //Pointer to next move (can be also pointing at the first move that needs to be calculated by engine)
@@ -56,15 +54,7 @@ public:
 
     // Getters
     bool isWhiteMove() const;
-
-    bool getWhiteLongCastlePossible() const;
-    bool getWhiteShortCastlePossible() const;
-    bool getBlackLongCastlePossible() const;
-    bool getBlackShortCastlePossible() const;
-    void blockWhiteShortCastle();
-    void blockWhiteLongCastle();
-    void blockBlackShortCastle();
-    void blockBlackLongCastle();
+    bool isOnMoveList() const;
 
     long long getWhitePawns() const;
     long long getWhiteKnights() const;
@@ -79,6 +69,7 @@ public:
     long long getBlackBishops() const;
     long long getBlackQueens() const;
     long long getBlackKings() const;
+    long long getMoves(int position) const;
     double getBoardEval() const;
     void setBoardEval(double eval);
     void setTurnNumber(unsigned int n);
@@ -92,6 +83,24 @@ public:
     void cutAllBranches(); //Recursive delete of all "next"/"left" boards
 
     void removeKing(bool isWhite);
+
+    void setLastMoveFrom(char from);
+    void setLastMoveTo(char to);
+    void setLastMoveShortCastle();
+    void setLastMoveLongCastle();
+    void setLastMoveEnPassant();
+    void blockBlackShortCastle();
+    void blockBlackLongCastle();
+    void blockWhiteShortCastle();
+    void blockWhiteLongCastle();
+    char getLastMoveFrom() const;
+    char getLastMoveTo() const;
+    bool getLastMoveEnPassant() const;
+    bool getBlackShortCastlePossible() const;
+    bool getBlackLongCastlePossible() const;
+    bool getWhiteShortCastlePossible() const;
+    bool getWhiteLongCastlePossible() const;
+    void printLastMove() const;
 };
 #endif // Board_H
 

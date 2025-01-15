@@ -34,14 +34,14 @@ void Engine::nextMove(Board* board, unsigned char from, unsigned char to) { // F
 Board* Engine::engineNextMove(Board* board,char botDepth){ // Function playing the move calculated as best by the engine
     count = 0;
     Engine::buildFutureGameTree(board, botDepth);
+    qWarning() << "All calculated boards: " << prevcount;
+    qWarning() << "New calculated boards: " << count;
+    qWarning() << "Boards in memory: " << board->existingBranches;
     prevcount+=count;
     Evaluation::calcEvalFromBranchTips(board);
     Board* best = Engine::getBestMove(board);
     best->cutSideBranches();
 
-    qWarning() << "All calculated boards: " << prevcount;
-    qWarning() << "New calculated boards: " << count;
-    qWarning() << "Boards in memory: " << board->existingBranches;
     board->printRootLength();
     qWarning() << "Current board evaluation " <<board->getBoardEval();
     qWarning() << "-------------------------------";
@@ -121,51 +121,47 @@ void Engine::buildFutureGameTree(Board* startingBoard, int n) {
 }
 
 // Main Functions
-bool Engine::pressedButton(Board* board, int buttonId, unsigned char* selected, unsigned char* clearSelected, unsigned long long* moves, unsigned long long* clearMoves ) // Reads input and calls most of other functions
+void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected, unsigned char* clearSelected, unsigned long long* moves, unsigned long long* clearMoves, char botDepth) // Reads input and calls most of other functions
 {
-     *clearSelected =   *selected;
-     *clearMoves =  *moves;
-    if(board->isOccupied(buttonId) && !board->isEnemyOccupied(buttonId)){
-        *selected = buttonId;
-        if(board->isWhiteMove()){
-            if (board->getWhitePawns()  & 1ULL <<  *selected)    *moves = Pawn::legalMoves(buttonId, *board);
-            else if (board->getWhiteRooks()  & 1ULL <<  *selected)    *moves = Rook::legalMoves(buttonId, *board);
-            else if (board->getWhiteKnights()  & 1ULL <<  *selected)  *moves = Knight::legalMoves(buttonId, *board);
-            else if (board->getWhiteBishops()  & 1ULL <<  *selected)  *moves = Bishop::legalMoves(buttonId, *board);
-            else if (board->getWhiteQueens()  & 1ULL <<  *selected)   *moves = Bishop::legalMoves(buttonId, *board) | Rook::legalMoves(buttonId, *board);
-            else if (board->getWhiteKings()  & 1ULL <<  *selected)    *moves = King::legalMoves(buttonId, *board);
-        }
-        else {
-            if (board->getBlackPawns() & 1ULL <<  *selected)    *moves = Pawn::legalMoves(buttonId, *board);
-            else if (board->getBlackRooks() & 1ULL <<  *selected)    *moves = Rook::legalMoves(buttonId, *board);
-            else if (board->getBlackKnights() & 1ULL <<  *selected)  *moves = Knight::legalMoves(buttonId, *board);
-            else if (board->getBlackBishops() & 1ULL <<  *selected)  *moves = Bishop::legalMoves(buttonId, *board);
-            else if (board->getBlackQueens() & 1ULL <<  *selected)   *moves = Bishop::legalMoves(buttonId, *board) | Rook::legalMoves(buttonId, *board);
-            else if (board->getBlackKings() & 1ULL <<  *selected)    *moves = King::legalMoves(buttonId, *board);
-        }
-    } else{
-        // Gdy zostało wciśnięte pole z tablicy ruchu
-        if ( *moves & (1ULL << buttonId)) {
-            nextMove(board, *selected, buttonId);
-            board->lastMove[0] =  *selected; // ustawienie ostatniego ruchu (do sprawdzania en passant)
-            board->lastMove[1] = buttonId;
-             *moves = 0b0000000000000000000000000000000000000000000000000000000000000000;
-             *selected = 64;
-            return true;
-        }
+    *clearSelected = *selected;
+    *clearMoves = *moves;
 
+    // If position didn't change
+    if (*selected == buttonId) {
+        *selected = 64;
+        *moves = 0;
+        return;
+    }
+
+    if ((*board)->isOccupied(buttonId) && !(*board)->isEnemyOccupied(buttonId)) {
+        *selected = buttonId;
+        *moves = (*board)->getMoves(buttonId);
+    } else {
+        if (*moves & (1ULL << buttonId)) {
+            nextMove(*board, *selected, buttonId);
+
+            (*board)->setLastMoveFrom(*selected);
+            (*board)->setLastMoveTo(buttonId);
+            // When against player
+            if(botDepth==0){
+                *board = (*board)->next;
+            // When against bot
+            } else{
+                *board = (*board)->next;
+                (*board)->next = engineNextMove(*board,botDepth);
+                *board = (*board)->next;
+            }
+            *moves = 0;
+            *selected = 64;
+
+            (*board)->printLastMove();
+        }
         // Gdy zostało wciśnięte puste pole
         else {
-             *selected = 64;
-             *moves = 0b0000000000000000000000000000000000000000000000000000000000000000;
+            *selected = 64;
+            *moves = 0;
         }
     }
 
-    // Sprawdzanie, czy zmieniła się pozycja, i resetowanie zaznaczenia, jeśli nie
-    if (*selected == *clearSelected) {
-         *selected = 64;
-         *moves = 0b0000000000000000000000000000000000000000000000000000000000000000;
-    }
-    return false;
 }
 
