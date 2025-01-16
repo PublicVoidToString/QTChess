@@ -5,7 +5,7 @@
 class Rook
 {
 public:
-    static unsigned long long legalMoves(int positionId, const Board& board);
+    static unsigned long long allMoves(int positionId, const Board& board);
 };
 
 #endif // ROOK_H

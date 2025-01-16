@@ -28,13 +28,14 @@ private:
 
 public:
     bool operator == (const Board &c);
-    static unsigned long existingBranches;
-    Board();
-    Board(Board* previousBoard);
+    static unsigned long existingBoards;
+    Board(bool debug=false);
+    Board(Board* previousBoard,bool debug=false);
     ~Board();
 
     void move(unsigned char from, unsigned char to); // Function making moving figure from->to on current board
-    void capture(unsigned char to, bool isWhitePiece);
+    void capture(unsigned char to, bool isWhiteMove);
+    void capturePiece(unsigned char to, uint64_t& pieceBoard);
     // GAME TREE (Current is stored by Chessboard class, therefore those pointers are made public)
     Board* prev; //Pointer to previous move (empty if first)
     Board* next; //Pointer to next move (can be also pointing at the first move that needs to be calculated by engine)
@@ -47,10 +48,6 @@ public:
     bool isEnemyOccupied(int buttonId) const; // Is enemy on buttonID tile
     bool isEnPassantEligible(int buttonId) const;
     bool isAttacked(int tileId, bool isWhite) const;
-    // TODO
-    bool isDraw() const;
-    bool isBlackMated() const;
-    bool isWhiteMated() const;
 
     // Getters
     bool isWhiteMove() const;
@@ -81,6 +78,7 @@ public:
     void cutRightBranches(); //Recursive delete of all "next"/"left" boards
     void cutLeftBranches(); //Recursive delete of all "next"/"left" boards
     void cutAllBranches(); //Recursive delete of all "next"/"left" boards
+    void cutNextBranches(); //Recursive delete of all "next"/"left" boards
 
     void removeKing(bool isWhite);
 
@@ -100,6 +98,12 @@ public:
     bool getBlackLongCastlePossible() const;
     bool getWhiteShortCastlePossible() const;
     bool getWhiteLongCastlePossible() const;
+
+    void setLastMoveWin(bool white);
+    bool getLastMoveWinWhite() const;
+    bool getLastMoveWinBlack() const;
+
+
     void printLastMove() const;
 };
 #endif // Board_H

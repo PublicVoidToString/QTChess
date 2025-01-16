@@ -11,9 +11,9 @@ double Evaluation::evaluatePosition(Board* board) { // Main eval function, calcu
 
     // Sprawdzenie czy nastąpił mat, pat TODO
 
-    if(board->isBlackMated()) board->setBoardEval(1000);
-    else if(board->isWhiteMated()) board->setBoardEval(-1000);
-    else if(board->isDraw()) board->setBoardEval(0);
+    if(board->getLastMoveWinWhite()) board->setBoardEval(1000);
+    else if(board->getLastMoveWinBlack()) board->setBoardEval(-1000);
+    else if(false) board->setBoardEval(0);
     else {
         double mg_white = 0;
         double eg_white = 0;

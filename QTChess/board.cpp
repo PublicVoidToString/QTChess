@@ -13,7 +13,7 @@
 // Functions
 // PUBLIC:
 
-unsigned long Board::existingBranches=0;
+unsigned long Board::existingBoards=0;
 
 bool Board::operator == (const Board &b)
 {
@@ -33,8 +33,8 @@ bool Board::operator == (const Board &b)
     return true;
 }
 
-Board::Board() {
-    existingBranches+=1;
+Board::Board(bool debug) {
+    if(!debug) existingBoards+=1;
     turnNumber = 0;
     boardEval=0;
     lastMove = 0xF1; //castles are possible
@@ -53,13 +53,13 @@ Board::Board() {
     blackQueens  = 0b0000100000000000000000000000000000000000000000000000000000000000;
     blackKings   = 0b0001000000000000000000000000000000000000000000000000000000000000;
 
-    prev = NULL;
-    right = NULL;
-    left = NULL;
-    next = NULL;
+    prev = nullptr;
+    right = nullptr;
+    left = nullptr;
+    next = nullptr;
 }
-Board::Board(Board* previousBoard) {
-    existingBranches+=1;
+Board::Board(Board* previousBoard,bool debug) {
+    if(!debug) existingBoards+=1;
     turnNumber = previousBoard->turnNumber+1;
 
     lastMove=previousBoard->lastMove & 0xFFFFFFFE;
@@ -79,167 +79,157 @@ Board::Board(Board* previousBoard) {
     blackKings   = previousBoard->blackKings;
 
 
-
     prev = previousBoard;
-    right = NULL;
-    left = NULL;
-    next = NULL;
+    right = nullptr;
+    left = nullptr;
+    next = nullptr;
 }
 
 void Board::move(unsigned char from, unsigned char to) // Function making moving figure from->to on current board
 {
-    bool isWhitePiece = false;
-    bool isEnPassant = false;
-    unsigned char capturedPawnPosition = -1;
-
+    bool isWhiteMove = false;
     if (whitePawns & (1ULL << from)) {
+        isWhiteMove=true;
         whitePawns &= ~(1ULL << from);
-        isWhitePiece = true;
-        if ((to - from) == 9 || (to - from) == 7) {
-            if (!isOccupied(to)) {
-                isEnPassant = true;
-                capturedPawnPosition = to - 8;
-            }
-        }
         whitePawns |= (1ULL << to);
-    } else if (whiteRooks & (1ULL << from)) {
-
+        if((to-from==9 || to-from==7) && to<=47 && to>=40){
+            capture(to-8, isWhiteMove);
+        }
+    } else if(whiteRooks & (1ULL << from)) {
+        isWhiteMove=true;
+        whiteRooks &= ~(1ULL << from);
+        whiteRooks |= (1ULL << to);
         if (from == 0) {
             blockWhiteLongCastle();
         } else if (from == 7) {
             blockWhiteShortCastle();
         }
-        whiteRooks &= ~(1ULL << from);
-        whiteRooks |= (1ULL << to);
-        isWhitePiece = true;
-    } else if (whiteKnights & (1ULL << from)) {
+
+    } else if(whiteKnights & (1ULL << from)) {
+        isWhiteMove=true;
         whiteKnights &= ~(1ULL << from);
         whiteKnights |= (1ULL << to);
-        isWhitePiece = true;
-    } else if (whiteBishops & (1ULL << from)) {
+
+    } else if(whiteBishops & (1ULL << from)) {
+        isWhiteMove=true;
         whiteBishops &= ~(1ULL << from);
         whiteBishops |= (1ULL << to);
-        isWhitePiece = true;
-    } else if (whiteQueens & (1ULL << from)) {
+
+    } else if(whiteQueens & (1ULL << from)) {
+        isWhiteMove=true;
         whiteQueens &= ~(1ULL << from);
         whiteQueens |= (1ULL << to);
-        isWhitePiece = true;
-    } else if (whiteKings & (1ULL << from)) {
+
+    } else if(whiteKings & (1ULL << from)) {
+        isWhiteMove=true;
         whiteKings &= ~(1ULL << from);
         whiteKings |= (1ULL << to);
-        // Castles
-        if (from == 4 && to == 6 && getWhiteShortCastlePossible()) {
+        if (from == 4 && to == 6) {
             whiteRooks &= ~(1ULL << 7);
             whiteRooks |= (1ULL << 5);
-        } else if (from == 4 && to == 2 && getWhiteLongCastlePossible()) {
+        } else if (from == 4 && to == 2) {
             whiteRooks &= ~(1ULL << 0);
             whiteRooks |= (1ULL << 3);
         }
-        // Updating castling legality after moving
         blockWhiteLongCastle();
         blockWhiteShortCastle();
-        isWhitePiece = true;
-    } else if (blackPawns & (1ULL << from)) {
-        blackPawns &= ~(1ULL << from);
-        if ((from - to) == 9 || (from - to) == 7) {
-            if (!isOccupied(to)) {
-                isEnPassant = true;
-                capturedPawnPosition = to + 8;
-            }
-        }
-        blackPawns |= (1ULL << to);
-    } else if (blackRooks & (1ULL << from)) {
 
+    } else if(blackPawns & (1ULL << from)) {
+        blackPawns &= ~(1ULL << from);
+        blackPawns |= (1ULL << to);
+        if((from-to==9 || from-to==7) && to<=15 && to>=8){
+            capture(to+8, isWhiteMove);
+        }
+    } else if(blackRooks & (1ULL << from)) {
+        blackRooks &= ~(1ULL << from);
+        blackRooks |= (1ULL << to);
         if (from == 56) {
             blockBlackLongCastle();
         } else if (from == 63) {
             blockBlackShortCastle();
         }
 
-        blackRooks &= ~(1ULL << from);
-        blackRooks |= (1ULL << to);
-    } else if (blackKnights & (1ULL << from)) {
+    } else if(blackKnights & (1ULL << from)) {
         blackKnights &= ~(1ULL << from);
         blackKnights |= (1ULL << to);
-    } else if (blackBishops & (1ULL << from)) {
+
+    } else if(blackBishops & (1ULL << from)) {
         blackBishops &= ~(1ULL << from);
         blackBishops |= (1ULL << to);
-    } else if (blackQueens & (1ULL << from)) {
+
+    } else if(blackQueens & (1ULL << from)) {
         blackQueens &= ~(1ULL << from);
         blackQueens |= (1ULL << to);
-    } else if (blackKings & (1ULL << from)) {
+
+    } else if(blackKings & (1ULL << from)) {
         blackKings &= ~(1ULL << from);
         blackKings |= (1ULL << to);
-        if (from == 60 && to == 62 && getBlackShortCastlePossible()) {
+        if (from == 60 && to == 62) {
             blackRooks &= ~(1ULL << 63);
             blackRooks |= (1ULL << 61);
-        } else if (from == 60 && to == 58 && getBlackLongCastlePossible()) {
+        } else if (from == 60 && to == 58) {
             blackRooks &= ~(1ULL << 56);
             blackRooks |= (1ULL << 59);
         }
         blockBlackShortCastle();
         blockBlackLongCastle();
     }
-    if (isEnPassant) {
-        if (isWhitePiece) {
-            blackPawns &= ~(1ULL << capturedPawnPosition);
-        } else {
-            whitePawns &= ~(1ULL << capturedPawnPosition);
-        }
-        setLastMoveEnPassant();
-    } else {
-        capture(to, isWhitePiece);
-    }
-
+    capture(to, isWhiteMove);
     setLastMoveFrom(from);
     setLastMoveTo(to);
 }
 
-void Board::capture(unsigned char to, bool isWhitePiece) {
-    if (isWhitePiece) {
+void Board::capture(unsigned char to, bool isWhiteMove) {
+    if (isWhiteMove) {
         if (blackPawns & (1ULL << to)) {
-            blackPawns &= ~(1ULL << to);
+            capturePiece(to, blackPawns);
             lastMove&=0xFFFF87FF;
         }
         else if (blackRooks & (1ULL << to)) {
-            blackRooks &= ~(1ULL << to);
+            capturePiece(to, blackRooks);
             lastMove&=0xFFFF47FF;
         }
         else if (blackKnights & (1ULL << to)) {
-            blackKnights &= ~(1ULL << to);
+            capturePiece(to, blackKnights);
             lastMove&=0xFFFF27FF;
         }
         else if (blackBishops & (1ULL << to)) {
-            blackBishops &= ~(1ULL << to);
+            capturePiece(to, blackBishops);
             lastMove&=0xFFFF17FF;
         }
         else if (blackQueens & (1ULL << to)) {
-            blackQueens &= ~(1ULL << to);
+            capturePiece(to, blackQueens);
             lastMove&=0xFFFF0FFF;
         }
         blackKings &= ~(1ULL << to);
     } else {
         if (whitePawns & (1ULL << to)) {
-            whitePawns &= ~(1ULL << to);
+            capturePiece(to, whitePawns);
             lastMove&=0xFFFF87FF;
         }
         else if (whiteRooks & (1ULL << to)) {
-            whiteRooks &= ~(1ULL << to);
+            capturePiece(to, whiteRooks);
             lastMove&=0xFFFF47FF;
         }
         else if (whiteKnights & (1ULL << to)) {
-            whiteKnights &= ~(1ULL << to);
+            capturePiece(to, whiteKnights);
             lastMove&=0xFFFF27FF;
         }
         else if (whiteBishops & (1ULL << to)) {
-            whiteBishops &= ~(1ULL << to);
+            capturePiece(to, whiteBishops);
             lastMove&=0xFFFF17FF;
         }
         else if (whiteQueens & (1ULL << to)) {
-            whiteQueens &= ~(1ULL << to);
+            capturePiece(to, whiteQueens);
             lastMove&=0xFFFF0FFF;
         }
         whiteKings &= ~(1ULL << to);
+    }
+}
+
+void Board::capturePiece(unsigned char to, uint64_t& pieceBoard) {
+    if (pieceBoard & (1ULL << to)) {
+        pieceBoard &= ~(1ULL << to);
     }
 }
 
@@ -268,41 +258,58 @@ bool Board::isEnPassantEligible(int buttonId) const {
 }
 
 bool Board::isAttacked(int tileId, bool isWhite) const {
-    long long moves = 0;
-    for (short from = 0; from < 64; from++) {
-        if (isWhite) {
-            if (getBlackPawns() >> from & 1) moves |= Pawn::legalMoves(from, *this, false);
-            else if (getBlackRooks() >> from & 1) moves |= Rook::legalMoves(from, *this);
-            else if (getBlackKnights() >> from & 1) moves |= Knight::legalMoves(from, *this);
-            else if (getBlackBishops() >> from & 1) moves |= Bishop::legalMoves(from, *this);
-            else if (getBlackQueens() >> from & 1) moves |= Rook::legalMoves(from, *this) | Bishop::legalMoves(from, *this);
-            else if (getBlackKings() >> from & 1) moves |= King::legalMoves(from, *this);
+    long long moves;
+
+    //qWarning() << "IsWhite: " << isWhite << " Pos " << tileId;
+    moves = Rook::allMoves(tileId, *this);
+    if ((moves & (isWhite ? (this->getBlackRooks() | this->getBlackQueens())
+                          : (this->getWhiteRooks() | this->getWhiteQueens()))) != 0) {
+        //qWarning() << "Attacker: Rook";
+        return true;
+    }
+
+    moves = Bishop::allMoves(tileId, *this);
+    if ((moves & (isWhite ? (this->getBlackBishops() | this->getBlackQueens())
+                          : (this->getWhiteBishops() | this->getWhiteQueens()))) != 0) {
+        //qWarning() << "Attacker: Bishop";
+        return true;
+    }
+
+    moves = Knight::allMoves(tileId, *this);
+    if ((moves & (isWhite ? this->getBlackKnights() : this->getWhiteKnights())) != 0) {
+        //qWarning() << "Attacker: Knight";
+        return true;
+    }
+
+    long long kingPos = 1ULL << tileId;
+    if (isWhite) {
+        if ((this->getBlackPawns() & (kingPos << 7)) != 0 || (this->getBlackPawns() & (kingPos << 9)) != 0) {
+            //qWarning() << "Attacker: BlackPawn";
+            return true;
         }
-        else {
-            if (getWhitePawns() >> from & 1) moves |= Pawn::legalMoves(from, *this, true);
-            else if (getWhiteRooks() >> from & 1) moves |= Rook::legalMoves(from, *this);
-            else if (getWhiteKnights() >> from & 1) moves |= Knight::legalMoves(from, *this);
-            else if (getWhiteBishops() >> from & 1) moves |= Bishop::legalMoves(from, *this);
-            else if (getWhiteQueens() >> from & 1) moves |= Rook::legalMoves(from, *this) | Bishop::legalMoves(from, *this);
-            else if (getWhiteKings() >> from & 1) moves |= King::legalMoves(from, *this);
+    } else {
+        if ((this->getWhitePawns() & (kingPos >> 7)) != 0 || (this->getWhitePawns() & (kingPos >> 9)) != 0) {
+            //qWarning() << "Attacker: WhitePawn";
+            return true;
         }
     }
-    if (((tileId+1) & moves) != 0) return true;
-    return false;
-}
 
-//TODO
-bool Board::isDraw() const {
-    return false;
-}
-bool Board::isBlackMated() const {
-    return false;
-}
-bool Board::isWhiteMated() const {
-    return false;
-}
+    long long kingAttacks = 0;
+    kingAttacks |= (kingPos << 8);
+    kingAttacks |= (kingPos >> 8);
+    kingAttacks |= (kingPos << 1) & ~0x0101010101010101ULL;
+    kingAttacks |= (kingPos >> 1) & ~0x8080808080808080ULL;
+    kingAttacks |= (kingPos << 9) & ~0x0101010101010101ULL;
+    kingAttacks |= (kingPos << 7) & ~0x8080808080808080ULL;
+    kingAttacks |= (kingPos >> 9) & ~0x8080808080808080ULL;
+    kingAttacks |= (kingPos >> 7) & ~0x0101010101010101ULL;
 
+    if ((kingAttacks & (isWhite ? this->getBlackKings() : this->getWhiteKings())) != 0) {
+        return true;
+    }
 
+    return false;
+}
 
 // Getters
 bool Board::isWhiteMove() const { return turnNumber%2==0; }
@@ -324,19 +331,19 @@ long long Board::getBlackKings() const { return blackKings; }
 long long Board::getMoves(int position) const {
     long long figureMoves=0;
     if(isWhiteMove()){
-        if (getWhitePawns()  & 1ULL <<  position)    figureMoves = Pawn::legalMoves(position, *this);
-        else if (getWhiteRooks()  & 1ULL <<  position)    figureMoves = Rook::legalMoves(position, *this);
-        else if (getWhiteKnights()  & 1ULL <<  position)  figureMoves = Knight::legalMoves(position, *this);
-        else if (getWhiteBishops()  & 1ULL <<  position)  figureMoves = Bishop::legalMoves(position, *this);
-        else if (getWhiteQueens()  & 1ULL <<  position)   figureMoves = Bishop::legalMoves(position, *this) | Rook::legalMoves(position, *this);
+        if (getWhitePawns()  & 1ULL <<  position)    figureMoves = Pawn::allMoves(position, *this, isWhiteMove());
+        else if (getWhiteRooks()  & 1ULL <<  position)    figureMoves = Rook::allMoves(position, *this);
+        else if (getWhiteKnights()  & 1ULL <<  position)  figureMoves = Knight::allMoves(position, *this);
+        else if (getWhiteBishops()  & 1ULL <<  position)  figureMoves = Bishop::allMoves(position, *this);
+        else if (getWhiteQueens()  & 1ULL <<  position)   figureMoves = Bishop::allMoves(position, *this) | Rook::allMoves(position, *this);
         else if (getWhiteKings()  & 1ULL <<  position)    figureMoves = King::legalMoves(position, *this);
     }
     else {
-        if (getBlackPawns() & 1ULL <<  position)    figureMoves = Pawn::legalMoves(position, *this);
-        else if (getBlackRooks() & 1ULL <<  position)    figureMoves = Rook::legalMoves(position, *this);
-        else if (getBlackKnights() & 1ULL <<  position)  figureMoves = Knight::legalMoves(position, *this);
-        else if (getBlackBishops() & 1ULL <<  position)  figureMoves = Bishop::legalMoves(position, *this);
-        else if (getBlackQueens() & 1ULL <<  position)   figureMoves = Bishop::legalMoves(position, *this) | Rook::legalMoves(position, *this);
+        if (getBlackPawns() & 1ULL <<  position)    figureMoves = Pawn::allMoves(position, *this, isWhiteMove());
+        else if (getBlackRooks() & 1ULL <<  position)    figureMoves = Rook::allMoves(position, *this);
+        else if (getBlackKnights() & 1ULL <<  position)  figureMoves = Knight::allMoves(position, *this);
+        else if (getBlackBishops() & 1ULL <<  position)  figureMoves = Bishop::allMoves(position, *this);
+        else if (getBlackQueens() & 1ULL <<  position)   figureMoves = Bishop::allMoves(position, *this) | Rook::allMoves(position, *this);
         else if (getBlackKings() & 1ULL <<  position)    figureMoves = King::legalMoves(position, *this);
     }
     return figureMoves;
@@ -360,10 +367,12 @@ void Board::cutSideBranches() {
     if(right!=nullptr) {
         right->cutRightBranches();
         delete right;
+        right=nullptr;
     }
     if(left!=nullptr) {
         left->cutLeftBranches();
         delete left;
+        left=nullptr;
     }
 }
 
@@ -371,10 +380,12 @@ void Board::cutRightBranches() {
     if(right!=nullptr) {
         right->cutRightBranches();
         delete right;
+        right=nullptr;
     }
     if(next!=nullptr) {
         next->cutAllBranches();
         delete next;
+        next=nullptr;
     }
 }
 
@@ -382,10 +393,12 @@ void Board::cutLeftBranches() {
     if(left!=nullptr) {
         left->cutLeftBranches();
         delete left;
+        left=nullptr;
     }
     if(next!=nullptr) {
         next->cutAllBranches();
         delete next;
+        next=nullptr;
     }
 }
 
@@ -393,14 +406,25 @@ void Board::cutAllBranches() {
     if(right!=nullptr) {
         right->cutRightBranches();
         delete right;
+        right=nullptr;
     }
     if(left!=nullptr) {
         left->cutLeftBranches();
         delete left;
+        left=nullptr;
     }
     if(next!=nullptr) {
         next->cutAllBranches();
         delete next;
+        next=nullptr;
+    }
+}
+
+void Board::cutNextBranches(){
+    if(next!=nullptr) {
+        next->cutAllBranches();
+        delete next;
+        next=nullptr;
     }
 }
 
@@ -435,6 +459,15 @@ bool Board::getWhiteLongCastlePossible() const { return lastMove&0x40; }
 bool Board::getBlackShortCastlePossible() const { return lastMove&0x20; }
 bool Board::getBlackLongCastlePossible() const { return lastMove&0x10; }
 
+void Board::setLastMoveWin(bool white) {
+    lastMove&=0xFFFFFFF3 ;
+    white ? lastMove|=0b1000 : lastMove|=0x100;
+}
+bool Board::getLastMoveWinWhite() const { return lastMove&0b1000; }
+bool Board::getLastMoveWinBlack() const { return lastMove&0b100; }
+
+
+
 void Board::printLastMove() const {
     qWarning() << "From: " << static_cast<int>(getLastMoveFrom())
     << " To: " << static_cast<int>(getLastMoveTo())
@@ -445,6 +478,6 @@ void Board::printLastMove() const {
 }
 
 Board::~Board() {
-    existingBranches-=1;
+    existingBoards-=1;
 }
 

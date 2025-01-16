@@ -20,6 +20,9 @@ public:
 
     static void buildFutureGameTree(Board* startingBoard, int n); // Function to calculate all possible moves for a n depth in the game tree.
 
+    static unsigned long long getMoves(short from, Board* startingBoard);
+
+    static unsigned long long getLegalMoves(short from, Board* startingBoard);
 };
 
 #endif // ENGINE_H

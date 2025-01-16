@@ -24,6 +24,7 @@ void Engine::nextMove(Board* board, unsigned char from, unsigned char to) { // F
             }
             if(nextMove->right==nullptr) qWarning()<< "Somethings wrong Engine.cpp line 27";
         }
+        delete comp;
     }
     else {
         board->next = new Board(board);
@@ -34,16 +35,17 @@ void Engine::nextMove(Board* board, unsigned char from, unsigned char to) { // F
 Board* Engine::engineNextMove(Board* board,char botDepth){ // Function playing the move calculated as best by the engine
     count = 0;
     Engine::buildFutureGameTree(board, botDepth);
-    qWarning() << "All calculated boards: " << prevcount;
-    qWarning() << "New calculated boards: " << count;
-    qWarning() << "Boards in memory: " << board->existingBranches;
     prevcount+=count;
     Evaluation::calcEvalFromBranchTips(board);
     Board* best = Engine::getBestMove(board);
     best->cutSideBranches();
+    best->printRootLength();
 
-    board->printRootLength();
+    qWarning() << "All calculated boards: " << prevcount;
+    qWarning() << "New calculated boards: " << count;
+    qWarning() << "Boards in memory: " << board->existingBoards;
     qWarning() << "Current board evaluation " <<board->getBoardEval();
+    best->printLastMove();
     qWarning() << "-------------------------------";
     return best;
 }
@@ -81,27 +83,8 @@ void Engine::buildFutureGameTree(Board* startingBoard, int n) {
         return;
     }
 
-
     for (short from = 0; from < 64; from++) {
-        long long moves = 0;
-
-        if (startingBoard->isWhiteMove()) {
-            if (startingBoard->getWhitePawns() >> from & 1) moves = Pawn::legalMoves(from, *startingBoard, true);
-            else if (startingBoard->getWhiteRooks() >> from & 1) moves = Rook::legalMoves(from, *startingBoard);
-            else if (startingBoard->getWhiteKnights() >> from & 1) moves = Knight::legalMoves(from, *startingBoard);
-            else if (startingBoard->getWhiteBishops() >> from & 1) moves = Bishop::legalMoves(from, *startingBoard);
-            else if (startingBoard->getWhiteQueens() >> from & 1) moves = Rook::legalMoves(from, *startingBoard) | Bishop::legalMoves(from, *startingBoard);
-            else if (startingBoard->getWhiteKings() >> from & 1) moves = King::legalMoves(from, *startingBoard);
-        }
-        else {
-            if (startingBoard->getBlackPawns() >> from & 1) moves = Pawn::legalMoves(from, *startingBoard, false);
-            else if (startingBoard->getBlackRooks() >> from & 1) moves = Rook::legalMoves(from, *startingBoard);
-            else if (startingBoard->getBlackKnights() >> from & 1) moves = Knight::legalMoves(from, *startingBoard);
-            else if (startingBoard->getBlackBishops() >> from & 1) moves = Bishop::legalMoves(from, *startingBoard);
-            else if (startingBoard->getBlackQueens() >> from & 1) moves = Rook::legalMoves(from, *startingBoard) | Bishop::legalMoves(from, *startingBoard);
-            else if (startingBoard->getBlackKings() >> from & 1) moves = King::legalMoves(from, *startingBoard);
-        }
-
+        long long moves = getLegalMoves(from, startingBoard);
         while (moves) {
             short to = __builtin_ctzll(moves);
             moves &= ~(1LL << to);
@@ -115,7 +98,8 @@ void Engine::buildFutureGameTree(Board* startingBoard, int n) {
                 temp->left = current;
                 current = temp;
             }
-            buildFutureGameTree(current, n - 1);
+            //Don't delete temp, as temporary is only the pointer and not it's destination
+            buildFutureGameTree(current, n - 1);         
         }
     }
 }
@@ -135,7 +119,7 @@ void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected,
 
     if ((*board)->isOccupied(buttonId) && !(*board)->isEnemyOccupied(buttonId)) {
         *selected = buttonId;
-        *moves = (*board)->getMoves(buttonId);
+        *moves = getLegalMoves(buttonId, *board);
     } else {
         if (*moves & (1ULL << buttonId)) {
             nextMove(*board, *selected, buttonId);
@@ -154,7 +138,6 @@ void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected,
             *moves = 0;
             *selected = 64;
 
-            (*board)->printLastMove();
         }
         // Gdy zostało wciśnięte puste pole
         else {
@@ -162,6 +145,29 @@ void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected,
             *moves = 0;
         }
     }
-
 }
 
+unsigned long long Engine::getLegalMoves(short from, Board *startingBoard) {
+    unsigned long long moves = startingBoard->getMoves(from);
+    unsigned long long legalMoves = 0ULL;
+
+    for (short to = 0; to < 64; ++to) {
+        if (moves & (1ULL << to)) {
+            Board *newBoard = new Board(startingBoard);
+            newBoard->setTurnNumber(startingBoard->getTurnNumber());
+            newBoard->move(from, to);
+
+            short kingPosition = newBoard->isWhiteMove()
+                                     ? __builtin_ctzll(newBoard->getWhiteKings())
+                                     : __builtin_ctzll(newBoard->getBlackKings());
+
+            if (!newBoard->isAttacked(kingPosition, startingBoard->isWhiteMove())) {
+                legalMoves |= (1ULL << to);
+            }
+
+            delete newBoard;
+        }
+    }
+
+    return legalMoves;
+}

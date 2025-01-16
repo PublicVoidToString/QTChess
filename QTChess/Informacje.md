@@ -32,16 +32,20 @@ Move representation <br/>
 promotion as 4 different moves
 
 Board lastMove explanation:
-000000 00 0000 0000 00000 00 0 0000000      0
-|||||| || |||| |||| ||||| || | |||||||      |
-moved   moved  QRBN PRNBQ SL E empty flags  starting board
-from      to   prom capt  
+100000 00 0000 0000 00000 00 0 0000 000 0
+|||||| || |||| |||| ||||| || | |||| ||| |
+moved   moved  QRBN PRNBQ SL E SLSL WBL S
+from      to   prom capt       WWBB WW  B
 
 QRBN - promotion
 PRKNQ - capture
-SL - short/long castle
-e - en passant
-starting board = if starting board leave as 0, otherwise 1
+SL - short/long castle (as played move)
+e - en passant (as played move)
+S/L W/B - short/long castle possible white/black
+WW - white won
+BW - black won (if WW & WB draw)
+L - last move (for unduing moves)
+SB - starting board = if starting board leave as 0, otherwise 1
                
 
 
