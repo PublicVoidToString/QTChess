@@ -164,9 +164,51 @@ private:
 
     static int flipSquare(int value);
 
+    static const constexpr unsigned long long fileA = 0x0101010101010101;
+    static const constexpr unsigned long long fileH = 0x8080808080808080;
+    static const constexpr unsigned long long rank1 = 0x00000000000000FF;
+    static const constexpr unsigned long long rank8 = 0xFF00000000000000;
+
+
+    static unsigned long long leftShift(unsigned long long bitboard);
+    static unsigned long long rightShift(unsigned long long bitboard);
+    static unsigned long long upShift(unsigned long long bitboard);
+    static unsigned long long downShift(unsigned long long bitboard);
+
+    static unsigned int sumBits(unsigned long long bitboard);
+
+    static unsigned int isolatedPawnCount(unsigned long long bitboard);
+    static unsigned int doubledPawnCount(unsigned long long bitboard);
+    static int backwardPawnCount(unsigned long long whitePawns, unsigned long long blackPawns);
+    static int passedPawnCount(unsigned long long whitePawns, unsigned long long blackPawns);
+
+    // pawn structure penalties/bonuses
+    // TODO - values for parameters
+
+    // Isolated pawns have no friendly pawns on the neighbouring ranks
+    static const constexpr double isolatedPawnPenalty = -0.20;
+
+    // Two pawns of the same color on the same file
+    static const constexpr double doubledPawnPenalty = -0.12;
+
+    // Cannot be supported by another pawn from behind.
+    // Is blocked by an enemy pawn - directly in front or adjacent
+    static const constexpr double backwardPawnPenalty = -0.12;
+
+    // Adjecent and the same files are clear from the opposite color pawns
+    static const constexpr double passedPawnBonus = 0.8;
+
+    // TODO - piece activity, king safety; meaby some other heuristics
+
 public:
     Evaluation();
     static double evaluatePosition(Board* board); // Main eval function, calculating based on private eval functions
+
+    static double pieceSquareTables(Board* board);
+
+
+    //TODO pawn structure, king safety etc.
+    static double pawnStructure(Board* board);
 
     static Board* calcEvalFromBranchTips(Board* startingBoard);
     static Board* getBestBranchFromGT(Board* startingBoard);

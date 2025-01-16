@@ -36,7 +36,7 @@ bool Board::operator == (const Board &b)
 Board::Board() {
     existingBranches+=1;
     turnNumber = 0;
-    boardEval=0;
+    boardEval = 0;
     lastMove[0] = 64; // initiated out of the chessboard
     lastMove[1] = 64;
 
