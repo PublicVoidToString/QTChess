@@ -5,7 +5,7 @@ Evaluation::Evaluation() {
 }
 
 int Evaluation::flipSquare(int value) {
-    return 63-value;
+    return value ^ 56;
 }
 
 double Evaluation::evaluatePosition(Board* board) { // Main eval function, calculating based on private eval functions
@@ -17,7 +17,12 @@ double Evaluation::evaluatePosition(Board* board) { // Main eval function, calcu
     else if(board->isDraw()) board->setBoardEval(0);
     else {
         double evaluation = 0;
-        evaluation = pieceSquareTables(board)+pawnStructure(board);
+        double pstBoardsEvaluation = pieceSquareTables(board);
+        double pawnStructureEvaluation = pawnStructure(board);
+        // qWarning() << "PST pesto eval: " << pstBoardsEvaluation;
+        // qWarning() << "Pawn structure evaluation: " << pawnStructureEvaluation;
+
+        evaluation = pstBoardsEvaluation + pawnStructureEvaluation;
 
         board->setBoardEval(evaluation);
     }
@@ -32,6 +37,7 @@ double Evaluation::pieceSquareTables(Board* board) {
     double mg_black = 0;
     double eg_black = 0;
     int gamePhase = 0;
+
 
     //Material Points and basic positional heuristics
     for (int square = 0; square < 64; square++) {
@@ -268,6 +274,10 @@ double Evaluation::pawnStructure(Board* board) {
     return bonus;
 }
 
+double Evaluation::pieceActivityEvaluation(Board* board) {
+
+}
+
 Board* Evaluation::calcEvalFromBranchTips(Board* startingBoard) {
 
     if (startingBoard == nullptr)
@@ -279,8 +289,6 @@ Board* Evaluation::calcEvalFromBranchTips(Board* startingBoard) {
         startingBoard->setBoardEval(10000);
         return startingBoard;
     }
-
-
 
     if (startingBoard->next != nullptr) {
         if (startingBoard->isWhiteMove()) {

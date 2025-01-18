@@ -6,7 +6,9 @@ class Evaluation
 {
 private:
 
-    // basic piece evaluation
+    // basic piece-sqare-table evaluation
+    static double pieceSquareTables(Board* board);
+
     static const constexpr double mg_pawn_value = 0.82;
     static const constexpr double mg_knight_value = 3.37;
     static const constexpr double mg_bishop_value = 3.65;
@@ -177,6 +179,8 @@ private:
 
     static unsigned int sumBits(unsigned long long bitboard);
 
+    static double pawnStructure(Board* board);
+
     static unsigned int isolatedPawnCount(unsigned long long bitboard);
     static unsigned int doubledPawnCount(unsigned long long bitboard);
     static int backwardPawnCount(unsigned long long whitePawns, unsigned long long blackPawns);
@@ -199,16 +203,14 @@ private:
     static const constexpr double passedPawnBonus = 0.8;
 
     // TODO - piece activity, king safety; meaby some other heuristics
+    static double pieceActivityEvaluation(Board* board);
+
 
 public:
     Evaluation();
     static double evaluatePosition(Board* board); // Main eval function, calculating based on private eval functions
 
-    static double pieceSquareTables(Board* board);
 
-
-    //TODO pawn structure, king safety etc.
-    static double pawnStructure(Board* board);
 
     static Board* calcEvalFromBranchTips(Board* startingBoard);
     static Board* getBestBranchFromGT(Board* startingBoard);
