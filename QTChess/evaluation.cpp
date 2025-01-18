@@ -24,6 +24,10 @@ double Evaluation::evaluatePosition(Board* board) { // Main eval function, calcu
 
         evaluation = pstBoardsEvaluation + pawnStructureEvaluation;
 
+        if (board->getTurnNumber() < openingPhaseMoveCount) {
+            evaluation += pieceDevelopmentEvaluation(board);
+        }
+
         board->setBoardEval(evaluation);
     }
 
@@ -40,78 +44,79 @@ double Evaluation::pieceSquareTables(Board* board) {
 
 
     //Material Points and basic positional heuristics
-    for (int square = 0; square < 64; square++) {
-        if (board->getWhitePawns() & (1ULL << square)) {
+    for (int i = 0; i < 64; i++) {
+        int square = flipSquare(i);
+        if (board->getWhitePawns() & (1ULL << i)) {
             mg_white += mg_pawn_table[square] + mg_pawn_value;
             eg_white += eg_pawn_table[square] + eg_pawn_value;
             gamePhase += pawn_gamephaseIncrease;
             continue;
         }
-        if (board->getWhiteKnights() & (1ULL << square)) {
+        if (board->getWhiteKnights() & (1ULL << i)) {
             mg_white += mg_knight_table[square] + mg_knight_value;
             eg_white += eg_knight_table[square] + eg_knight_value;
             gamePhase += knight_gamephaseIncrease;
             continue;
         }
-        if (board->getWhiteBishops() & (1ULL << square)) {
+        if (board->getWhiteBishops() & (1ULL << i)) {
             mg_white += mg_bishop_table[square] + mg_bishop_value;
             eg_white += eg_bishop_table[square] + eg_bishop_value;
             gamePhase += bishop_gamephaseIncrease;
             continue;
         }
-        if (board->getWhiteRooks() & (1ULL << square)) {
+        if (board->getWhiteRooks() & (1ULL << i)) {
             mg_white += mg_rook_table[square] + mg_rook_value;
             eg_white += eg_rook_table[square] + eg_rook_value;
             gamePhase += rook_gamephaseIncrease;
             continue;
         }
-        if (board->getWhiteQueens() & (1ULL << square)) {
+        if (board->getWhiteQueens() & (1ULL << i)) {
             mg_white += mg_queen_table[square] + mg_queen_value;
             eg_white += eg_queen_table[square] + eg_queen_value;
             gamePhase += queen_gamephaseIncrease;
             continue;
         }
-        if (board->getWhiteKings() & (1ULL << square)) {
+        if (board->getWhiteKings() & (1ULL << i)) {
             mg_white += mg_king_table[square] + king_value;
             eg_white += eg_king_table[square] + king_value;
             continue;
         }
 
-        int flippedSquare = flipSquare(square);
+        square = flipSquare(square);
 
-        if (board->getBlackPawns() & (1ULL << square)) {
-            mg_black += mg_pawn_table[flippedSquare] + mg_pawn_value;
-            eg_black += eg_pawn_table[flippedSquare] + eg_pawn_value;
+        if (board->getBlackPawns() & (1ULL << i)) {
+            mg_black += mg_pawn_table[square] + mg_pawn_value;
+            eg_black += eg_pawn_table[square] + eg_pawn_value;
             gamePhase += pawn_gamephaseIncrease;
             continue;
         }
-        if (board->getBlackKnights() & (1ULL << square)) {
-            mg_black += mg_knight_table[flippedSquare] + mg_knight_value;
-            eg_black += eg_knight_table[flippedSquare] + eg_knight_value;
+        if (board->getBlackKnights() & (1ULL << i)) {
+            mg_black += mg_knight_table[square] + mg_knight_value;
+            eg_black += eg_knight_table[square] + eg_knight_value;
             gamePhase += knight_gamephaseIncrease;
             continue;
         }
-        if (board->getBlackBishops() & (1ULL << square)) {
-            mg_black += mg_bishop_table[flippedSquare] + mg_bishop_value;
-            eg_black += eg_bishop_table[flippedSquare] + eg_bishop_value;
+        if (board->getBlackBishops() & (1ULL << i)) {
+            mg_black += mg_bishop_table[square] + mg_bishop_value;
+            eg_black += eg_bishop_table[square] + eg_bishop_value;
             gamePhase += bishop_gamephaseIncrease;
             continue;
         }
-        if (board->getBlackRooks() & (1ULL << square)) {
-            mg_black += mg_rook_table[flippedSquare] + mg_rook_value;
-            eg_black += eg_rook_table[flippedSquare] + eg_rook_value;
+        if (board->getBlackRooks() & (1ULL << i)) {
+            mg_black += mg_rook_table[square] + mg_rook_value;
+            eg_black += eg_rook_table[square] + eg_rook_value;
             gamePhase += rook_gamephaseIncrease;
             continue;
         }
-        if (board->getBlackQueens() & (1ULL << square)) {
-            mg_black += mg_queen_table[flippedSquare] + mg_queen_value;
-            eg_black += eg_queen_table[flippedSquare] + eg_queen_value;
+        if (board->getBlackQueens() & (1ULL << i)) {
+            mg_black += mg_queen_table[square] + mg_queen_value;
+            eg_black += eg_queen_table[square] + eg_queen_value;
             gamePhase += queen_gamephaseIncrease;
             continue;
         }
-        if (board->getBlackKings() & (1ULL << square)) {
-            mg_black += mg_king_table[flippedSquare] + king_value;
-            eg_black += eg_king_table[flippedSquare] + king_value;
+        if (board->getBlackKings() & (1ULL << i)) {
+            mg_black += mg_king_table[square] + king_value;
+            eg_black += eg_king_table[square] + king_value;
         }
     }
 
@@ -274,8 +279,24 @@ double Evaluation::pawnStructure(Board* board) {
     return bonus;
 }
 
-double Evaluation::pieceActivityEvaluation(Board* board) {
+double Evaluation::pieceDevelopmentEvaluation(Board* board) {
+    double whiteDevelopmentPenalty = 0;
+    whiteDevelopmentPenalty += undesiredKnightLocationPenalty*sumBits(undesiredWhiteMinorPieceLocations & board->getWhiteKnights());
+    whiteDevelopmentPenalty += undesiredBishopLocationPenalty*sumBits(undesiredWhiteMinorPieceLocations & board->getWhiteBishops());
+    whiteDevelopmentPenalty += undesiredRookLocationPenalty*sumBits(undesiredWhiteRooksLocations & board->getWhiteRooks());
+    whiteDevelopmentPenalty += undesiredKingLocationPenalty*sumBits(undesiredWhiteKingLocations & board->getWhiteKings());
 
+    // qWarning() << "White development penalty " << whiteDevelopmentPenalty;
+
+    double blackDevelopmentPenalty = 0;
+    blackDevelopmentPenalty += undesiredKnightLocationPenalty*sumBits(undesiredBlackMinorPieceLocations & board->getBlackKnights());
+    blackDevelopmentPenalty += undesiredBishopLocationPenalty*sumBits(undesiredBlackMinorPieceLocations & board->getBlackBishops());
+    blackDevelopmentPenalty += undesiredRookLocationPenalty*sumBits(undesiredBlackRooksLocations & board->getBlackRooks());
+    blackDevelopmentPenalty += undesiredKingLocationPenalty*sumBits(undesiredBlackKingLocations & board->getBlackKings());
+
+    // qWarning() << "Black development penalty " << blackDevelopmentPenalty;
+
+    return whiteDevelopmentPenalty - blackDevelopmentPenalty;
 }
 
 Board* Evaluation::calcEvalFromBranchTips(Board* startingBoard) {

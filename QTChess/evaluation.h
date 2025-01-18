@@ -200,11 +200,26 @@ private:
     static const constexpr double backwardPawnPenalty = -0.12;
 
     // Adjecent and the same files are clear from the opposite color pawns
-    static const constexpr double passedPawnBonus = 0.8;
+    static const constexpr double passedPawnBonus = 0.9;
 
     // TODO - piece activity, king safety; meaby some other heuristics
-    static double pieceActivityEvaluation(Board* board);
+    static double pieceDevelopmentEvaluation(Board* board);
+    // Number of moves, where development heuristics are considered
+    static const constexpr int openingPhaseMoveCount = 30;
 
+    static const constexpr unsigned long long undesiredWhiteMinorPieceLocations = 0b0000000000000000000000000000000000000000000000000000000011100111;
+    static const constexpr unsigned long long undesiredBlackMinorPieceLocations = 0b1110011100000000000000000000000000000000000000000000000000000000;
+    static const constexpr double undesiredBishopLocationPenalty = -0.2;
+    static const constexpr double undesiredKnightLocationPenalty = -0.1;
+
+    static const constexpr unsigned long long undesiredWhiteRooksLocations = 0b0000000000000000000000000000000000000000000000000000000011000111;
+    static const constexpr unsigned long long undesiredBlackRooksLocations = 0b1100011100000000000000000000000000000000000000000000000000000000;
+
+    static const constexpr double undesiredRookLocationPenalty = -0.2;
+    static const constexpr unsigned long long undesiredWhiteKingLocations = 0b1111111111111111111111111111111111111111111111111111111100111000;
+    static const constexpr unsigned long long undesiredBlackKingLocations = 0b0011100011111111111111111111111111111111111111111111111111111111;
+
+    static const constexpr double undesiredKingLocationPenalty = -0.9;
 
 public:
     Evaluation();

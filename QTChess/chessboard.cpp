@@ -159,7 +159,7 @@ void ChessBoard::clearSelectedFromBoard(){
 }
 
 void ChessBoard::printAllPieces(){
-    // for testing only
+    // for testing only - player vs player
     // Evaluation::evaluatePosition(board);
 
     for (int i = 0; i < 64; ++i) {
