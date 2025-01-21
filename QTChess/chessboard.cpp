@@ -37,7 +37,7 @@ ChessBoard::~ChessBoard()
 void ChessBoard::initBoard()
 {
     board = new Board();
-    Engine::buildFutureGameTree(board, 1);
+    Engine::buildFutureGameTree(board, 2);
 
     // Main layout (where later the grid is added)
     QHBoxLayout *mainLayout = new QHBoxLayout(this);

@@ -7,6 +7,7 @@
 #include "knight.h"
 #include "rook.h"
 #include "king.h"
+#include "engine.h"
 
 // PRIVATE:
 
@@ -463,8 +464,29 @@ void Board::setLastMoveWin(bool white) {
     lastMove&=0xFFFFFFF3 ;
     white ? lastMove|=0b1000 : lastMove|=0x100;
 }
-bool Board::getLastMoveWinWhite() const { return lastMove&0b1000; }
-bool Board::getLastMoveWinBlack() const { return lastMove&0b100; }
+
+//TODO let's just check if checkmate by calculating it, i'm done
+bool Board::getWhiteCheckmate() {
+    if(!isWhiteMove()) return false;
+    short kingPosition = __builtin_ctzll(this->getWhiteKings());
+    if( isAttacked(kingPosition,true)){
+        Engine::buildFutureGameTree(this,1);
+        if(this->next==nullptr)
+            return true;
+    }
+    return false;
+}
+
+bool Board::getBlackCheckmate() {
+    if(isWhiteMove()) return false;
+    short kingPosition = __builtin_ctzll(this->getBlackKings());
+    if( isAttacked(kingPosition,false)) {
+        Engine::buildFutureGameTree(this,1);
+        if(this->next==nullptr)
+            return true;
+    }
+    return false;
+}
 
 
 

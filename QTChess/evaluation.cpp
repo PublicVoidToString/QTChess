@@ -1,4 +1,5 @@
 #include "evaluation.h"
+#include <QMessageBox>
 
 Evaluation::Evaluation() {
 }
@@ -11,8 +12,12 @@ double Evaluation::evaluatePosition(Board* board) { // Main eval function, calcu
 
     // Sprawdzenie czy nastąpił mat, pat TODO
 
-    if(board->getLastMoveWinWhite()) board->setBoardEval(1000);
-    else if(board->getLastMoveWinBlack()) board->setBoardEval(-1000);
+    if(board->getWhiteCheckmate()) {
+        board->setBoardEval(-1000);
+    }
+    else if(board->getBlackCheckmate()) {
+        board->setBoardEval(1000);
+    }
     else if(false) board->setBoardEval(0);
     else {
         double mg_white = 0;
@@ -118,18 +123,6 @@ double Evaluation::evaluatePosition(Board* board) { // Main eval function, calcu
 }
 
 Board* Evaluation::calcEvalFromBranchTips(Board* startingBoard) {
-
-    if (startingBoard == nullptr)
-        return nullptr;
-    if (startingBoard->getWhiteKings()==0 ) {
-        startingBoard->setBoardEval(-10000);
-        return startingBoard;
-    } else if (startingBoard->getBlackKings()==0){
-        startingBoard->setBoardEval(10000);
-        return startingBoard;
-    }
-
-
 
     if (startingBoard->next != nullptr) {
         if (startingBoard->isWhiteMove()) {

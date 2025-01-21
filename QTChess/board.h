@@ -100,8 +100,8 @@ public:
     bool getWhiteLongCastlePossible() const;
 
     void setLastMoveWin(bool white);
-    bool getLastMoveWinWhite() const;
-    bool getLastMoveWinBlack() const;
+    bool getWhiteCheckmate();
+    bool getBlackCheckmate();
 
 
     void printLastMove() const;

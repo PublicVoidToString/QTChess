@@ -23,6 +23,10 @@ public:
     static unsigned long long getMoves(short from, Board* startingBoard);
 
     static unsigned long long getLegalMoves(short from, Board* startingBoard);
+
+    static int printPossibleMoveCount(Board* startingBoard, int count=-1);
+
+    static void printMoveDebug(Board* startingBoard);
 };
 
 #endif // ENGINE_H

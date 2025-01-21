@@ -39,14 +39,7 @@ Board* Engine::engineNextMove(Board* board,char botDepth){ // Function playing t
     Evaluation::calcEvalFromBranchTips(board);
     Board* best = Engine::getBestMove(board);
     best->cutSideBranches();
-    best->printRootLength();
 
-    qWarning() << "All calculated boards: " << prevcount;
-    qWarning() << "New calculated boards: " << count;
-    qWarning() << "Boards in memory: " << board->existingBoards;
-    qWarning() << "Current board evaluation " <<board->getBoardEval();
-    best->printLastMove();
-    qWarning() << "-------------------------------";
     return best;
 }
 
@@ -99,7 +92,7 @@ void Engine::buildFutureGameTree(Board* startingBoard, int n) {
                 current = temp;
             }
             //Don't delete temp, as temporary is only the pointer and not it's destination
-            buildFutureGameTree(current, n - 1);         
+            buildFutureGameTree(current, n - 1);
         }
     }
 }
@@ -123,11 +116,12 @@ void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected,
     } else {
         if (*moves & (1ULL << buttonId)) {
             nextMove(*board, *selected, buttonId);
-
             (*board)->setLastMoveFrom(*selected);
             (*board)->setLastMoveTo(buttonId);
             // When against player
             if(botDepth==0){
+                Engine::buildFutureGameTree(*board, 2);
+                Evaluation::calcEvalFromBranchTips(*board);
                 *board = (*board)->next;
             // When against bot
             } else{
@@ -137,7 +131,7 @@ void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected,
             }
             *moves = 0;
             *selected = 64;
-
+            printMoveDebug(*board);
         }
         // Gdy zostało wciśnięte puste pole
         else {
@@ -170,4 +164,32 @@ unsigned long long Engine::getLegalMoves(short from, Board *startingBoard) {
     }
 
     return legalMoves;
+}
+
+void Engine::printMoveDebug(Board* startingBoard){
+    printPossibleMoveCount(startingBoard);
+    qWarning() << "All calculated boards: " << prevcount;
+    qWarning() << "New calculated boards: " << count;
+    (startingBoard)->printRootLength();
+    qWarning() << "Boards in memory: " << (startingBoard)->existingBoards;
+    qWarning() << "Current board evaluation " <<(startingBoard)->getBoardEval();
+    (startingBoard)->printLastMove();
+    qWarning() << "-------------------------------";
+}
+
+int Engine::printPossibleMoveCount(Board* startingBoard, int count) {
+    if (!startingBoard) {
+        return count;
+    }
+
+    int temp = count + 1;
+
+    if (startingBoard->right) {
+        temp = printPossibleMoveCount(startingBoard->right, temp);
+    }
+    if (startingBoard->next) {
+        temp = printPossibleMoveCount(startingBoard->next, temp);
+    }
+    if (count == -1) { qWarning() << "All Calculated Possible Moves: " << temp; }
+    return temp;
 }
