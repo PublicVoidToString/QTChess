@@ -5,8 +5,7 @@
 class Pawn
 {
 public:
-    static unsigned long long legalMoves(int positionId, const Board& board);
-    static unsigned long long legalMoves(int positionId, const Board& board, bool isWhite);
+    static unsigned long long allMoves(int positionId, const Board& board, bool isWhite);
 };
 
 #endif // PAWN_H

@@ -12,6 +12,7 @@ ChessBoard::ChessBoard(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::ChessBoard)
 {
+    setAttribute(Qt::WA_DeleteOnClose);
     selected = 64;
     clearSelected = 64;
     moves        = 0b0000000000000000000000000000000000000000000000000000000000000000;
@@ -20,6 +21,7 @@ ChessBoard::ChessBoard(QWidget *parent)
     ui->setupUi(this);
     initBoard();
     printAllPieces();
+
 }
 void ChessBoard::setDepth(char level){
     botDepth = level*2;
@@ -28,12 +30,16 @@ void ChessBoard::setDepth(char level){
 ChessBoard::~ChessBoard()
 {
     free(chessTiles);
+    for(;board->prev!=nullptr;board=board->prev);
+    board->cutAllBranches();
+    delete board;
     delete ui;
 }
 
 void ChessBoard::initBoard()
 {
     board = new Board();
+    Engine::buildFutureGameTree(board, 2);
 
     // Main layout (where later the grid is added)
     QHBoxLayout *mainLayout = new QHBoxLayout(this);
@@ -112,26 +118,12 @@ void ChessBoard::undoMove(){
 
 void ChessBoard::handleButtonClick(int buttonId)
 {
-    bool moved = Engine::pressedButton(board,buttonId,&selected,&clearSelected,&moves,&clearMoves);
-    if(moved) {
-        if (board->next != nullptr) {
-            if(botDepth==0){
-                board = board->next;
-            } else{
-                board = board->next;
-                board->next = Engine::engineNextMove(board,botDepth);
-                board=board->next;
-            }
-            printAllPieces();
-            clearSelectedFromBoard();
-        }
-        else {
-            QMessageBox::warning(nullptr, "Warning", "No next board available!");
-        }
-    } else{
-        printSelection();
-        printAllPieces();
-    }
+    Engine::pressedButton(&board,buttonId,&selected,&clearSelected,&moves,&clearMoves,botDepth);
+
+    //Reprinting board
+    clearSelectedFromBoard();
+    printSelection();
+    printAllPieces();
 }
 
 void ChessBoard::resizeEvent(QResizeEvent *event)
@@ -155,7 +147,6 @@ void ChessBoard::clearSelectedFromBoard(){
             chessTiles[i]->setStyleSheet("background-color: #b9efbd;");
         }
     }
-
 }
 
 void ChessBoard::printAllPieces(){
@@ -197,6 +188,7 @@ void ChessBoard::printAllPieces(){
         }
     }
 }
+
 
 void ChessBoard::printSelection(){
     if(selected!=64) {

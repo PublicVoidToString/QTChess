@@ -1,5 +1,6 @@
 #include "evaluation.h"
 #include <QDebug>
+#include <QMessageBox>
 
 Evaluation::Evaluation() {
 }
@@ -12,9 +13,13 @@ double Evaluation::evaluatePosition(Board* board) { // Main eval function, calcu
 
     // Sprawdzenie czy nastąpił mat, pat TODO
 
-    if(board->isBlackMated()) board->setBoardEval(1000);
-    else if(board->isWhiteMated()) board->setBoardEval(-1000);
-    else if(board->isDraw()) board->setBoardEval(0);
+    if(board->getWhiteCheckmate()) {
+        board->setBoardEval(-1000);
+    }
+    else if(board->getBlackCheckmate()) {
+        board->setBoardEval(1000);
+    }
+    else if(false) board->setBoardEval(0);
     else {
         double evaluation = 0;
         double pstBoardsEvaluation = pieceSquareTables(board);

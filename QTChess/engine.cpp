@@ -24,6 +24,7 @@ void Engine::nextMove(Board* board, unsigned char from, unsigned char to) { // F
             }
             if(nextMove->right==nullptr) qWarning()<< "Somethings wrong Engine.cpp line 27";
         }
+        delete comp;
     }
     else {
         board->next = new Board(board);
@@ -39,12 +40,6 @@ Board* Engine::engineNextMove(Board* board,char botDepth){ // Function playing t
     Board* best = Engine::getBestMove(board);
     best->cutSideBranches();
 
-    qWarning() << "All calculated boards: " << prevcount;
-    qWarning() << "New calculated boards: " << count;
-    qWarning() << "Boards in memory: " << board->existingBranches;
-    board->printRootLength();
-    qWarning() << "Current board evaluation " <<board->getBoardEval();
-    qWarning() << "-------------------------------";
     return best;
 }
 
@@ -81,27 +76,8 @@ void Engine::buildFutureGameTree(Board* startingBoard, int n) {
         return;
     }
 
-
     for (short from = 0; from < 64; from++) {
-        long long moves = 0;
-
-        if (startingBoard->isWhiteMove()) {
-            if (startingBoard->getWhitePawns() >> from & 1) moves = Pawn::legalMoves(from, *startingBoard, true);
-            else if (startingBoard->getWhiteRooks() >> from & 1) moves = Rook::legalMoves(from, *startingBoard);
-            else if (startingBoard->getWhiteKnights() >> from & 1) moves = Knight::legalMoves(from, *startingBoard);
-            else if (startingBoard->getWhiteBishops() >> from & 1) moves = Bishop::legalMoves(from, *startingBoard);
-            else if (startingBoard->getWhiteQueens() >> from & 1) moves = Rook::legalMoves(from, *startingBoard) | Bishop::legalMoves(from, *startingBoard);
-            else if (startingBoard->getWhiteKings() >> from & 1) moves = King::legalMoves(from, *startingBoard);
-        }
-        else {
-            if (startingBoard->getBlackPawns() >> from & 1) moves = Pawn::legalMoves(from, *startingBoard, false);
-            else if (startingBoard->getBlackRooks() >> from & 1) moves = Rook::legalMoves(from, *startingBoard);
-            else if (startingBoard->getBlackKnights() >> from & 1) moves = Knight::legalMoves(from, *startingBoard);
-            else if (startingBoard->getBlackBishops() >> from & 1) moves = Bishop::legalMoves(from, *startingBoard);
-            else if (startingBoard->getBlackQueens() >> from & 1) moves = Rook::legalMoves(from, *startingBoard) | Bishop::legalMoves(from, *startingBoard);
-            else if (startingBoard->getBlackKings() >> from & 1) moves = King::legalMoves(from, *startingBoard);
-        }
-
+        long long moves = getLegalMoves(from, startingBoard);
         while (moves) {
             short to = __builtin_ctzll(moves);
             moves &= ~(1LL << to);
@@ -115,57 +91,105 @@ void Engine::buildFutureGameTree(Board* startingBoard, int n) {
                 temp->left = current;
                 current = temp;
             }
+            //Don't delete temp, as temporary is only the pointer and not it's destination
             buildFutureGameTree(current, n - 1);
         }
     }
 }
 
 // Main Functions
-bool Engine::pressedButton(Board* board, int buttonId, unsigned char* selected, unsigned char* clearSelected, unsigned long long* moves, unsigned long long* clearMoves ) // Reads input and calls most of other functions
+void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected, unsigned char* clearSelected, unsigned long long* moves, unsigned long long* clearMoves, char botDepth) // Reads input and calls most of other functions
 {
-     *clearSelected =   *selected;
-     *clearMoves =  *moves;
-    if(board->isOccupied(buttonId) && !board->isEnemyOccupied(buttonId)){
-        *selected = buttonId;
-        if(board->isWhiteMove()){
-            if (board->getWhitePawns()  & 1ULL <<  *selected)    *moves = Pawn::legalMoves(buttonId, *board);
-            else if (board->getWhiteRooks()  & 1ULL <<  *selected)    *moves = Rook::legalMoves(buttonId, *board);
-            else if (board->getWhiteKnights()  & 1ULL <<  *selected)  *moves = Knight::legalMoves(buttonId, *board);
-            else if (board->getWhiteBishops()  & 1ULL <<  *selected)  *moves = Bishop::legalMoves(buttonId, *board);
-            else if (board->getWhiteQueens()  & 1ULL <<  *selected)   *moves = Bishop::legalMoves(buttonId, *board) | Rook::legalMoves(buttonId, *board);
-            else if (board->getWhiteKings()  & 1ULL <<  *selected)    *moves = King::legalMoves(buttonId, *board);
-        }
-        else {
-            if (board->getBlackPawns() & 1ULL <<  *selected)    *moves = Pawn::legalMoves(buttonId, *board);
-            else if (board->getBlackRooks() & 1ULL <<  *selected)    *moves = Rook::legalMoves(buttonId, *board);
-            else if (board->getBlackKnights() & 1ULL <<  *selected)  *moves = Knight::legalMoves(buttonId, *board);
-            else if (board->getBlackBishops() & 1ULL <<  *selected)  *moves = Bishop::legalMoves(buttonId, *board);
-            else if (board->getBlackQueens() & 1ULL <<  *selected)   *moves = Bishop::legalMoves(buttonId, *board) | Rook::legalMoves(buttonId, *board);
-            else if (board->getBlackKings() & 1ULL <<  *selected)    *moves = King::legalMoves(buttonId, *board);
-        }
-    } else{
-        // Gdy zostało wciśnięte pole z tablicy ruchu
-        if ( *moves & (1ULL << buttonId)) {
-            nextMove(board, *selected, buttonId);
-            board->lastMove[0] =  *selected; // ustawienie ostatniego ruchu (do sprawdzania en passant)
-            board->lastMove[1] = buttonId;
-             *moves = 0b0000000000000000000000000000000000000000000000000000000000000000;
-             *selected = 64;
-            return true;
-        }
+    *clearSelected = *selected;
+    *clearMoves = *moves;
 
+    // If position didn't change
+    if (*selected == buttonId) {
+        *selected = 64;
+        *moves = 0;
+        return;
+    }
+
+    if ((*board)->isOccupied(buttonId) && !(*board)->isEnemyOccupied(buttonId)) {
+        *selected = buttonId;
+        *moves = getLegalMoves(buttonId, *board);
+    } else {
+        if (*moves & (1ULL << buttonId)) {
+            nextMove(*board, *selected, buttonId);
+            (*board)->setLastMoveFrom(*selected);
+            (*board)->setLastMoveTo(buttonId);
+            // When against player
+            if(botDepth==0){
+                Engine::buildFutureGameTree(*board, 2);
+                Evaluation::calcEvalFromBranchTips(*board);
+                *board = (*board)->next;
+            // When against bot
+            } else{
+                *board = (*board)->next;
+                (*board)->next = engineNextMove(*board,botDepth);
+                *board = (*board)->next;
+            }
+            *moves = 0;
+            *selected = 64;
+            printMoveDebug(*board);
+        }
         // Gdy zostało wciśnięte puste pole
         else {
-             *selected = 64;
-             *moves = 0b0000000000000000000000000000000000000000000000000000000000000000;
+            *selected = 64;
+            *moves = 0;
+        }
+    }
+}
+
+unsigned long long Engine::getLegalMoves(short from, Board *startingBoard) {
+    unsigned long long moves = startingBoard->getMoves(from);
+    unsigned long long legalMoves = 0ULL;
+
+    for (short to = 0; to < 64; ++to) {
+        if (moves & (1ULL << to)) {
+            Board *newBoard = new Board(startingBoard);
+            newBoard->setTurnNumber(startingBoard->getTurnNumber());
+            newBoard->move(from, to);
+
+            short kingPosition = newBoard->isWhiteMove()
+                                     ? __builtin_ctzll(newBoard->getWhiteKings())
+                                     : __builtin_ctzll(newBoard->getBlackKings());
+
+            if (!newBoard->isAttacked(kingPosition, startingBoard->isWhiteMove())) {
+                legalMoves |= (1ULL << to);
+            }
+
+            delete newBoard;
         }
     }
 
-    // Sprawdzanie, czy zmieniła się pozycja, i resetowanie zaznaczenia, jeśli nie
-    if (*selected == *clearSelected) {
-         *selected = 64;
-         *moves = 0b0000000000000000000000000000000000000000000000000000000000000000;
-    }
-    return false;
+    return legalMoves;
 }
 
+void Engine::printMoveDebug(Board* startingBoard){
+    printPossibleMoveCount(startingBoard);
+    qWarning() << "All calculated boards: " << prevcount;
+    qWarning() << "New calculated boards: " << count;
+    (startingBoard)->printRootLength();
+    qWarning() << "Boards in memory: " << (startingBoard)->existingBoards;
+    qWarning() << "Current board evaluation " <<(startingBoard)->getBoardEval();
+    (startingBoard)->printLastMove();
+    qWarning() << "-------------------------------";
+}
+
+int Engine::printPossibleMoveCount(Board* startingBoard, int count) {
+    if (!startingBoard) {
+        return count;
+    }
+
+    int temp = count + 1;
+
+    if (startingBoard->right) {
+        temp = printPossibleMoveCount(startingBoard->right, temp);
+    }
+    if (startingBoard->next) {
+        temp = printPossibleMoveCount(startingBoard->next, temp);
+    }
+    if (count == -1) { qWarning() << "All Calculated Possible Moves: " << temp; }
+    return temp;
+}
