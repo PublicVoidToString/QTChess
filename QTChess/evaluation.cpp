@@ -318,14 +318,14 @@ Board* Evaluation::calcEvalFromBranchTips(Board* startingBoard) {
 
     if (startingBoard->next != nullptr) {
         if (startingBoard->isWhiteMove()) {
-            startingBoard->setBoardEval(-1001);
+            Evaluation::evaluatePosition(startingBoard);
             for (Board* current = startingBoard->next; current != nullptr; current = current->right) {
                 calcEvalFromBranchTips(current);
                 if (startingBoard->getBoardEval() < current->getBoardEval())
                     startingBoard->setBoardEval(current->getBoardEval());
             }
         } else {
-            startingBoard->setBoardEval(1001);
+            Evaluation::evaluatePosition(startingBoard);
             for (Board* current = startingBoard->next; current != nullptr; current = current->right) {
                 calcEvalFromBranchTips(current);
                 if (startingBoard->getBoardEval() > current->getBoardEval())
