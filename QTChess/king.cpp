@@ -77,26 +77,28 @@ unsigned long long King::legalMoves(int positionId, const Board& board) {
 }
 
 bool King::isInCheck(int positionId, const Board& board, bool isWhite) {
+    return false;
+    /*
     Board* noKingBoard = new Board(board);
     noKingBoard->removeKing(isWhite);
     noKingBoard->setTurnNumber(board.getTurnNumber());
     long long moves;
 
-    moves = Rook::legalMoves(positionId, *noKingBoard);
+    moves = Rook::allMoves(positionId, *noKingBoard);
     if ((moves & (isWhite ? (noKingBoard->getBlackRooks() | noKingBoard->getBlackQueens())
                           : (noKingBoard->getWhiteRooks() | noKingBoard->getWhiteQueens()))) != 0) {
         delete noKingBoard;
         return true;
     }
 
-    moves = Bishop::legalMoves(positionId, *noKingBoard);
+    moves = Bishop::allMoves(positionId, *noKingBoard);
     if ((moves & (isWhite ? (noKingBoard->getBlackBishops() | noKingBoard->getBlackQueens())
                           : (noKingBoard->getWhiteBishops() | noKingBoard->getWhiteQueens()))) != 0) {
         delete noKingBoard;
         return true;
     }
 
-    moves = Knight::legalMoves(positionId, *noKingBoard);
+    moves = Knight::allMoves(positionId, *noKingBoard);
     if ((moves & (isWhite ? noKingBoard->getBlackKnights() : noKingBoard->getWhiteKnights())) != 0) {
         delete noKingBoard;
         return true;
@@ -132,5 +134,6 @@ bool King::isInCheck(int positionId, const Board& board, bool isWhite) {
 
     delete noKingBoard;
     return false;
+    */
 }
 

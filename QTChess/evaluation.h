@@ -19,7 +19,7 @@ private:
     static const constexpr double eg_rook_value = 5.12;
     static const constexpr double eg_queen_value = 9.36;
 
-    static const constexpr double king_value = 1000;
+    static const constexpr double king_value = 1000; //TODO FIX and remove
 
     // PST - piece-square-tables + different evaulations for midgame and endgame
     // these values get tapered - more towards the endgame as it moves away from the opening

@@ -5,7 +5,7 @@
 class Knight
 {
 public:
-    static unsigned long long legalMoves(int positionId, const Board& board);
+    static unsigned long long allMoves(int positionId, const Board& board);
 };
 
 #endif // KNIGHT_H
