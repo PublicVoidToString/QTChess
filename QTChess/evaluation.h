@@ -6,7 +6,9 @@ class Evaluation
 {
 private:
 
-    // basic piece evaluation
+    // basic piece-sqare-table evaluation
+    static double pieceSquareTables(Board* board);
+
     static const constexpr double mg_pawn_value = 0.82;
     static const constexpr double mg_knight_value = 3.37;
     static const constexpr double mg_bishop_value = 3.65;
@@ -164,9 +166,66 @@ private:
 
     static int flipSquare(int value);
 
+    static const constexpr unsigned long long fileA = 0x0101010101010101;
+    static const constexpr unsigned long long fileH = 0x8080808080808080;
+    static const constexpr unsigned long long rank1 = 0x00000000000000FF;
+    static const constexpr unsigned long long rank8 = 0xFF00000000000000;
+
+
+    static unsigned long long leftShift(unsigned long long bitboard);
+    static unsigned long long rightShift(unsigned long long bitboard);
+    static unsigned long long upShift(unsigned long long bitboard);
+    static unsigned long long downShift(unsigned long long bitboard);
+
+    static unsigned int sumBits(unsigned long long bitboard);
+
+    static double pawnStructure(Board* board);
+
+    static unsigned int isolatedPawnCount(unsigned long long bitboard);
+    static unsigned int doubledPawnCount(unsigned long long bitboard);
+    static int backwardPawnCount(unsigned long long whitePawns, unsigned long long blackPawns);
+    static int passedPawnCount(unsigned long long whitePawns, unsigned long long blackPawns);
+
+    // pawn structure penalties/bonuses
+    // TODO - values for parameters
+
+    // Isolated pawns have no friendly pawns on the neighbouring ranks
+    static const constexpr double isolatedPawnPenalty = -0.20;
+
+    // Two pawns of the same color on the same file
+    static const constexpr double doubledPawnPenalty = -0.12;
+
+    // Cannot be supported by another pawn from behind.
+    // Is blocked by an enemy pawn - directly in front or adjacent
+    static const constexpr double backwardPawnPenalty = -0.12;
+
+    // Adjecent and the same files are clear from the opposite color pawns
+    static const constexpr double passedPawnBonus = 0.9;
+
+    // TODO - piece activity, king safety; meaby some other heuristics
+    static double pieceDevelopmentEvaluation(Board* board);
+    // Number of moves, where development heuristics are considered
+    static const constexpr int openingPhaseMoveCount = 30;
+
+    static const constexpr unsigned long long undesiredWhiteMinorPieceLocations = 0b0000000000000000000000000000000000000000000000000000000011100111;
+    static const constexpr unsigned long long undesiredBlackMinorPieceLocations = 0b1110011100000000000000000000000000000000000000000000000000000000;
+    static const constexpr double undesiredBishopLocationPenalty = -0.2;
+    static const constexpr double undesiredKnightLocationPenalty = -0.1;
+
+    static const constexpr unsigned long long undesiredWhiteRooksLocations = 0b0000000000000000000000000000000000000000000000000000000011000111;
+    static const constexpr unsigned long long undesiredBlackRooksLocations = 0b1100011100000000000000000000000000000000000000000000000000000000;
+
+    static const constexpr double undesiredRookLocationPenalty = -0.2;
+    static const constexpr unsigned long long undesiredWhiteKingLocations = 0b1111111111111111111111111111111111111111111111111111111100111000;
+    static const constexpr unsigned long long undesiredBlackKingLocations = 0b0011100011111111111111111111111111111111111111111111111111111111;
+
+    static const constexpr double undesiredKingLocationPenalty = -0.9;
+
 public:
     Evaluation();
     static double evaluatePosition(Board* board); // Main eval function, calculating based on private eval functions
+
+
 
     static Board* calcEvalFromBranchTips(Board* startingBoard);
     static Board* getBestBranchFromGT(Board* startingBoard);

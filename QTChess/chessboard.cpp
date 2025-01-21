@@ -5,6 +5,8 @@
 #include <QMessageBox>
 #include <QIcon>
 
+#include "evaluation.h"
+
 
 ChessBoard::ChessBoard(QWidget *parent)
     : QWidget(parent)
@@ -148,6 +150,9 @@ void ChessBoard::clearSelectedFromBoard(){
 }
 
 void ChessBoard::printAllPieces(){
+    // for testing only - player vs player
+    // Evaluation::evaluatePosition(board);
+
     for (int i = 0; i < 64; ++i) {
         QString pieceName;
         // Sprawdzenie obecności figury białej
