@@ -1,70 +1,100 @@
 #include "engine.h"
 #include "evaluation.h"
-#include "pawn.h"
-#include "bishop.h"
-#include "knight.h"
-#include "rook.h"
-#include "king.h"
 
 Engine::Engine() {}
+long allCount=0;
 
-long prevcount=0;
-long count=0;
-// Engine Functions
-void Engine::nextMove(Board* board, unsigned char from, unsigned char to) { // Function creating new Board instance on next and perfoming move on it
-    if(board->next!=nullptr){
-        Board *comp = new Board(board);
-        comp->move(from,to);
-        for(Board *nextMove=board->next;nextMove!=nullptr;nextMove=nextMove->right){
-            if(*nextMove==*comp){
-                board->next=nextMove;
-                board->next->cutSideBranches();
-                delete comp;
-                return;
-            }
-            if(nextMove->right==nullptr) qWarning()<< "Somethings wrong Engine.cpp line 27";
+bool Engine::isPromotion(Board* board, int buttonId, unsigned char selected, unsigned long long moves){
+    if(selected==64) return false;
+    if(!(moves & (1ULL<<buttonId))) return false;
+    if(board->isWhiteMove()){
+        if(buttonId<56) return false;
+        if(board->getWhitePawns() & (1ULL<<selected)) return true;
+    }else{
+        if(buttonId>7) return false;
+        if(board->getBlackPawns() & (1ULL<<selected)) return true;
+    }
+    return false;
+}
+
+
+// FINISHED /maybe change into smaller functions
+void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected, unsigned long long* moves, char botDepth, unsigned short promotion) // Reads input and calls most of other functions
+{
+    if(promotion == 5) return;
+    // If pressed the same tile twice
+    if (*selected == buttonId) {
+        *selected = 64;
+        *moves = 0;
+        return;
+    }
+    // If selected current players piece
+    if ((*board)->isOccupied(buttonId) && !(*board)->isEnemyOccupied(buttonId)) {
+        *selected = buttonId;
+        *moves = getLegalMoves(buttonId, *board);
+        return;
+    }
+    // If selected is a possible move
+    if (*moves & (1ULL << buttonId)) {
+        if((*board)->next==nullptr) {
+            QMessageBox::critical(nullptr, "Error", "Next Board does not exist!! (ERROR EK01)");
+            QCoreApplication::quit();
         }
-        delete comp;
+        findAndApplyMove(board, *selected, buttonId, promotion);
+        (*board)->cutSideBranches();
+        if(botDepth>1){
+            Evaluation::calcEvalFromBranchTips(*board);
+            (*board)->next = Engine::getBestMove(*board);
+            (*board)=(*board)->next;
+            (*board)->cutSideBranches();
+        }
+        Engine::buildFutureGameTree(*board, botDepth);
+
+        //Reset selection on board
+        *moves = 0;
+        *selected = 64;
+        printMoveDebug(*board);
     }
+    // If tile not in move list
     else {
-        board->next = new Board(board);
-        board->next -> move(from,to);
+        *selected = 64;
+        *moves = 0;
     }
 }
 
-Board* Engine::engineNextMove(Board* board,char botDepth){ // Function playing the move calculated as best by the engine
-    count = 0;
-    Engine::buildFutureGameTree(board, botDepth);
-    prevcount+=count;
-    Evaluation::calcEvalFromBranchTips(board);
-    Board* best = Engine::getBestMove(board);
-    best->cutSideBranches();
-
-    return best;
+// FINISHED
+void Engine::findAndApplyMove(Board** board, unsigned char from, unsigned char to, unsigned short promotion) { // Function creating new Board instance on next and perfoming move on it
+    for(Board *comparator = (*board)->next;comparator!=nullptr;comparator=comparator->right){
+        if(comparator->getLastMoveFrom() == from && comparator->getLastMoveTo() == to && comparator->getLastMovePromotion() == promotion){
+            (*board)->next=comparator;
+            (*board)=(*board)->next;
+            comparator->cutSideBranches();
+            return;
+        }
+    }
+    QMessageBox::critical(nullptr, "Error", "Move coudn't be found!! (ERROR EK02)");
+    QCoreApplication::quit();
 }
 
+// FINISHED
 Board* Engine::getBestMove(Board* startingBoard){
     Board* best=nullptr;
     if (startingBoard->next == nullptr) {
-        QMessageBox::critical(nullptr, "Error", "The next board is null. The application will close.");
+        QMessageBox::critical(nullptr, "Error", "Next Board does not exist in engine!! (ERROR EK03)");
         QCoreApplication::quit();
     }
     for(Board* current=startingBoard->next;current->right!=nullptr;current=current->right){
         if(best==nullptr) best=current;
         else if(startingBoard->isWhiteMove()){
-            if(best->getBoardEval()<current->getBoardEval()){
-                best=current;
-            }
+            if(current->getBoardEval() > best->getBoardEval()){ best=current; }
         }else{
-            if(best->getBoardEval()>current->getBoardEval()){
-                best=current;
-            }
+            if(current->getBoardEval() < best->getBoardEval()){ best=current; }
         }
     }
     return best;
 }
 
-//TODO Maybe add a chance to incease n number on branches with small amounts of moves, idk we'll see how it goes
+// NEEDS TO BE LOOKED INTO ///YEEEP
 void Engine::buildFutureGameTree(Board* startingBoard, int n) {
     if (n <= 0) return;
     Board* current = startingBoard;
@@ -81,83 +111,38 @@ void Engine::buildFutureGameTree(Board* startingBoard, int n) {
         while (moves) {
             short to = __builtin_ctzll(moves);
             moves &= ~(1LL << to);
-            Board* temp = new Board(startingBoard);
-            count++;
-            temp->move(from, to);
-            if (current == startingBoard) {
-                current = current->next = temp;
-            } else {
-                current->right = temp;
-                temp->left = current;
-                current = temp;
-            }
-            //Don't delete temp, as temporary is only the pointer and not it's destination
-            buildFutureGameTree(current, n - 1);
+            short promotion = 0;
+            if(isPromotion(startingBoard,to,from,UINT64_MAX)) promotion = 4;
+            do{
+                Board* temp = new Board(startingBoard, from, to, promotion,false);
+                allCount++;
+                if (current == startingBoard) {
+                    current = current->next = temp;
+                } else {
+                    current->right = temp;
+                    temp->left = current;
+                    current = temp;
+                }
+                //Don't delete temp, as temporary is only the pointer and not it's destination
+                buildFutureGameTree(current, n - 1);
+            } while(promotion-->0);
         }
     }
 }
 
-// Main Functions
-void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected, unsigned char* clearSelected, unsigned long long* moves, unsigned long long* clearMoves, char botDepth) // Reads input and calls most of other functions
-{
-    *clearSelected = *selected;
-    *clearMoves = *moves;
-
-    // If position didn't change
-    if (*selected == buttonId) {
-        *selected = 64;
-        *moves = 0;
-        return;
-    }
-
-    if ((*board)->isOccupied(buttonId) && !(*board)->isEnemyOccupied(buttonId)) {
-        *selected = buttonId;
-        *moves = getLegalMoves(buttonId, *board);
-    } else {
-        if (*moves & (1ULL << buttonId)) {
-            nextMove(*board, *selected, buttonId);
-            (*board)->setLastMoveFrom(*selected);
-            (*board)->setLastMoveTo(buttonId);
-            // When against player
-            if(botDepth==0){
-                Engine::buildFutureGameTree(*board, 2);
-                Evaluation::calcEvalFromBranchTips(*board);
-                *board = (*board)->next;
-            // When against bot
-            } else{
-                *board = (*board)->next;
-                (*board)->next = engineNextMove(*board,botDepth);
-                *board = (*board)->next;
-            }
-            *moves = 0;
-            *selected = 64;
-            printMoveDebug(*board);
-        }
-        // Gdy zostało wciśnięte puste pole
-        else {
-            *selected = 64;
-            *moves = 0;
-        }
-    }
-}
-
+// FINISHED
 unsigned long long Engine::getLegalMoves(short from, Board *startingBoard) {
     unsigned long long moves = startingBoard->getMoves(from);
     unsigned long long legalMoves = 0ULL;
+    Board *newBoard = nullptr;
 
     for (short to = 0; to < 64; ++to) {
         if (moves & (1ULL << to)) {
-            Board *newBoard = new Board(startingBoard);
+            newBoard = new Board(startingBoard, from, to,0,false);
             newBoard->setTurnNumber(startingBoard->getTurnNumber());
-            newBoard->move(from, to);
 
-            short kingPosition = newBoard->isWhiteMove()
-                                     ? __builtin_ctzll(newBoard->getWhiteKings())
-                                     : __builtin_ctzll(newBoard->getBlackKings());
-
-            if (!newBoard->isAttacked(kingPosition, startingBoard->isWhiteMove())) {
-                legalMoves |= (1ULL << to);
-            }
+            short kingPosition = newBoard->getKingPosition();
+            if (!newBoard->isAttacked(kingPosition, startingBoard->isWhiteMove())) { legalMoves |= (1ULL << to); }
 
             delete newBoard;
         }
@@ -166,30 +151,25 @@ unsigned long long Engine::getLegalMoves(short from, Board *startingBoard) {
     return legalMoves;
 }
 
+
+// FINISHED
+int Engine::printPossibleMoveCount(Board* startingBoard, int count) {
+    if (!startingBoard) { return count; }
+    int temp = count + 1;
+    if (startingBoard->right) { temp = printPossibleMoveCount(startingBoard->right, temp); }
+    if (startingBoard->next) { temp = printPossibleMoveCount(startingBoard->next, temp); }
+    if (count == -1) { qWarning() << "All Calculated Possible Moves: " << temp; }
+    return temp;
+}
+
+// FINISHED
 void Engine::printMoveDebug(Board* startingBoard){
     printPossibleMoveCount(startingBoard);
-    qWarning() << "All calculated boards: " << prevcount;
-    qWarning() << "New calculated boards: " << count;
     (startingBoard)->printRootLength();
+    qWarning() << "All calculated boards: " << allCount;
     qWarning() << "Boards in memory: " << (startingBoard)->existingBoards;
     qWarning() << "Current board evaluation " <<(startingBoard)->getBoardEval();
     (startingBoard)->printLastMove();
+    qWarning() << "Last move promotion: " << (startingBoard)->getLastMovePromotion();
     qWarning() << "-------------------------------";
-}
-
-int Engine::printPossibleMoveCount(Board* startingBoard, int count) {
-    if (!startingBoard) {
-        return count;
-    }
-
-    int temp = count + 1;
-
-    if (startingBoard->right) {
-        temp = printPossibleMoveCount(startingBoard->right, temp);
-    }
-    if (startingBoard->next) {
-        temp = printPossibleMoveCount(startingBoard->next, temp);
-    }
-    if (count == -1) { qWarning() << "All Calculated Possible Moves: " << temp; }
-    return temp;
 }
