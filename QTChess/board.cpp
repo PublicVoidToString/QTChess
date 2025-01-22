@@ -92,10 +92,11 @@ void Board::move(unsigned char from, unsigned char to) // Function making moving
     if (whitePawns & (1ULL << from)) {
         isWhiteMove=true;
         whitePawns &= ~(1ULL << from);
-        whitePawns |= (1ULL << to);
-        if((to-from==9 || to-from==7) && to<=47 && to>=40){
+        // en passant
+        if((to-from==9 || to-from==7) && to<=47 && to>=40 && !isOccupied(to)){
             capture(to-8, isWhiteMove);
         }
+        whitePawns |= (1ULL << to);
     } else if(whiteRooks & (1ULL << from)) {
         isWhiteMove=true;
         whiteRooks &= ~(1ULL << from);
@@ -137,10 +138,10 @@ void Board::move(unsigned char from, unsigned char to) // Function making moving
 
     } else if(blackPawns & (1ULL << from)) {
         blackPawns &= ~(1ULL << from);
-        blackPawns |= (1ULL << to);
-        if((from-to==9 || from-to==7) && to<=15 && to>=8){
+        if((from-to==9 || from-to==7) && to<=23 && to>=16 && !isOccupied(to)){
             capture(to+8, isWhiteMove);
         }
+        blackPawns |= (1ULL << to);
     } else if(blackRooks & (1ULL << from)) {
         blackRooks &= ~(1ULL << from);
         blackRooks |= (1ULL << to);
