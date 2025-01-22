@@ -134,7 +134,7 @@ double Evaluation::pieceSquareTables(Board* board) {
     egScore = eg_white - eg_black;
 
     int mgPhase = gamePhase;
-    if (mgPhase > 24) mgPhase = 24; /* in case of early promotion */
+    if (mgPhase > 24) mgPhase = 24; // in case of early promotion
     int egPhase = 24 - mgPhase;
     return (mgScore * mgPhase + egScore * egPhase) / 24.0;
 

@@ -79,7 +79,6 @@ Board::Board(Board* previousBoard,bool debug) {
     blackQueens  = previousBoard->blackQueens;
     blackKings   = previousBoard->blackKings;
 
-
     prev = previousBoard;
     right = nullptr;
     left = nullptr;
@@ -251,11 +250,12 @@ bool Board::isEnemyOccupied(int buttonId) const { // Is enemy on buttonID tile
 bool Board::isEnPassantEligible(int buttonId) const {
 
     // checks if last move was a 2 forward advance
-
     if(Board::isWhiteMove()) {
-        return (blackPawns & (1ULL << buttonId)) && this->prev->getLastMoveFrom() == buttonId+16 && this->prev->getLastMoveTo() == buttonId;
+        return (blackPawns & (1ULL << buttonId)) && this->getLastMoveFrom() == buttonId+16
+               && this->getLastMoveTo() == buttonId;
     } else {
-        return (whitePawns & (1ULL << buttonId)) && this->prev->getLastMoveFrom() == buttonId-16 && this->prev->getLastMoveTo() == buttonId;
+        return (whitePawns & (1ULL << buttonId)) && this->getLastMoveFrom() == buttonId-16
+               && this->getLastMoveTo() == buttonId;
     }
 }
 

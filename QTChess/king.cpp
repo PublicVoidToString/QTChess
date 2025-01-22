@@ -77,8 +77,7 @@ unsigned long long King::legalMoves(int positionId, const Board& board) {
 }
 
 bool King::isInCheck(int positionId, const Board& board, bool isWhite) {
-    return false;
-    /*
+
     Board* noKingBoard = new Board(board);
     noKingBoard->removeKing(isWhite);
     noKingBoard->setTurnNumber(board.getTurnNumber());
@@ -134,6 +133,5 @@ bool King::isInCheck(int positionId, const Board& board, bool isWhite) {
 
     delete noKingBoard;
     return false;
-    */
 }
 

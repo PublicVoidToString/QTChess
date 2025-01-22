@@ -116,8 +116,6 @@ void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected,
     } else {
         if (*moves & (1ULL << buttonId)) {
             nextMove(*board, *selected, buttonId);
-            (*board)->setLastMoveFrom(*selected);
-            (*board)->setLastMoveTo(buttonId);
             // When against player
             if(botDepth==0){
                 Engine::buildFutureGameTree(*board, 2);
