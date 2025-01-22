@@ -41,32 +41,32 @@ unsigned long long King::legalMoves(int positionId, const Board& board) {
         }
 
         // Pole jest wolne
-        if (!isInCheck(newPosition,board,board.isWhiteMove()))
+        if (!board.isAttacked(newPosition, board.isWhiteMove()))
             legalMovesBitmap |= (1ULL << newPosition);
     }
 
     if (board.getWhiteLongCastlePossible() && positionId == 4) {
         if (!board.isOccupied(1) && !board.isOccupied(2) && !board.isOccupied(3)) {
-            if(!isInCheck(2,board,true) && !isInCheck(3,board,true) && !isInCheck(4,board,true))
+            if(!board.isAttacked(2,true) && !board.isAttacked(3,true) && !board.isAttacked(4,true))
                 legalMovesBitmap |= (1ULL << 2);
         }
     }
 
     if (board.getWhiteShortCastlePossible() && positionId == 4) {
         if (!board.isOccupied(5) && !board.isOccupied(6)) {
-            if(!isInCheck(4,board,true) && !isInCheck(5,board,true) && !isInCheck(6,board,true))
+            if(!board.isAttacked(4,true) && !board.isAttacked(5,true) && !board.isAttacked(6,true))
                 legalMovesBitmap |= (1ULL << 6);
         }
     }
     if (board.getBlackLongCastlePossible() && positionId == 60) {
         if (!board.isOccupied(57) && !board.isOccupied(58) && !board.isOccupied(59)) {
-            if(!isInCheck(58,board,false) && !isInCheck(59,board,false) && !isInCheck(60,board,false))
+            if(!board.isAttacked(58,false) && !board.isAttacked(59,false) && !board.isAttacked(60,false))
                 legalMovesBitmap |= (1ULL << 58);
         }
     }
     if (board.getBlackShortCastlePossible() && positionId == 60) {
         if (!board.isOccupied(61) && !board.isOccupied(62)) {
-            if(!isInCheck(60,board,false) && !isInCheck(61,board,false) && !isInCheck(62,board,false))
+            if(!board.isAttacked(60,false) && !board.isAttacked(61,false) && !board.isAttacked(62,false))
                 legalMovesBitmap |= (1ULL << 62);
         }
     }
@@ -76,7 +76,9 @@ unsigned long long King::legalMoves(int positionId, const Board& board) {
 
 }
 
+// TODO kamil prosił o todo/do usunięcia
 bool King::isInCheck(int positionId, const Board& board, bool isWhite) {
+
     return false;
     /*
     Board* noKingBoard = new Board(board);
