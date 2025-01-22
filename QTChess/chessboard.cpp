@@ -1,12 +1,31 @@
 #include "chessboard.h"
 #include "ui_chessboard.h"
 #include "engine.h"
+#include "promotionwindow.h"
 #include <QResizeEvent>
 #include <QMessageBox>
 #include <QIcon>
 
 #include "evaluation.h"
 
+
+
+void ChessBoard::handleButtonClick(int buttonId)
+{
+    short promotion = 0;
+    bool isPromotion = Engine::isPromotion(board,buttonId,selected,moves);
+    if (isPromotion) {
+        PromotionWindow promoWindow;
+        promoWindow.exec();
+        promotion = promoWindow.getPromotionChoice();
+    }
+    Engine::pressedButton(&board,buttonId,&selected,&moves,botDepth, promotion);
+
+    //Reprinting board
+    clearSelectedFromBoard();
+    printSelection();
+    printAllPieces();
+}
 
 ChessBoard::ChessBoard(QWidget *parent)
     : QWidget(parent)
@@ -17,6 +36,7 @@ ChessBoard::ChessBoard(QWidget *parent)
     clearSelected = 64;
     moves        = 0b0000000000000000000000000000000000000000000000000000000000000000;
     clearMoves   = 0b0000000000000000000000000000000000000000000000000000000000000000;
+    botDepth     = 1;
     chessTiles = (QPushButton**)malloc(sizeof(QPushButton*)*64);
     ui->setupUi(this);
     initBoard();
@@ -25,6 +45,7 @@ ChessBoard::ChessBoard(QWidget *parent)
 }
 void ChessBoard::setDepth(char level){
     botDepth = level*2;
+    Engine::buildFutureGameTree(board, botDepth);
 }
 
 ChessBoard::~ChessBoard()
@@ -39,7 +60,7 @@ ChessBoard::~ChessBoard()
 void ChessBoard::initBoard()
 {
     board = new Board();
-    Engine::buildFutureGameTree(board, 2);
+    Engine::buildFutureGameTree(board, botDepth);
 
     // Main layout (where later the grid is added)
     QHBoxLayout *mainLayout = new QHBoxLayout(this);
@@ -114,16 +135,6 @@ void ChessBoard::undoMove(){
         printAllPieces();
         clearSelectedFromBoard();
     }
-}
-
-void ChessBoard::handleButtonClick(int buttonId)
-{
-    Engine::pressedButton(&board,buttonId,&selected,&clearSelected,&moves,&clearMoves,botDepth);
-
-    //Reprinting board
-    clearSelectedFromBoard();
-    printSelection();
-    printAllPieces();
 }
 
 void ChessBoard::resizeEvent(QResizeEvent *event)
