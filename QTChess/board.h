@@ -31,9 +31,12 @@ public:
     static unsigned long existingBoards;
     Board(bool debug=false);
     Board(Board* previousBoard,bool debug=false);
+    Board(Board* previousBoard,unsigned char from, unsigned char to, bool debug=false);
+    Board(Board* previousBoard,unsigned char from, unsigned char to, unsigned short promotion, bool debug=false);
     ~Board();
 
-    void move(unsigned char from, unsigned char to); // Function making moving figure from->to on current board
+    void move(unsigned char from, unsigned char to, unsigned short promotion=0); // Function making moving figure from->to on current board
+    void promote(unsigned char tile, unsigned char promotion);
     void capture(unsigned char to, bool isWhiteMove);
     void capturePiece(unsigned char to, uint64_t& pieceBoard);
     // GAME TREE (Current is stored by Chessboard class, therefore those pointers are made public)
@@ -53,6 +56,7 @@ public:
     bool isWhiteMove() const;
     bool isOnMoveList() const;
 
+    short getKingPosition() const;
     long long getWhitePawns() const;
     long long getWhiteKnights() const;
     long long getWhiteRooks() const;
@@ -98,6 +102,8 @@ public:
     bool getBlackLongCastlePossible() const;
     bool getWhiteShortCastlePossible() const;
     bool getWhiteLongCastlePossible() const;
+    short getLastMovePromotion() const;
+    void setLastMovePromotion(short promotion) ;
 
     void setLastMoveWin(bool white);
     bool getWhiteCheckmate();
