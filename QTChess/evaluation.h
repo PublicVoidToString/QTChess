@@ -6,9 +6,6 @@ class Evaluation
 {
 private:
 
-    // basic piece-sqare-table evaluation
-    static double pieceSquareTables(Board* board);
-
     static const constexpr double mg_pawn_value = 0.82;
     static const constexpr double mg_knight_value = 3.37;
     static const constexpr double mg_bishop_value = 3.65;
@@ -177,12 +174,11 @@ private:
     static unsigned long long upShift(unsigned long long bitboard);
     static unsigned long long downShift(unsigned long long bitboard);
 
-    static unsigned int sumBits(unsigned long long bitboard);
+    static int sumBits(unsigned long long bitboard);
 
-    static double pawnStructure(Board* board);
 
-    static unsigned int isolatedPawnCount(unsigned long long bitboard);
-    static unsigned int doubledPawnCount(unsigned long long bitboard);
+    static int isolatedPawnCount(unsigned long long bitboard);
+    static int doubledPawnCount(unsigned long long bitboard);
     static int backwardPawnCount(unsigned long long whitePawns, unsigned long long blackPawns);
     static int passedPawnCount(unsigned long long whitePawns, unsigned long long blackPawns);
 
@@ -202,8 +198,7 @@ private:
     // Adjecent and the same files are clear from the opposite color pawns
     static const constexpr double passedPawnBonus = 0.9;
 
-    // TODO - piece activity, king safety; meaby some other heuristics
-    static double pieceDevelopmentEvaluation(Board* board);
+
     // Number of moves, where development heuristics are considered
     static const constexpr int openingPhaseMoveCount = 30;
 
@@ -225,6 +220,10 @@ public:
     Evaluation();
     static double evaluatePosition(Board* board); // Main eval function, calculating based on private eval functions
 
+    // different heuristics
+    static double pieceDevelopmentEvaluation(Board* board);
+    static double pieceSquareTables(Board* board);
+    static double pawnStructure(Board* board);
 
 
     static Board* calcEvalFromBranchTips(Board* startingBoard);
