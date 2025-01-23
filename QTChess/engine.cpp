@@ -43,12 +43,12 @@ void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected,
         findAndApplyMove(board, *selected, buttonId, promotion);
         (*board)->cutSideBranches();
         if(botDepth>1){
+            Engine::buildFutureGameTree(*board, botDepth);
             Evaluation::calcEvalFromBranchTips(*board);
             (*board)->next = Engine::getBestMove(*board);
             (*board)=(*board)->next;
             (*board)->cutSideBranches();
         }
-        Engine::buildFutureGameTree(*board, botDepth);
 
         //Reset selection on board
         *moves = 0;
@@ -169,6 +169,12 @@ void Engine::printMoveDebug(Board* startingBoard){
     qWarning() << "All calculated boards: " << allCount;
     qWarning() << "Boards in memory: " << (startingBoard)->existingBoards;
     qWarning() << "Current board evaluation " <<(startingBoard)->getBoardEval();
+    qWarning() << "PST board eval: " <<
+        Evaluation::pieceSquareTables(startingBoard) <<
+        "Pawn structure evaluation: " <<
+        Evaluation::pawnStructure(startingBoard) <<
+        "Piece development evaluation: " <<
+        Evaluation::pieceDevelopmentEvaluation(startingBoard);
     (startingBoard)->printLastMove();
     qWarning() << "Last move promotion: " << (startingBoard)->getLastMovePromotion();
     qWarning() << "-------------------------------";

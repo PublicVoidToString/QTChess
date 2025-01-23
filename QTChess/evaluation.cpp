@@ -160,8 +160,8 @@ unsigned long long Evaluation::downShift(unsigned long long bitboard)
     return (bitboard >> 8) & ~rank8;
 }
 
-unsigned int Evaluation::sumBits(unsigned long long bitboard) {
-    unsigned int sum = 0;
+int Evaluation::sumBits(unsigned long long bitboard) {
+    int sum = 0;
     unsigned long long buffer = bitboard;
     for (sum = 0; buffer; sum++)
     {
@@ -170,11 +170,11 @@ unsigned int Evaluation::sumBits(unsigned long long bitboard) {
     return sum;
 }
 
-unsigned int Evaluation::isolatedPawnCount(unsigned long long bitboard) {
+int Evaluation::isolatedPawnCount(unsigned long long bitboard) {
 
     int isolatedPawnCount = 0;
     for (int file = 0; file <8; file++) {
-        unsigned int count = sumBits((fileA << file) & bitboard);
+        int count = sumBits((fileA << file) & bitboard);
         if(count > 0) {
             if(!(leftShift(fileA << file) & bitboard) && !(rightShift(fileA << file) & bitboard)) {
                 isolatedPawnCount+=count;
@@ -185,10 +185,10 @@ unsigned int Evaluation::isolatedPawnCount(unsigned long long bitboard) {
     return isolatedPawnCount;
 }
 
-unsigned int Evaluation::doubledPawnCount(unsigned long long bitboard) {
-    unsigned int doubledPawnCount = 0;
+int Evaluation::doubledPawnCount(unsigned long long bitboard) {
+    int doubledPawnCount = 0;
     for(int file = 0; file < 8; file++) {
-        unsigned int count = sumBits(bitboard & (fileA << file));
+        int count = sumBits(bitboard & (fileA << file));
         if (count > 1) {
             doubledPawnCount += count-1;
         }
@@ -275,7 +275,7 @@ double Evaluation::pawnStructure(Board* board) {
     // doubled pawns
     //qWarning() << "Doubled white pawn count: " << doubledPawnCount(board->getWhitePawns());
     //qWarning() << "Doubled black pawn count: " << doubledPawnCount(board->getBlackPawns());
-    bonus += doubledPawnPenalty * (doubledPawnCount(board->getWhitePawns()) - doubledPawnCount(board->getWhitePawns()));
+    bonus += doubledPawnPenalty * (doubledPawnCount(board->getWhitePawns()) - doubledPawnCount(board->getBlackPawns()));
     // backward pawns
     bonus += backwardPawnPenalty * backwardPawnCount(board->getWhitePawns(), board->getBlackPawns());
     // passed pawns
@@ -304,6 +304,8 @@ double Evaluation::pieceDevelopmentEvaluation(Board* board) {
     return whiteDevelopmentPenalty - blackDevelopmentPenalty;
 }
 
+
+//TODO Add Alpha Beta pruning, adjust minmaxing
 Board* Evaluation::calcEvalFromBranchTips(Board* startingBoard) {
 
     if (startingBoard == nullptr)
@@ -316,30 +318,33 @@ Board* Evaluation::calcEvalFromBranchTips(Board* startingBoard) {
         return startingBoard;
     }
 
-    if (startingBoard->next != nullptr) {
-        if (startingBoard->isWhiteMove()) {
-            Evaluation::evaluatePosition(startingBoard);
-            for (Board* current = startingBoard->next; current != nullptr; current = current->right) {
-                calcEvalFromBranchTips(current);
-                if (startingBoard->getBoardEval() < current->getBoardEval())
-                    startingBoard->setBoardEval(current->getBoardEval());
-            }
-        } else {
-            Evaluation::evaluatePosition(startingBoard);
-            for (Board* current = startingBoard->next; current != nullptr; current = current->right) {
-                calcEvalFromBranchTips(current);
-                if (startingBoard->getBoardEval() > current->getBoardEval())
-                    startingBoard->setBoardEval(current->getBoardEval());
-            }
-        }
-    } else {
-        Evaluation::evaluatePosition(startingBoard);
+    // Evaluate leaf nodes first
+    if (startingBoard->next == nullptr) {
+        evaluatePosition(startingBoard);
+        return startingBoard;
     }
+
+    // Recursively evaluate child nodes and propagate evaluations
+    double bestChildEval = startingBoard->isWhiteMove() ? -INFINITY : INFINITY;
+    for (Board* current = startingBoard->next; current != nullptr; current = current->right) {
+        calcEvalFromBranchTips(current);
+
+        if (startingBoard->isWhiteMove() && current->getBoardEval() > bestChildEval) {
+            bestChildEval = current->getBoardEval();
+        } else if (!startingBoard->isWhiteMove() && current->getBoardEval() < bestChildEval) {
+            bestChildEval = current->getBoardEval();
+        }
+    }
+
+
+    startingBoard->setBoardEval(bestChildEval);
 
     return startingBoard;
 }
 
-//TODO Add Alpha Beta pruning, adjust minmaxing
+
+// can be deleted, does the same thing as function above, but function above is now fixed
+/*
 Board* Evaluation::getBestBranchFromGT(Board* startingBoard){
     if(startingBoard==nullptr || startingBoard->next==nullptr) return nullptr;
     Board* best = nullptr;
@@ -351,5 +356,5 @@ Board* Evaluation::getBestBranchFromGT(Board* startingBoard){
         if(current != nullptr && ( best == nullptr || best->getBoardEval() < current->getBoardEval() )) best=current;
     }
     return best;
-}
+}*/
 
