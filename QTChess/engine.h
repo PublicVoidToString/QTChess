@@ -25,6 +25,11 @@ public:
     static int printPossibleMoveCount(Board* startingBoard, int count=-1);
 
     static void printMoveDebug(Board* startingBoard);
+
+    // diffrent variations of minimax algorithm
+    static void minimaxTreeSearch(Board* board, int n);
+    static void alphaBetaTreeSearch(Board* board, int n, double alpha, double beta);
+
 };
 
 #endif // ENGINE_H

@@ -343,18 +343,3 @@ Board* Evaluation::calcEvalFromBranchTips(Board* startingBoard) {
 }
 
 
-// can be deleted, does the same thing as function above, but function above is now fixed
-/*
-Board* Evaluation::getBestBranchFromGT(Board* startingBoard){
-    if(startingBoard==nullptr || startingBoard->next==nullptr) return nullptr;
-    Board* best = nullptr;
-    for(Board* current = startingBoard->next; current->right!=nullptr;current=current->right){
-        //Evaluate board position based on Game Tree
-        Board* currentBranch = getBestBranchFromGT(current);
-        if(currentBranch != nullptr) current->setBoardEval(currentBranch->getBoardEval());
-
-        if(current != nullptr && ( best == nullptr || best->getBoardEval() < current->getBoardEval() )) best=current;
-    }
-    return best;
-}*/
-
