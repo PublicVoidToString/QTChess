@@ -15,9 +15,14 @@ double Evaluation::evaluatePosition(Board* board) { // Main eval function, calcu
 
     if(board->getWhiteCheckmate()) {
         board->setBoardEval(-1000);
+        return board->getBoardEval();
     }
     else if(board->getBlackCheckmate()) {
         board->setBoardEval(1000);
+        return board->getBoardEval();
+    } else if(!board->isPossibleMove()){
+        board->setBoardEval(0);
+        return board->getBoardEval();
     }
     else if(false) board->setBoardEval(0);
     else {
@@ -309,10 +314,10 @@ Board* Evaluation::calcEvalFromBranchTips(Board* startingBoard) {
     if (startingBoard == nullptr)
         return nullptr;
     if (startingBoard->getWhiteKings()==0 ) {
-        startingBoard->setBoardEval(-10000);
+        startingBoard->setBoardEval(-1001);
         return startingBoard;
     } else if (startingBoard->getBlackKings()==0){
-        startingBoard->setBoardEval(10000);
+        startingBoard->setBoardEval(1001);
         return startingBoard;
     }
 

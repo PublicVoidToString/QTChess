@@ -15,6 +15,7 @@ SOURCES += \
     chessboard.cpp \
     engine.cpp \
     evaluation.cpp \
+    finalmessage.cpp \
     king.cpp \
     knight.cpp \
     main.cpp \
@@ -29,6 +30,7 @@ HEADERS += \
     chessboard.h \
     engine.h \
     evaluation.h \
+    finalmessage.h \
     king.h \
     knight.h \
     mainmenu.h \
@@ -38,6 +40,7 @@ HEADERS += \
 
 FORMS += \
     chessboard.ui \
+    finalmessage.ui \
     mainmenu.ui \
     promotionwindow.ui
 

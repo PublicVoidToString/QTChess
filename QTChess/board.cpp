@@ -54,33 +54,10 @@ Board::Board(bool debug) {
     blackQueens  = 0b0000100000000000000000000000000000000000000000000000000000000000;
     blackKings   = 0b0001000000000000000000000000000000000000000000000000000000000000;
 
+    whitePieces = (whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKings);
+    blackPieces = (blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKings);
+    allPieces = (whitePieces | blackPieces);
     prev = nullptr;
-    right = nullptr;
-    left = nullptr;
-    next = nullptr;
-}
-Board::Board(Board* previousBoard,bool debug) {
-    if(!debug) existingBoards+=1;
-    turnNumber = previousBoard->turnNumber+1;
-
-    lastMove=previousBoard->lastMove & 0xFFFFFFFE;
-    setLastMovePromotion(0);
-
-    whitePawns   = previousBoard->whitePawns;
-    whiteRooks   = previousBoard->whiteRooks;
-    whiteKnights = previousBoard->whiteKnights;
-    whiteBishops = previousBoard->whiteBishops;
-    whiteQueens  = previousBoard->whiteQueens;
-    whiteKings   = previousBoard->whiteKings;
-
-    blackPawns   = previousBoard->blackPawns;
-    blackRooks   = previousBoard->blackRooks;
-    blackKnights = previousBoard->blackKnights;
-    blackBishops = previousBoard->blackBishops;
-    blackQueens  = previousBoard->blackQueens;
-    blackKings   = previousBoard->blackKings;
-
-    prev = previousBoard;
     right = nullptr;
     left = nullptr;
     next = nullptr;
@@ -105,54 +82,40 @@ Board::Board(Board* previousBoard,unsigned char from, unsigned char to, unsigned
     blackBishops = previousBoard->blackBishops;
     blackQueens  = previousBoard->blackQueens;
     blackKings   = previousBoard->blackKings;
-    move(from, to, promotion);
+
+    makeMove(from, to, promotion);
+
+    whitePieces = (whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKings);
+    blackPieces = (blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKings);
+    allPieces = (whitePieces | blackPieces);
+
     prev = previousBoard;
     right = nullptr;
     left = nullptr;
     next = nullptr;
 }
 
-void Board::move(unsigned char from, unsigned char to, unsigned short promotion) // Function making moving figure from->to on current board
+void Board::makeMove(unsigned char from, unsigned char to, unsigned short promotion) // Making move on board without checking it's legality
 {
     setLastMovePromotion(promotion);
-    bool isWhiteMove = false;
-    if (whitePawns & (1ULL << from)) {
-        isWhiteMove=true;
-        whitePawns &= ~(1ULL << from);
-        // en passant
-        if((to-from==9 || to-from==7) && to<=47 && to>=40 && !isOccupied(to)){
-            capture(to-8, isWhiteMove);
-        }
-        whitePawns |= (1ULL << to);
-    } else if(whiteRooks & (1ULL << from)) {
-        isWhiteMove=true;
-        whiteRooks &= ~(1ULL << from);
-        whiteRooks |= (1ULL << to);
-        if (from == 0) {
-            blockWhiteLongCastle();
-        } else if (from == 7) {
-            blockWhiteShortCastle();
-        }
-
-    } else if(whiteKnights & (1ULL << from)) {
-        isWhiteMove=true;
-        whiteKnights &= ~(1ULL << from);
-        whiteKnights |= (1ULL << to);
-
-    } else if(whiteBishops & (1ULL << from)) {
-        isWhiteMove=true;
-        whiteBishops &= ~(1ULL << from);
-        whiteBishops |= (1ULL << to);
-
-    } else if(whiteQueens & (1ULL << from)) {
-        isWhiteMove=true;
-        whiteQueens &= ~(1ULL << from);
-        whiteQueens |= (1ULL << to);
-
-    } else if(whiteKings & (1ULL << from)) {
-        isWhiteMove=true;
-        whiteKings &= ~(1ULL << from);
-        whiteKings |= (1ULL << to);
+    setLastMoveFrom(from);
+    setLastMoveTo(to);
+    uint64_t* bitboard = getBitboard(to);
+    if(bitboard!=nullptr) *bitboard &= ~(1ULL<<to);
+    bitboard = getBitboard(from);
+    if (bitboard == nullptr) {
+        qWarning() << "Invalid move: no bitboard found for tile: " << to << " (ERROR BK01)";
+        return;
+    }
+    *bitboard ^= ((1ULL<<from)|(1ULL<<to));
+    if((*bitboard)==whitePawns){
+        if(promotion > 0) promote(to, promotion);
+        if((to-from==9 || to-from==7) && to<=47 && to>=40 && !isOccupied(to))  { blackPawns &= ~(1ULL<<(to-8)); }
+    }else if((*bitboard)==blackPawns){
+        if(promotion > 0) promote(to, promotion);
+        if((from-to==9 || from-to==7) && to<=23 && to>=16 && !isOccupied(to))  { whitePawns &= ~(1ULL<<(to+8)); }
+    }
+    else if((*bitboard)==whiteKings){
         if (from == 4 && to == 6) {
             whiteRooks &= ~(1ULL << 7);
             whiteRooks |= (1ULL << 5);
@@ -163,34 +126,7 @@ void Board::move(unsigned char from, unsigned char to, unsigned short promotion)
         blockWhiteLongCastle();
         blockWhiteShortCastle();
 
-    } else if(blackPawns & (1ULL << from)) {
-        blackPawns &= ~(1ULL << from);
-        if((from-to==9 || from-to==7) && to<=23 && to>=16 && !isOccupied(to)){
-            capture(to+8, isWhiteMove);
-        }
-        blackPawns |= (1ULL << to);
-    } else if(blackRooks & (1ULL << from)) {
-        blackRooks &= ~(1ULL << from);
-        blackRooks |= (1ULL << to);
-        if (from == 56) {
-            blockBlackLongCastle();
-        } else if (from == 63) {
-            blockBlackShortCastle();
-        }
-
-    } else if(blackKnights & (1ULL << from)) {
-        blackKnights &= ~(1ULL << from);
-        blackKnights |= (1ULL << to);
-
-    } else if(blackBishops & (1ULL << from)) {
-        blackBishops &= ~(1ULL << from);
-        blackBishops |= (1ULL << to);
-
-    } else if(blackQueens & (1ULL << from)) {
-        blackQueens &= ~(1ULL << from);
-        blackQueens |= (1ULL << to);
-
-    } else if(blackKings & (1ULL << from)) {
+    }else if((*bitboard)==blackKings){
         blackKings &= ~(1ULL << from);
         blackKings |= (1ULL << to);
         if (from == 60 && to == 62) {
@@ -203,10 +139,6 @@ void Board::move(unsigned char from, unsigned char to, unsigned short promotion)
         blockBlackShortCastle();
         blockBlackLongCastle();
     }
-    capture(to, isWhiteMove);
-    setLastMoveFrom(from);
-    setLastMoveTo(to);
-    if(promotion > 0) promote(to, promotion);
 }
 
 void Board::promote(unsigned char tile, unsigned char promotion) {
@@ -288,33 +220,38 @@ void Board::capture(unsigned char to, bool isWhiteMove) {
 }
 
 void Board::capturePiece(unsigned char to, uint64_t& pieceBoard) {
-    if (pieceBoard & (1ULL << to)) {
-        pieceBoard &= ~(1ULL << to);
-    }
+    pieceBoard &= ~(1ULL << to);
 }
 
+void Board::movePiece(unsigned char to, uint64_t& pieceBoard) {
+    pieceBoard |= 1ULL << to;
+}
 
 // Logic Functions
-bool Board::isOccupied(int buttonId) const { // Is any figure on buttonID tile
-    return (whitePawns | whiteKnights | whiteRooks | whiteBishops | whiteQueens | whiteKings |
-            blackPawns | blackKnights | blackRooks | blackBishops | blackQueens | blackKings) & (1ULL << buttonId);
+bool Board::isOccupied(int tileId) const {
+    return (allPieces & (1ULL << tileId));
 }
-bool Board::isEnemyOccupied(int buttonId) const { // Is enemy on buttonID tile
+
+bool Board::isEnemyOccupied(int tileId) const { // Is enemy on tileId tile
     if(isWhiteMove()) {
-        return (blackPawns | blackKnights | blackRooks | blackBishops | blackQueens | blackKings) & (1ULL << buttonId);
+        return isBlack(tileId);
     } else {
-        return (whitePawns | whiteKnights | whiteRooks | whiteBishops | whiteQueens | whiteKings) & (1ULL << buttonId);
+        return isWhite(tileId);
     }
 }
-bool Board::isEnPassantEligible(int buttonId) const {
+
+bool Board::isWhite(int tileId) const { return whitePieces & (1ULL << tileId); }
+bool Board::isBlack(int tileId) const { return blackPieces & (1ULL << tileId); }
+
+bool Board::isEnPassantEligible(int tileId) const {
 
     // checks if last move was a 2 forward advance
     if(Board::isWhiteMove()) {
-        return (blackPawns & (1ULL << buttonId)) && this->getLastMoveFrom() == buttonId+16
-               && this->getLastMoveTo() == buttonId;
+        return (blackPawns & (1ULL << tileId)) && this->getLastMoveFrom() == tileId+16
+               && this->getLastMoveTo() == tileId;
     } else {
-        return (whitePawns & (1ULL << buttonId)) && this->getLastMoveFrom() == buttonId-16
-               && this->getLastMoveTo() == buttonId;
+        return (whitePawns & (1ULL << tileId)) && this->getLastMoveFrom() == tileId-16
+               && this->getLastMoveTo() == tileId;
     }
 }
 

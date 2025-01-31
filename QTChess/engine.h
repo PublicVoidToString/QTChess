@@ -25,6 +25,10 @@ public:
     static int printPossibleMoveCount(Board* startingBoard, int count=-1);
 
     static void printMoveDebug(Board* startingBoard);
+
+    static short isGameEnded(Board* startingBoard);
+
+    static bool setIfGameEnded(Board* startingBoard);
 };
 
 #endif // ENGINE_H
