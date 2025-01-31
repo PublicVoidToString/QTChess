@@ -49,7 +49,7 @@ void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected,
             (*board)=(*board)->next;
             (*board)->cutSideBranches();
         }
-        Engine::minimaxTreeSearch(*board, 1);
+        Engine::buildFutureGameTree(*board, 1);
         //Reset selection on board
         *moves = 0;
         *selected = 64;
