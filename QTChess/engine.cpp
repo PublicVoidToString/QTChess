@@ -187,19 +187,19 @@ void Engine::printMoveDebug(Board* startingBoard){
 // brutal, unoptimised minimaxTreeSearch
 void Engine::minimaxTreeSearch (Board* startingBoard, int n) {
 
-    if (n <= 0) {
-        Evaluation::evaluatePosition(startingBoard);
-        return;
-    }
-
     if (startingBoard->getBlackCheckmate()) {
-        startingBoard->setBoardEval(-10000);
+        startingBoard->setBoardEval(-10000-n); // adding n --> makes sure that the engine goes for the quicker checkmate
         return;
     } else if (startingBoard->getWhiteCheckmate()){
-        startingBoard->setBoardEval(10000);
+        startingBoard->setBoardEval(10000+n);
         return;
     } else if (false) {      // TODO remis
         startingBoard->setBoardEval(0);
+        return;
+    }
+
+    if (n <= 0) {
+        Evaluation::evaluatePosition(startingBoard);
         return;
     }
 
@@ -250,19 +250,19 @@ void Engine::minimaxTreeSearch (Board* startingBoard, int n) {
 
 void Engine::alphaBetaTreeSearch (Board* startingBoard, int n, double alpha, double beta) {
 
-    if (n <= 0) {
-        Evaluation::evaluatePosition(startingBoard);
-        return;
-    }
-
     if (startingBoard->getBlackCheckmate()) {
-        startingBoard->setBoardEval(-10000);
+        startingBoard->setBoardEval(-10000-n); // adding n --> makes sure that the engine goes for the quicker checkmate
         return;
     } else if (startingBoard->getWhiteCheckmate()){
-        startingBoard->setBoardEval(10000);
+        startingBoard->setBoardEval(10000+n);
         return;
     } else if (false) {      // TODO remis
         startingBoard->setBoardEval(0);
+        return;
+    }
+
+    if (n <= 0) {
+        Evaluation::evaluatePosition(startingBoard);
         return;
     }
 
