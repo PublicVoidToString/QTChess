@@ -18,8 +18,6 @@ bool Engine::isPromotion(Board* board, int buttonId, unsigned char selected, uns
     return false;
 }
 
-
-
 // FINISHED /maybe change into smaller functions
 void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected, unsigned long long* moves, char botDepth, unsigned short promotion) // Reads input and calls most of other functions
 {
@@ -109,7 +107,6 @@ Board* Engine::getBestMove(Board* startingBoard){
 }
 
 // Builds game tree without evaluating - used mainly for 1 depth (players move)
-
 void Engine::buildFutureGameTree(Board* startingBoard, int n) {
     if (n <= 0) return;
     Board* current = startingBoard;
@@ -190,7 +187,8 @@ void Engine::printMoveDebug(Board* startingBoard){
     (startingBoard)->printRootLength();
     qWarning() << "All calculated boards: " << allCount;
     qWarning() << "Boards in memory: " << (startingBoard)->existingBoards;
-    qWarning() << "Current board evaluation " <<(startingBoard)->getBoardEval();
+    qWarning() << "Current board evaluation (taking depth into consideration) " <<(startingBoard)->getBoardEval();
+    qWarning() << "Current board static evaluation (not taking depth into account)";
     qWarning() << "PST board eval: " <<
         Evaluation::pieceSquareTables(startingBoard) <<
         "Pawn structure evaluation: " <<
@@ -236,7 +234,6 @@ void Engine::minimaxTreeSearch (Board* startingBoard, int n) {
     }
 
     Board* current = startingBoard;
-    Board* bestBoard = nullptr;
     double bestValue = startingBoard->isWhiteMove() ? -INFINITY : INFINITY;
 
     for (short from = 0; from < 64; from++) {
@@ -262,21 +259,18 @@ void Engine::minimaxTreeSearch (Board* startingBoard, int n) {
                 if (startingBoard->isWhiteMove()) {
                     if(bestValue < temp->getBoardEval()) {
                         bestValue = temp->getBoardEval();
-                        bestBoard = temp;
                     }
 
                 } else {
                     if(bestValue > temp->getBoardEval()) {
                         bestValue = temp->getBoardEval();
-                        bestBoard = temp;
                     }
                 }
 
             } while(promotion-->0);
         }
     }
-    //bestBoard->cutAllBranches();
-    //startingBoard->next = bestBoard;
+
     startingBoard->setBoardEval(bestValue);
 }
 
@@ -299,7 +293,6 @@ void Engine::alphaBetaTreeSearch (Board* startingBoard, int n, double alpha, dou
     }
 
     Board* current = startingBoard;
-    Board* bestBoard = nullptr;
     double bestValue = startingBoard->isWhiteMove() ? -INFINITY : INFINITY;
 
     for (short from = 0; from < 64; from++) {
@@ -326,14 +319,12 @@ void Engine::alphaBetaTreeSearch (Board* startingBoard, int n, double alpha, dou
                 if (startingBoard->isWhiteMove()) {
                     if(bestValue < temp->getBoardEval()) {
                         bestValue = temp->getBoardEval();
-                        bestBoard = temp;
                     }
                     alpha = std::max(alpha, bestValue);
 
                 } else {
                     if(bestValue > temp->getBoardEval()) {
                         bestValue = temp->getBoardEval();
-                        bestBoard = temp;
                     }
                     beta = std::min(beta, bestValue);
                 }
@@ -351,8 +342,7 @@ void Engine::alphaBetaTreeSearch (Board* startingBoard, int n, double alpha, dou
             }
         }
     }
-    //bestBoard->cutAllBranches();
-    //startingBoard->next = bestBoard;
+
     startingBoard->setBoardEval(bestValue);
 }
 

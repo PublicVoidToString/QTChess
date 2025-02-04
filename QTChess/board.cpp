@@ -138,6 +138,18 @@ void Board::makeMove(unsigned char from, unsigned char to, unsigned short promot
         }
         blockBlackShortCastle();
         blockBlackLongCastle();
+    }else if((*bitboard)==whiteRooks){
+        if (from == 0) {
+            blockWhiteLongCastle();
+        } else if (from == 7) {
+            blockWhiteShortCastle();
+        }
+    }else if((*bitboard)==blackRooks) {
+        if (from == 56) {
+            blockBlackLongCastle();
+        } else if (from == 63) {
+            blockBlackShortCastle();
+        }
     }
 }
 
