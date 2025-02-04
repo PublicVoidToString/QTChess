@@ -5,9 +5,29 @@
 #include "knight.h"
 #include "rook.h"
 #include "king.h"
+#include <bitset>
+#include <QString>
 //pieces
 
 // Getters
+
+uint64_t* Board::getBitboard(int tileId) {
+    uint64_t mask = 1ULL << tileId;
+    if (whitePawns & mask) return &whitePawns;
+    if (whiteRooks & mask) return &whiteRooks;
+    if (whiteKnights & mask) return &whiteKnights;
+    if (whiteBishops & mask) return &whiteBishops;
+    if (whiteQueens & mask) return &whiteQueens;
+    if (whiteKings & mask) return &whiteKings;
+    if (blackPawns & mask) return &blackPawns;
+    if (blackRooks & mask) return &blackRooks;
+    if (blackKnights & mask) return &blackKnights;
+    if (blackBishops & mask) return &blackBishops;
+    if (blackQueens & mask) return &blackQueens;
+    if (blackKings & mask) return &blackKings;
+    return nullptr;
+}
+
 bool Board::isWhiteMove() const { return turnNumber%2==0; }
 
 short Board::getKingPosition() const {
@@ -30,6 +50,7 @@ long long Board::getBlackBishops() const { return blackBishops; }
 long long Board::getBlackQueens() const { return blackQueens; }
 long long Board::getBlackKings() const { return blackKings; }
 
+//TODO Fix
 long long Board::getMoves(int position) const {
     long long figureMoves=0;
     if(isWhiteMove()){
@@ -145,8 +166,8 @@ void Board::setLastMoveTo(char to) {
 }
 
 void Board::setLastMoveEnPassant() {
-    lastMove|=0x100; //En Passant true
-    lastMove&=0xFFFF87FF; //Captured figure pawn
+    lastMove|=0x100;
+    lastMove&=0xFFFF87FF;
 }
 void Board::blockWhiteShortCastle() { lastMove&=0b11111111111111111111111101111111; }
 void Board::blockWhiteLongCastle() { lastMove&= 0b11111111111111111111111110111111; }
@@ -160,12 +181,13 @@ bool Board::getWhiteShortCastlePossible() const { return lastMove&0x80; }
 bool Board::getWhiteLongCastlePossible() const { return lastMove&0x40; }
 bool Board::getBlackShortCastlePossible() const { return lastMove&0x20; }
 bool Board::getBlackLongCastlePossible() const { return lastMove&0x10; }
+short Board::getGameState() const { return lastMove&0b1100; }
 
 short Board::getLastMovePromotion() const {
     if (lastMove & 0b10000000000000000000) return 1;
-    if (lastMove & 0b1000000000000000000)  return 2;
-    if (lastMove & 0b100000000000000000)   return 3;
-    if (lastMove & 0b10000000000000000)    return 4;
+    if (lastMove & 0b01000000000000000000)  return 2;
+    if (lastMove & 0b00100000000000000000)   return 3;
+    if (lastMove & 0b00010000000000000000)    return 4;
     return 0;
 }
 
@@ -176,13 +198,13 @@ void Board::setLastMovePromotion(short promotion) {
         lastMove |= 0b10000000000000000000;
         break;
     case 2:
-        lastMove |= 0b1000000000000000000;
+        lastMove |= 0b01000000000000000000;
         break;
     case 3:
-        lastMove |= 0b100000000000000000;
+        lastMove |= 0b00100000000000000000;
         break;
     case 4:
-        lastMove |= 0b10000000000000000;
+        lastMove |= 0b00010000000000000000;
         break;
     case 0:
         break;
@@ -204,8 +226,10 @@ bool Board::getWhiteCheckmate() {
     short kingPosition = __builtin_ctzll(this->getWhiteKings());
     if( isAttacked(kingPosition,true)){
         Engine::buildFutureGameTree(this,1);
-        if(this->next==nullptr)
+        if(this->next==nullptr) {
+            lastMove|=0b0100;
             return true;
+        }
     }
     return false;
 }
@@ -215,12 +239,22 @@ bool Board::getBlackCheckmate() {
     short kingPosition = __builtin_ctzll(this->getBlackKings());
     if( isAttacked(kingPosition,false)) {
         Engine::buildFutureGameTree(this,1);
-        if(this->next==nullptr)
+        if(this->next==nullptr){
+            lastMove|=0b1000;
             return true;
+        }
     }
     return false;
 }
 
+bool Board::isPossibleMove() {
+    Engine::buildFutureGameTree(this,1);
+    if(this->next==nullptr){
+        lastMove|=0b1100;
+        return false;
+    }
+    return true;
+}
 
 
 void Board::printLastMove() const {

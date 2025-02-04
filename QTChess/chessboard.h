@@ -22,7 +22,6 @@ public:
 private slots:
     // Slots are QT environment specific functions
     // that can be connected to signals
-    void undoMove();
     void handleButtonClick(int buttonId);
 
 protected:
@@ -34,6 +33,8 @@ private:
     unsigned char clearSelected; //Previous selected tile to be cleared in next move
     unsigned long long moves; //Moves bitboard of all possible moves of figure on selected tile
     unsigned long long clearMoves; //Previous Moves bitboard to be cleared in next move
+    unsigned int windowSize;
+    bool gameEnded = false;
     Ui::ChessBoard* ui;
     // Array of chess tiles used for display
     QPushButton** chessTiles;
@@ -43,6 +44,7 @@ private:
     void initBoard();
     void printAllPieces();
     void printSelection();
+    void printOutcome(QString outcome);
     void clearSelectedFromBoard();
 };
 

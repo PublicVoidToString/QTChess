@@ -32,13 +32,16 @@ Move representation <br/>
 promotion as 4 different moves
 
 Board lastMove explanation:
-100000 00 0000 0000 00000 00 0 0000 000 0
-|||||| || |||| |||| ||||| || | |||| ||| |
-moved   moved  QRBN PRNBQ SL E SLSL WBL S
-from      to   prom capt       WWBB WW  B
+100000 000000 0000 00000 00 0 0000 00 0 0
+|||||| |||||| |||| ||||| || | |||| || | |
+moved   moved QRBN PRNBQ SL E SLSL WB L S
+from      to  prom capt       WWBB WW   B
 
-QRBN - promotion
-PRKNQ - capture
+moved from - old position of moved piece
+moved to - new position of moved piece
+QRBN - promoted to Queen,rook,bishop, or knight
+
+PRNBQ - capture (pawn,rook,knight,Bishop,Queen
 SL - short/long castle (as played move)
 e - en passant (as played move)
 S/L W/B - short/long castle possible white/black
@@ -66,3 +69,6 @@ https://adamberent.com/piece-square-table/
 
 # General algorithms, board representation and ideas
 https://www.youtube.com/watch?v=w4FFX_otR-4&t=308s
+
+
+https://www.codeproject.com/Articles/5313417/Worlds-fastest-Bitboard-Chess-Movegenerator

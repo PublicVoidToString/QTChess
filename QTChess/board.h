@@ -1,6 +1,8 @@
 #ifndef Board_H
 #define Board_H
 #include <stdint.h>
+#include <QFuture>
+#include <QFutureWatcher>
 
 class Board
 {
@@ -10,20 +12,16 @@ private:
 
     uint32_t lastMove;
     // Bitboards representing figure positions
-    unsigned long long whitePawns;
-    unsigned long long whiteKnights;
-    unsigned long long whiteRooks;
-    unsigned long long whiteBishops;
-    unsigned long long whiteQueens;
-    unsigned long long whiteKings;
+    uint64_t whitePawns; uint64_t blackPawns;
+    uint64_t whiteKnights; uint64_t blackKnights;
+    uint64_t whiteRooks; uint64_t blackRooks;
+    uint64_t whiteBishops; uint64_t blackBishops;
+    uint64_t whiteQueens; uint64_t blackQueens;
+    uint64_t whiteKings; uint64_t blackKings;
 
-    unsigned long long blackPawns;
-    unsigned long long blackKnights;
-    unsigned long long blackRooks;
-    unsigned long long blackBishops;
-    unsigned long long blackQueens;
-    unsigned long long blackKings;
-
+    uint64_t blackPieces;
+    uint64_t whitePieces;
+    uint64_t allPieces;
 
 
 public:
@@ -31,13 +29,24 @@ public:
     static unsigned long existingBoards;
     Board(bool debug=false);
     Board(Board* previousBoard,bool debug=false);
-    Board(Board* previousBoard,unsigned char from, unsigned char to, bool debug=false);
     Board(Board* previousBoard,unsigned char from, unsigned char to, unsigned short promotion, bool debug=false);
     ~Board();
 
-    void move(unsigned char from, unsigned char to, unsigned short promotion=0); // Function making moving figure from->to on current board
+    // Logic Functions
+    bool isOccupied(int tileId) const; // Is any figure on tileId tile
+    bool isEnemyOccupied(int tileId) const; // Is enemy on tileId tile
+    bool isWhite(int tileId) const;
+    bool isBlack(int tileId) const;
+
+    bool isEnPassantEligible(int tileId) const;
+    bool isAttacked(int tileId, bool isWhite) const;
+    uint64_t* getBitboard(int tileId);
+
+
+    void makeMove(unsigned char from, unsigned char to, unsigned short promotion=0); // Function making moving figure from->to on current board
     void promote(unsigned char tile, unsigned char promotion);
     void capture(unsigned char to, bool isWhiteMove);
+    void movePiece(unsigned char to, uint64_t& pieceBoard);
     void capturePiece(unsigned char to, uint64_t& pieceBoard);
     // GAME TREE (Current is stored by Chessboard class, therefore those pointers are made public)
     Board* prev; //Pointer to previous move (empty if first)
@@ -46,11 +55,7 @@ public:
     Board* right; // Next possible move
     Board* left; // Previous possible move
 
-    // Logic Functions
-    bool isOccupied(int buttonId) const; // Is any figure on buttonID tile
-    bool isEnemyOccupied(int buttonId) const; // Is enemy on buttonID tile
-    bool isEnPassantEligible(int buttonId) const;
-    bool isAttacked(int tileId, bool isWhite) const;
+
 
     // Getters
     bool isWhiteMove() const;
@@ -102,12 +107,17 @@ public:
     bool getBlackLongCastlePossible() const;
     bool getWhiteShortCastlePossible() const;
     bool getWhiteLongCastlePossible() const;
+    short getGameState() const;
+
     short getLastMovePromotion() const;
     void setLastMovePromotion(short promotion) ;
 
     void setLastMoveWin(bool white);
+    void setLastMoveWhiteWin();
+    void setLastMoveBlackWin();
     bool getWhiteCheckmate();
     bool getBlackCheckmate();
+    bool isPossibleMove();
 
 
     void printLastMove() const;

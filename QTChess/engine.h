@@ -30,6 +30,8 @@ public:
     static void minimaxTreeSearch(Board* board, int n);
     static void alphaBetaTreeSearch(Board* board, int n, double alpha, double beta);
 
+    static short isGameEnded(Board* startingBoard);
+    static bool setIfGameEnded(Board* startingBoard);
 };
 
 #endif // ENGINE_H

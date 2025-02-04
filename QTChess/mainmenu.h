@@ -29,6 +29,7 @@ private:
     Ui::MainMenu *ui;
     QPushButton *pushButton;
     ChessBoard *chessBoard;
+
 };
 
 #endif // MAINMENU_H

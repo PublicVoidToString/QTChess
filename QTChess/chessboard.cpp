@@ -6,25 +6,38 @@
 #include <QMessageBox>
 #include <QIcon>
 
-#include "evaluation.h"
+#include "finalmessage.h"
 
 
 
 void ChessBoard::handleButtonClick(int buttonId)
 {
+    if(gameEnded) return;
     short promotion = 0;
     bool isPromotion = Engine::isPromotion(board,buttonId,selected,moves);
     if (isPromotion) {
         PromotionWindow promoWindow;
         promoWindow.exec();
         promotion = promoWindow.getPromotionChoice();
+        qWarning() << "promowion: " << promotion;
     }
     Engine::pressedButton(&board,buttonId,&selected,&moves,botDepth, promotion);
 
     //Reprinting board
     clearSelectedFromBoard();
-    printSelection();
     printAllPieces();
+    switch(Engine::isGameEnded(board)){
+    case 1:
+        printOutcome("BlackWin.png");
+        return;
+    case 2:
+        printOutcome("WhiteWin.png");
+        return;
+    case 3:
+        printOutcome("Draw.png");
+        return;
+    }
+    printSelection();
 }
 
 ChessBoard::ChessBoard(QWidget *parent)
@@ -34,6 +47,7 @@ ChessBoard::ChessBoard(QWidget *parent)
     setAttribute(Qt::WA_DeleteOnClose);
     selected = 64;
     clearSelected = 64;
+    windowSize=640;
     moves        = 0b0000000000000000000000000000000000000000000000000000000000000000;
     clearMoves   = 0b0000000000000000000000000000000000000000000000000000000000000000;
     botDepth     = 1;
@@ -43,9 +57,10 @@ ChessBoard::ChessBoard(QWidget *parent)
     printAllPieces();
 
 }
+
 void ChessBoard::setDepth(char level){
     botDepth = level*2;
-    Engine::buildFutureGameTree(board, 1);
+    Engine::minimaxTreeSearch(board, 1);
 }
 
 ChessBoard::~ChessBoard()
@@ -60,7 +75,7 @@ ChessBoard::~ChessBoard()
 void ChessBoard::initBoard()
 {
     board = new Board();
-    Engine::buildFutureGameTree(board, 1);
+    Engine::minimaxTreeSearch(board, 1);
 
     // Main layout (where later the grid is added)
     QHBoxLayout *mainLayout = new QHBoxLayout(this);
@@ -94,56 +109,24 @@ void ChessBoard::initBoard()
         }
     }
 
-    // Button "Cofnij ruch"
-    QPushButton *undoButton = new QPushButton("Cofnij ruch", this);
-    undoButton->setStyleSheet("background-color: black; color: white;");
-    undoButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    connect(undoButton, &QPushButton::clicked, this, &ChessBoard::undoMove);
-
     // Adding chessbouard and additional buttons to the background
     mainLayout->addLayout(gridLayout);
-    mainLayout->addWidget(undoButton);
 
     // Setting main layout
     this->setLayout(mainLayout);
 }
 
-void ChessBoard::undoMove(){
-    bool succed=false;
-    if(botDepth!=0){
-        if(board->prev!=nullptr && board->prev->prev!=nullptr){
-            Board* toDelete1 = board;
-            Board* toDelete2 = board->prev;
-            board=board->prev->prev;
-            toDelete2->next=nullptr;
-            if(toDelete2==toDelete1){
-                qWarning() << "To jest to SAMO";
-            }
-            delete toDelete2;
-            delete toDelete1;
-            succed=true;
-        }
-    }
-    else if(board->prev!=nullptr){
-        Board* del = board;
-        board=board->prev;
-        delete del;
-        board->next=nullptr;
-        succed=true;
-    }
-    if(succed){
-        printAllPieces();
-        clearSelectedFromBoard();
-    }
-}
 
 void ChessBoard::resizeEvent(QResizeEvent *event)
 {
-    // Obliczamy mniejszy z dwóch wymiarów okna
-    int size = qMin(event->size().width(), event->size().height());
-
-    // Ustawiamy nowy rozmiar okna, aby było kwadratowe
-    this->resize(size, size);
+    if(!gameEnded){
+        // Obliczamy mniejszy z dwóch wymiarów okna
+        int size = qMin(event->size().width(), event->size().height());
+        windowSize=size;
+        // Ustawiamy nowy rozmiar okna, aby było kwadratowe
+        printAllPieces();
+    }
+    this->resize(windowSize, windowSize);
 }
 
 void ChessBoard::clearSelectedFromBoard(){
@@ -161,9 +144,7 @@ void ChessBoard::clearSelectedFromBoard(){
 }
 
 void ChessBoard::printAllPieces(){
-    // for testing only - player vs player
-    // Evaluation::evaluatePosition(board);
-
+    int size = windowSize/13;
     for (int i = 0; i < 64; ++i) {
         QString pieceName;
         // Sprawdzenie obecności figury białej
@@ -181,25 +162,19 @@ void ChessBoard::printAllPieces(){
         else if (board->getBlackBishops() & (1ULL << i)) pieceName = "Bishop.png";
         else if (board->getBlackQueens() & (1ULL << i)) pieceName = "Queen.png";
         else if (board->getBlackKings() & (1ULL << i)) pieceName = "King.png";
+        else pieceName = "empty.png";
 
         // Jeżeli znalazł się obrazek do przypisania, ustawiamy ikonę
-        if (!pieceName.isEmpty()) {
-            QPixmap piecePixmap(":/images/" + pieceName);
-            if (!piecePixmap.isNull()) {
-                piecePixmap = piecePixmap.scaled(80, 80, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-                chessTiles[i]->setIcon(QIcon(piecePixmap));
-                chessTiles[i]->setIconSize(QSize(80, 80));
-            } else {
-                qWarning() << "Nie udało się załadować obrazka figury: " << pieceName;
-            }
+        QPixmap piecePixmap(":/images/" + pieceName);
+        if (!piecePixmap.isNull()) {
+            piecePixmap = piecePixmap.scaled(size, size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            chessTiles[i]->setIcon(QIcon(piecePixmap));
+            chessTiles[i]->setIconSize(QSize(size, size));
         } else {
-            // Jeśli nie ma figury na danym polu, zostawiamy ikonę pustą
-            chessTiles[i]->setIcon(QIcon());
-            chessTiles[i]->setIconSize(QSize(80, 80));
+            qWarning() << "Nie udało się załadować obrazka figury: " << pieceName;
         }
     }
 }
-
 
 void ChessBoard::printSelection(){
     if(selected!=64) {
@@ -234,4 +209,11 @@ void ChessBoard::printSelection(){
             chessTiles[i]->setStyleSheet("background-color: #f59e9e;");
         }
     }
+}
+
+void ChessBoard::printOutcome(QString outcome) {
+    FinalMessage *popup = new FinalMessage(outcome, windowSize, this);
+    popup->move(0, windowSize/3);
+    gameEnded=true;
+    popup->show();
 }
