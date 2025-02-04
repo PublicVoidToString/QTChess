@@ -45,7 +45,7 @@ ChessBoard::ChessBoard(QWidget *parent)
 }
 void ChessBoard::setDepth(char level){
     botDepth = level*2;
-    Engine::buildFutureGameTree(board, botDepth);
+    Engine::buildFutureGameTree(board, 1);
 }
 
 ChessBoard::~ChessBoard()
@@ -60,7 +60,7 @@ ChessBoard::~ChessBoard()
 void ChessBoard::initBoard()
 {
     board = new Board();
-    Engine::buildFutureGameTree(board, botDepth);
+    Engine::buildFutureGameTree(board, 1);
 
     // Main layout (where later the grid is added)
     QHBoxLayout *mainLayout = new QHBoxLayout(this);
