@@ -225,7 +225,6 @@ public:
     static double pieceSquareTables(Board* board);
     static double pawnStructure(Board* board);
 
-    static Board* calcEvalFromBranchTips(Board* startingBoard);
 };
 
 #endif // EVALUATION_H

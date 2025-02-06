@@ -36,9 +36,8 @@ bool Board::operator == (const Board &b)
 
 Board::Board(bool debug) {
     if(!debug) existingBoards+=1;
-    turnNumber = 0;
     boardEval=0;
-    lastMove = 0xF1; //castles are possible
+    lastMove = 0xF00000000; //castles are possible
 
     whitePawns   = 0b0000000000000000000000000000000000000000000000001111111100000000;
     whiteRooks   = 0b0000000000000000000000000000000000000000000000000000000010000001;
@@ -65,9 +64,9 @@ Board::Board(bool debug) {
 
 Board::Board(Board* previousBoard,unsigned char from, unsigned char to, unsigned short promotion, bool debug) {
     if(!debug) existingBoards+=1;
-    turnNumber = previousBoard->turnNumber+1;
+    lastMove=previousBoard->lastMove;
+    increaseTurnNumber();
 
-    lastMove=previousBoard->lastMove & 0xFFFFFFFE;
     setLastMovePromotion(promotion);
     whitePawns   = previousBoard->whitePawns;
     whiteRooks   = previousBoard->whiteRooks;
@@ -187,45 +186,45 @@ void Board::capture(unsigned char to, bool isWhiteMove) {
     if (isWhiteMove) {
         if (blackPawns & (1ULL << to)) {
             capturePiece(to, blackPawns);
-            lastMove&=0xFFFF87FF;
-        }
-        else if (blackRooks & (1ULL << to)) {
-            capturePiece(to, blackRooks);
-            lastMove&=0xFFFF47FF;
+            lastMove&=0xFFFFF8FFFFFFFFFF;
         }
         else if (blackKnights & (1ULL << to)) {
             capturePiece(to, blackKnights);
-            lastMove&=0xFFFF27FF;
+            lastMove&=0xFFFF1FFFFFFFFFFF;
         }
         else if (blackBishops & (1ULL << to)) {
             capturePiece(to, blackBishops);
-            lastMove&=0xFFFF17FF;
+            lastMove&=0xFFFF2FFFFFFFFFFF;
+        }
+        else if (blackRooks & (1ULL << to)) {
+            capturePiece(to, blackRooks);
+            lastMove&=0xFFFF4FFFFFFFFFFF;
         }
         else if (blackQueens & (1ULL << to)) {
             capturePiece(to, blackQueens);
-            lastMove&=0xFFFF0FFF;
+            lastMove&=0xFFFF8FFFFFFFFFFF;
         }
         blackKings &= ~(1ULL << to);
     } else {
         if (whitePawns & (1ULL << to)) {
             capturePiece(to, whitePawns);
-            lastMove&=0xFFFF87FF;
-        }
-        else if (whiteRooks & (1ULL << to)) {
-            capturePiece(to, whiteRooks);
-            lastMove&=0xFFFF47FF;
+            lastMove&=0xFFFFF8FFFFFFFFFF;
         }
         else if (whiteKnights & (1ULL << to)) {
             capturePiece(to, whiteKnights);
-            lastMove&=0xFFFF27FF;
+            lastMove&=0xFFFF1FFFFFFFFFFF;
         }
         else if (whiteBishops & (1ULL << to)) {
             capturePiece(to, whiteBishops);
-            lastMove&=0xFFFF17FF;
+            lastMove&=0xFFFF2FFFFFFFFFFF;
+        }
+        else if (whiteRooks & (1ULL << to)) {
+            capturePiece(to, whiteRooks);
+            lastMove&=0xFFFF4FFFFFFFFFFF;
         }
         else if (whiteQueens & (1ULL << to)) {
             capturePiece(to, whiteQueens);
-            lastMove&=0xFFFF0FFF;
+            lastMove&=0xFFFF8FFFFFFFFFFF;
         }
         whiteKings &= ~(1ULL << to);
     }

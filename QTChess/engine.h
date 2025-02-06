@@ -18,7 +18,7 @@ public:
 
     static void pressedButton(Board** board, int buttonId, unsigned char* selected, unsigned long long* moves, char botDepth, unsigned short promotion=0);
 
-    static void buildFutureGameTree(Board* startingBoard, int n); // Function to calculate all possible moves for a n depth in the game tree.
+    static void buildFutureGameTree(Board* startingBoard); // Builds a depth one game tree
 
     static unsigned long long getLegalMoves(short from, Board* startingBoard);
 

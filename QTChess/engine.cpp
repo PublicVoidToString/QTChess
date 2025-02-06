@@ -47,8 +47,8 @@ void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected,
         if(isGameEnded(*board)&0b11) return;
         if(botDepth>1){
             printMoveDebug(*board);
-            //Engine::minimaxTreeSearch(*board, botDepth);
-            Engine::alphaBetaTreeSearch(*board, botDepth, -INFINITY, INFINITY);
+            Engine::minimaxTreeSearch(*board, botDepth);
+            //Engine::alphaBetaTreeSearch(*board, botDepth, -INFINITY, INFINITY);
             (*board)->next = Engine::getBestMove(*board);
             (*board)=(*board)->next;
             (*board)->cutSideBranches();
@@ -107,15 +107,10 @@ Board* Engine::getBestMove(Board* startingBoard){
 }
 
 // Builds game tree without evaluating - used mainly for 1 depth (players move)
-void Engine::buildFutureGameTree(Board* startingBoard, int n) {
-    if (n <= 0) return;
+void Engine::buildFutureGameTree(Board* startingBoard) {
+
     Board* current = startingBoard;
-    if (current->next!=nullptr){
-        for(current=current->next;current!=nullptr;current=current->right){
-            buildFutureGameTree(current, n - 1);
-        }
-        return;
-    }
+
     for (short from = 0; from < 64; from++) {
         if(startingBoard->isOccupied(from) && !startingBoard->isEnemyOccupied(from)){
             long long moves = getLegalMoves(from, startingBoard);
@@ -136,16 +131,11 @@ void Engine::buildFutureGameTree(Board* startingBoard, int n) {
                         current = possibleMove;
                     }
 
-                    //ALFA BETA GOES HERE
-
-
-                    buildFutureGameTree(current, n - 1);
-
-
                 } while(promotion-->0);
             }
         }
     }
+
 }
 
 
@@ -158,7 +148,6 @@ unsigned long long Engine::getLegalMoves(short from, Board *startingBoard) {
     for (short to = 0; to < 64; ++to) {
         if (moves & (1ULL << to)) {
             newBoard = new Board(startingBoard, from, to,0,false);
-            newBoard->setTurnNumber(startingBoard->getTurnNumber());
 
             short kingPosition = newBoard->getKingPosition();
             if (!newBoard->isAttacked(kingPosition, startingBoard->isWhiteMove())) { legalMoves |= (1ULL << to); }
@@ -184,7 +173,7 @@ int Engine::printPossibleMoveCount(Board* startingBoard, int count) {
 // FINISHED
 void Engine::printMoveDebug(Board* startingBoard){
     printPossibleMoveCount(startingBoard);
-    (startingBoard)->printRootLength();
+    qWarning() << (startingBoard)->getLastMove();
     qWarning() << "All calculated boards: " << allCount;
     qWarning() << "Boards in memory: " << (startingBoard)->existingBoards;
     qWarning() << "Current board evaluation (taking depth into consideration) " <<(startingBoard)->getBoardEval();
@@ -223,7 +212,7 @@ void Engine::minimaxTreeSearch (Board* startingBoard, int n) {
     } else if (startingBoard->getWhiteCheckmate()){
         startingBoard->setBoardEval(-10000-n);
         return;
-    } else if (false) {      // TODO remis
+    } else if(!startingBoard->isPossibleMove()){ // stalemate
         startingBoard->setBoardEval(0);
         return;
     }
@@ -282,7 +271,7 @@ void Engine::alphaBetaTreeSearch (Board* startingBoard, int n, double alpha, dou
     } else if (startingBoard->getWhiteCheckmate()){
         startingBoard->setBoardEval(-10000-n);
         return;
-    } else if (false) {      // TODO remis
+    } else if(!startingBoard->isPossibleMove()){ // stalemate
         startingBoard->setBoardEval(0);
         return;
     }

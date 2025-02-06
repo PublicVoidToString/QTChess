@@ -37,20 +37,37 @@ Board lastMove explanation:
 moved   moved QRBN PRNBQ SL E SLSL WB L S
 from      to  prom capt       WWBB WW   B
 
+New version
+100000 000000 0000 00000 000000 0 0000 00 0000000 0 0000000000000000000000  
+|||||| |||||| |||| ||||| |||||| | |||| || ||||||| | ||||||||||||||||||||||
+moved  moved  QRBN QRBNP PNBRQK E SLSL WB 50rule  3 move counter
+from   to     prom capt  moving   WWBB WW   
+
+000000 000000 0000 11111 000000 0 0000 00 0000000 0 1111111111111111111111
+
+
+111110 111111 0000 00000 000000 0 0000 11 0000000 0 0000000000000000010100
+
+
+
+ruch czarnych (przed)
+000110 000111 0000 00000 000000 0 0000 00 0000000 0 0000000000000000001001
+ruch białych (zbugowany)
+111110 111111 0000 00000 000000 0 0000 11 0000000 0 0000000000000000001010
+
+
 moved from - old position of moved piece
 moved to - new position of moved piece
-QRBN - promoted to Queen,rook,bishop, or knight
-
-PRNBQ - capture (pawn,rook,knight,Bishop,Queen
-SL - short/long castle (as played move)
-e - en passant (as played move)
+QRBN - promoted to queen, rook, bishop, knight
+QRBNP - capture (queen, rook, bishop, knight)
+PNBRQK - a moving piece/attacker (pawn, knight, bishop, rook, queen, king)
+E - en passant (as played move)
 S/L W/B - short/long castle possible white/black
 WW - white won
 BW - black won (if WW & WB draw)
-L - last move (for unduing moves)
-SB - starting board = if starting board leave as 0, otherwise 1
-               
-
+50rule - 50 move rule draw (50 moves = 100 plies)
+3 - 3 repetition move rule flag
+move counter - counts plies (or half-moves)
 
 # Image Sources:
 https://www.flaticon.com/free-icon/queen_1626844?related_id=1626879&origin=search <br/>
