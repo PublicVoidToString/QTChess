@@ -47,14 +47,14 @@ void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected,
         if(isGameEnded(*board)&0b11) return;
         if(botDepth>1){
             printMoveDebug(*board);
-            Engine::minimaxTreeSearch(*board, botDepth);
-            //Engine::alphaBetaTreeSearch(*board, botDepth, -INFINITY, INFINITY);
+            //Engine::minimaxTreeSearch(*board, botDepth);
+            Engine::alphaBetaTreeSearch(*board, botDepth, -INFINITY, INFINITY);
             (*board)->next = Engine::getBestMove(*board);
             (*board)=(*board)->next;
             (*board)->cutSideBranches();
         }
 
-        Engine::minimaxTreeSearch(*board, 1);
+        Engine::Engine::minimaxTreeSearch(*board, 1);
 
         //QFuture<void> future = QtConcurrent::run([=]() {
         //    Engine::buildFutureGameTree(*board, botDepth);
@@ -106,6 +106,20 @@ Board* Engine::getBestMove(Board* startingBoard){
     return best;
 }
 
+bool Engine::hasLegalMoves(Board* board) {
+    for (short from = 0; from < 64; from++) {
+        if(board->isOccupied(from) && !board->isEnemyOccupied(from)){
+            long long moves = getLegalMoves(from, board);
+            if(moves != 0) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+/*
 // Builds game tree without evaluating - used mainly for 1 depth (players move)
 void Engine::buildFutureGameTree(Board* startingBoard) {
 
@@ -137,7 +151,7 @@ void Engine::buildFutureGameTree(Board* startingBoard) {
     }
 
 }
-
+*/
 
 // TODO Check & Fix
 unsigned long long Engine::getLegalMoves(short from, Board *startingBoard) {
@@ -148,6 +162,7 @@ unsigned long long Engine::getLegalMoves(short from, Board *startingBoard) {
     for (short to = 0; to < 64; ++to) {
         if (moves & (1ULL << to)) {
             newBoard = new Board(startingBoard, from, to,0,false);
+            newBoard->increaseTurnNumber();
 
             short kingPosition = newBoard->getKingPosition();
             if (!newBoard->isAttacked(kingPosition, startingBoard->isWhiteMove())) { legalMoves |= (1ULL << to); }
@@ -338,7 +353,7 @@ void Engine::alphaBetaTreeSearch (Board* startingBoard, int n, double alpha, dou
 // FINISHED
 short Engine::isGameEnded(Board* startingBoard) {
     //return 1 - black win, return 2 - white win, return 3 draw, return anything else - game continuous
-    return startingBoard->getGameState() >> 2;
+    return startingBoard->getGameState();
 }
 
 bool Engine::setIfGameEnded(Board* startingBoard){

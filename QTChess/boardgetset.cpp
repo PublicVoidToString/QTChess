@@ -182,7 +182,7 @@ bool Board::getWhiteShortCastlePossible() const { return lastMove&0b100000000000
 bool Board::getWhiteLongCastlePossible() const { return lastMove&0b10000000000000000000000000000000000; }
 bool Board::getBlackShortCastlePossible() const { return lastMove&0b1000000000000000000000000000000000; }
 bool Board::getBlackLongCastlePossible() const { return lastMove&0b100000000000000000000000000000000; }
-short Board::getGameState() const { return lastMove&0b11000000000000000000000000000000; }
+unsigned int Board::getGameState() const { return (lastMove&0b0000000000000000000000000000000011000000000000000000000000000000) >> 30; }
 
 short Board::getLastMovePromotion() const {
     if (lastMove & 0x0008000000000000) return 1;
@@ -226,8 +226,7 @@ bool Board::getWhiteCheckmate() {
     if(!isWhiteMove()) return false;
     short kingPosition = __builtin_ctzll(this->getWhiteKings());
     if(isAttacked(kingPosition,true)){
-        Engine::buildFutureGameTree(this);
-        if(this->next==nullptr) {
+        if(!Engine::hasLegalMoves(this)) {
             lastMove|=0x40000000;
             return true;
         }
@@ -239,8 +238,7 @@ bool Board::getBlackCheckmate() {
     if(isWhiteMove()) return false;
     short kingPosition = __builtin_ctzll(this->getBlackKings());
     if( isAttacked(kingPosition,false)) {
-        Engine::buildFutureGameTree(this);
-        if(this->next==nullptr){
+        if(!Engine::hasLegalMoves(this)){
             lastMove|=0x80000000;
             return true;
         }
@@ -249,8 +247,7 @@ bool Board::getBlackCheckmate() {
 }
 
 bool Board::isPossibleMove() {
-    Engine::buildFutureGameTree(this);
-    if(this->next==nullptr){
+    if(!Engine::hasLegalMoves(this)){
         lastMove|=0xC0000000;
         return false;
     }

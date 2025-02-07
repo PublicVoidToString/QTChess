@@ -107,7 +107,7 @@ public:
     bool getWhiteShortCastlePossible() const;
     bool getWhiteLongCastlePossible() const;
     unsigned int getTurnNumber() const;
-    short getGameState() const;
+    unsigned int getGameState() const;
 
     uint64_t getLastMove() const;
 
