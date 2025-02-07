@@ -7,10 +7,9 @@
 class Board
 {
 private:
-    unsigned int turnNumber;
     double boardEval; // + White, - Black, Calculated when creating board, making a move, or when Engine is calculating Moves
 
-    uint32_t lastMove;
+    uint64_t lastMove;
     // Bitboards representing figure positions
     uint64_t whitePawns; uint64_t blackPawns;
     uint64_t whiteKnights; uint64_t blackKnights;
@@ -78,8 +77,6 @@ public:
     long long getMoves(int position) const;
     double getBoardEval() const;
     void setBoardEval(double eval);
-    void setTurnNumber(unsigned int n);
-    unsigned int getTurnNumber() const;
 
     void printRootLength() const;
 
@@ -91,6 +88,7 @@ public:
 
     void removeKing(bool isWhite);
 
+
     void setLastMoveFrom(char from);
     void setLastMoveTo(char to);
     void setLastMoveShortCastle();
@@ -100,6 +98,7 @@ public:
     void blockBlackLongCastle();
     void blockWhiteShortCastle();
     void blockWhiteLongCastle();
+    void increaseTurnNumber();
     char getLastMoveFrom() const;
     char getLastMoveTo() const;
     bool getLastMoveEnPassant() const;
@@ -107,7 +106,10 @@ public:
     bool getBlackLongCastlePossible() const;
     bool getWhiteShortCastlePossible() const;
     bool getWhiteLongCastlePossible() const;
-    short getGameState() const;
+    unsigned int getTurnNumber() const;
+    unsigned int getGameState() const;
+
+    uint64_t getLastMove() const;
 
     short getLastMovePromotion() const;
     void setLastMovePromotion(short promotion) ;
