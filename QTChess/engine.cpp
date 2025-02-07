@@ -54,7 +54,7 @@ void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected,
             (*board)->cutSideBranches();
         }
 
-        Engine::Engine::minimaxTreeSearch(*board, 1);
+        Engine::minimaxTreeSearch(*board, 1);
 
         //QFuture<void> future = QtConcurrent::run([=]() {
         //    Engine::buildFutureGameTree(*board, botDepth);
