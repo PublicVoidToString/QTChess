@@ -44,9 +44,19 @@ public:
 
     void makeMove(unsigned char from, unsigned char to, unsigned short promotion=0); // Function making moving figure from->to on current board
     void promote(unsigned char tile, unsigned char promotion);
-    void capture(unsigned char to, bool isWhiteMove);
-    void movePiece(unsigned char to, uint64_t& pieceBoard);
+
+    void move(unsigned char from, unsigned char to);
+    // select the bitboard where move occurs; updates last move
+    void movePiece(unsigned char from, unsigned char to, uint64_t& pieceBoard);
+    // executes the move; if TO is occupied, then perform capture (calls capture)
+
+    void capture(unsigned char to);
+    // select the bitboard where capture occurs; updates last move
     void capturePiece(unsigned char to, uint64_t& pieceBoard);
+    // executes the capture (removes piece in the correct bitmap)
+
+
+
     // GAME TREE (Current is stored by Chessboard class, therefore those pointers are made public)
     Board* prev; //Pointer to previous move (empty if first)
     Board* next; //Pointer to next move (can be also pointing at the first move that needs to be calculated by engine)

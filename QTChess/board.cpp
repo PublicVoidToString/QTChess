@@ -67,7 +67,6 @@ Board::Board(Board* previousBoard,unsigned char from, unsigned char to, unsigned
     lastMove=previousBoard->lastMove;
     increaseTurnNumber();
 
-    setLastMovePromotion(promotion);
     whitePawns   = previousBoard->whitePawns;
     whiteRooks   = previousBoard->whiteRooks;
     whiteKnights = previousBoard->whiteKnights;
@@ -99,6 +98,7 @@ void Board::makeMove(unsigned char from, unsigned char to, unsigned short promot
     setLastMovePromotion(promotion);
     setLastMoveFrom(from);
     setLastMoveTo(to);
+
     uint64_t* bitboard = getBitboard(to);
     if(bitboard!=nullptr) *bitboard &= ~(1ULL<<to);
     bitboard = getBitboard(from);
@@ -109,10 +109,15 @@ void Board::makeMove(unsigned char from, unsigned char to, unsigned short promot
     *bitboard ^= ((1ULL<<from)|(1ULL<<to));
     if((*bitboard)==whitePawns){
         if(promotion > 0) promote(to, promotion);
-        if((to-from==9 || to-from==7) && to<=47 && to>=40 && !isOccupied(to))  { blackPawns &= ~(1ULL<<(to-8)); }
+        if((to-from==9 || to-from==7) && to<=47 && to>=40 && !isOccupied(to))  {
+            setLastMoveEnPassant();
+            blackPawns &= ~(1ULL<<(to-8));
+        }
     }else if((*bitboard)==blackPawns){
         if(promotion > 0) promote(to, promotion);
-        if((from-to==9 || from-to==7) && to<=23 && to>=16 && !isOccupied(to))  { whitePawns &= ~(1ULL<<(to+8)); }
+        if((from-to==9 || from-to==7) && to<=23 && to>=16 && !isOccupied(to))  {
+            whitePawns &= ~(1ULL<<(to+8));
+        }
     }
     else if((*bitboard)==whiteKings){
         if (from == 4 && to == 6) {
@@ -182,60 +187,122 @@ void Board::promote(unsigned char tile, unsigned char promotion) {
     *promotionTarget |= tileMask;
 }
 
-void Board::capture(unsigned char to, bool isWhiteMove) {
-    if (isWhiteMove) {
+void Board::move(unsigned char from, unsigned char to) {
+
+    // clearing last move - both move and capture
+    lastMove&=0xFFFF000FFFFFFFFF;
+
+    // this means capture occurs
+    if(isOccupied(to)) {
+        capture(to);
+    }
+
+    if (isWhiteMove()) {
+        if (blackPawns & (1ULL << from)) {
+            movePiece(from, to, blackPawns);
+            lastMove|=0x0000040000000000;
+        }
+        else if (blackKnights & (1ULL << from)) {
+            movePiece(from, to, blackKnights);
+            lastMove|=0x0000020000000000;
+        }
+        else if (blackBishops & (1ULL << to)) {
+            movePiece(from, to, blackBishops);
+            lastMove|=0x0000010000000000;
+        }
+        else if (blackRooks & (1ULL << to)) {
+            movePiece(from, to, blackRooks);
+            lastMove|=0x0000008000000000;
+        }
+        else if (blackQueens & (1ULL << to)) {
+            movePiece(from, to, blackQueens);
+            lastMove|=0x0000004000000000;
+        }
+        else {
+            movePiece(from, to, blackKings);
+            lastMove|=0x0000002000000000;
+        }
+    } else {
+        if (whitePawns & (1ULL << to)) {
+            movePiece(from, to, whitePawns);
+            lastMove|=0x0000040000000000;
+        }
+        else if (whiteKnights & (1ULL << to)) {
+            movePiece(from, to, whiteKnights);
+            lastMove|=0x0000020000000000;
+        }
+        else if (whiteBishops & (1ULL << to)) {
+            movePiece(from, to, whiteBishops);
+            lastMove|=0x0000010000000000;
+        }
+        else if (whiteRooks & (1ULL << to)) {
+            movePiece(from, to, whiteRooks);
+            lastMove|=0x0000008000000000;
+        }
+        else if (whiteQueens & (1ULL << to)) {
+            movePiece(from, to, whiteQueens);
+            lastMove|=0x0000004000000000;
+        } else {
+            movePiece(from, to, whiteKings);
+            lastMove|=0x0000002000000000;
+        }
+    }
+}
+
+void Board::movePiece(unsigned char from, unsigned char to, uint64_t& pieceBoard) {
+    pieceBoard &= ~(1ULL << from);
+    pieceBoard |= 1ULL << to;
+}
+
+void Board::capture(unsigned char to) {
+
+    if (isWhiteMove()) {
         if (blackPawns & (1ULL << to)) {
             capturePiece(to, blackPawns);
-            lastMove&=0xFFFFF8FFFFFFFFFF;
+            lastMove|=0x0000080000000000;
         }
         else if (blackKnights & (1ULL << to)) {
             capturePiece(to, blackKnights);
-            lastMove&=0xFFFF1FFFFFFFFFFF;
+            lastMove|=0x0000100000000000;
         }
         else if (blackBishops & (1ULL << to)) {
             capturePiece(to, blackBishops);
-            lastMove&=0xFFFF2FFFFFFFFFFF;
+            lastMove&=0x0000200000000000;
         }
         else if (blackRooks & (1ULL << to)) {
             capturePiece(to, blackRooks);
-            lastMove&=0xFFFF4FFFFFFFFFFF;
+            lastMove&=0x0000400000000000;
         }
         else if (blackQueens & (1ULL << to)) {
             capturePiece(to, blackQueens);
-            lastMove&=0xFFFF8FFFFFFFFFFF;
+            lastMove|=0x0000800000000000;
         }
-        blackKings &= ~(1ULL << to);
     } else {
         if (whitePawns & (1ULL << to)) {
             capturePiece(to, whitePawns);
-            lastMove&=0xFFFFF8FFFFFFFFFF;
+            lastMove|=0x0000080000000000;
         }
         else if (whiteKnights & (1ULL << to)) {
             capturePiece(to, whiteKnights);
-            lastMove&=0xFFFF1FFFFFFFFFFF;
+            lastMove|=0x0000100000000000;
         }
         else if (whiteBishops & (1ULL << to)) {
             capturePiece(to, whiteBishops);
-            lastMove&=0xFFFF2FFFFFFFFFFF;
+            lastMove|=0x0000200000000000;
         }
         else if (whiteRooks & (1ULL << to)) {
             capturePiece(to, whiteRooks);
-            lastMove&=0xFFFF4FFFFFFFFFFF;
+            lastMove|=0x0000400000000000;
         }
         else if (whiteQueens & (1ULL << to)) {
             capturePiece(to, whiteQueens);
-            lastMove&=0xFFFF8FFFFFFFFFFF;
+            lastMove|=0x0000800000000000;
         }
-        whiteKings &= ~(1ULL << to);
     }
 }
 
 void Board::capturePiece(unsigned char to, uint64_t& pieceBoard) {
     pieceBoard &= ~(1ULL << to);
-}
-
-void Board::movePiece(unsigned char to, uint64_t& pieceBoard) {
-    pieceBoard |= 1ULL << to;
 }
 
 // Logic Functions

@@ -168,7 +168,10 @@ void Board::setLastMoveTo(char to) {
 
 void Board::setLastMoveEnPassant() {
     lastMove|=0x0000001000000000;
-    lastMove&=0xFFFF0FFFFFFFFFFF; // en passant captures a pawn
+    // en passant captures a pawn
+    lastMove&=0xFFFF000FFFFFFFFF;
+    lastMove|=0x0000040000000000; // setting move - pawn
+    lastMove|=0x0000080000000000; // setting capture - pawn
 }
 void Board::blockWhiteShortCastle() { lastMove&=0b1111111111111111111111111111011111111111111111111111111111111111; }
 void Board::blockWhiteLongCastle() { lastMove&= 0b1111111111111111111111111111101111111111111111111111111111111111; }
@@ -186,9 +189,9 @@ unsigned int Board::getGameState() const { return (lastMove&0b000000000000000000
 
 short Board::getLastMovePromotion() const {
     if (lastMove & 0x0008000000000000) return 1;
-    if (lastMove & 0x0006000000000000)  return 2;
-    if (lastMove & 0x0004000000000000)   return 3;
-    if (lastMove & 0x0002000000000000)    return 4;
+    if (lastMove & 0x0006000000000000) return 2;
+    if (lastMove & 0x0004000000000000) return 3;
+    if (lastMove & 0x0002000000000000) return 4;
     return 0;
 }
 
