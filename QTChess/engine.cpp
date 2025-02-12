@@ -81,6 +81,11 @@ void Engine::findAndApplyMove(Board** board, unsigned char from, unsigned char t
             (*board)=(*board)->next;
             comparator->cutSideBranches();
             return;
+        } else {
+            qWarning() << "FROM " << from << " vs " << static_cast<int>(comparator->getLastMoveFrom())
+                       << "TO " << to << "vs " << static_cast<int>(comparator->getLastMoveTo())
+                       << "BLACK BISHOPS" << comparator->getBlackBishops()
+                       << "PROMOTION " << promotion << "vs " << comparator->getLastMovePromotion();
         }
     }
     QMessageBox::critical(nullptr, "Error", "Move coudn't be found!! (ERROR EK02)");

@@ -7,6 +7,8 @@
 #include "king.h"
 #include <bitset>
 #include <QString>
+#include <QMessageBox>
+
 //pieces
 
 // Getters
@@ -76,7 +78,7 @@ double Board::getBoardEval() const { return boardEval; }
 void Board::setBoardEval(double eval) { boardEval=eval; }
 unsigned int Board::getTurnNumber() const { return lastMove&0x3FFFFF; }
 void Board::increaseTurnNumber() { lastMove++; }
-
+int Board::getOrderingScore() const { return orderingScore; }
 
 void Board::printRootLength() const {
     int size = 0;
@@ -168,8 +170,9 @@ void Board::setLastMoveTo(char to) {
 
 void Board::setLastMoveEnPassant() {
     lastMove|=0x0000001000000000;
+
     // en passant captures a pawn
-    lastMove&=0xFFFF000FFFFFFFFF;
+    lastMove&=0xFFFF001FFFFFFFFF;
     lastMove|=0x0000040000000000; // setting move - pawn
     lastMove|=0x0000080000000000; // setting capture - pawn
 }
@@ -180,7 +183,7 @@ void Board::blockBlackLongCastle() { lastMove&= 0b111111111111111111111111111111
 
 char Board::getLastMoveFrom() const { return static_cast<char>((lastMove >> 58) & 0x3F); }
 char Board::getLastMoveTo() const { return static_cast<char>((lastMove >> 52) & 0x3F); }
-bool Board::getLastMoveEnPassant() const { return lastMove&0xFFFF0FFFFFFFFFFF; }
+bool Board::getLastMoveEnPassant() const { return lastMove&0x0000001000000000; }
 bool Board::getWhiteShortCastlePossible() const { return lastMove&0b100000000000000000000000000000000000; }
 bool Board::getWhiteLongCastlePossible() const { return lastMove&0b10000000000000000000000000000000000; }
 bool Board::getBlackShortCastlePossible() const { return lastMove&0b1000000000000000000000000000000000; }
@@ -189,9 +192,9 @@ unsigned int Board::getGameState() const { return (lastMove&0b000000000000000000
 
 short Board::getLastMovePromotion() const {
     if (lastMove & 0x0008000000000000) return 1;
-    if (lastMove & 0x0006000000000000) return 2;
-    if (lastMove & 0x0004000000000000) return 3;
-    if (lastMove & 0x0002000000000000) return 4;
+    if (lastMove & 0x0004000000000000) return 2;
+    if (lastMove & 0x0002000000000000) return 3;
+    if (lastMove & 0x0001000000000000) return 4;
     return 0;
 }
 
@@ -202,13 +205,13 @@ void Board::setLastMovePromotion(short promotion) {
         lastMove |= 0x0008000000000000;
         break;
     case 2:
-        lastMove |= 0x0006000000000000;
-        break;
-    case 3:
         lastMove |= 0x0004000000000000;
         break;
-    case 4:
+    case 3:
         lastMove |= 0x0002000000000000;
+        break;
+    case 4:
+        lastMove |= 0x0001000000000000;
         break;
     case 0:
         break;

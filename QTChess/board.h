@@ -10,6 +10,19 @@ private:
     double boardEval; // + White, - Black, Calculated when creating board, making a move, or when Engine is calculating Moves
 
     uint64_t lastMove;
+    int orderingScore;
+    /*
+     * Used for ordering boards in alpha-beta pruning with following priority:
+     *
+     * 1. Queen promotions
+     * 2. MVV - most valuable victim
+     * 3. LVA - least valuable attacker (only when capture occurs)
+     * 4. Quiet moves (no capture occurs)
+     * 5. Underpromotions (very rarely useful)
+     *
+     *
+     */
+
     // Bitboards representing figure positions
     uint64_t whitePawns; uint64_t blackPawns;
     uint64_t whiteKnights; uint64_t blackKnights;
@@ -41,20 +54,15 @@ public:
     bool isAttacked(int tileId, bool isWhite) const;
     uint64_t* getBitboard(int tileId);
 
-
+    void calculateOrderingScore();
     void makeMove(unsigned char from, unsigned char to, unsigned short promotion=0); // Function making moving figure from->to on current board
     void promote(unsigned char tile, unsigned char promotion);
 
-    void move(unsigned char from, unsigned char to);
-    // select the bitboard where move occurs; updates last move
-    void movePiece(unsigned char from, unsigned char to, uint64_t& pieceBoard);
-    // executes the move; if TO is occupied, then perform capture (calls capture)
+    void updateMovingPiece(uint64_t movingPieceBitmap);
+    // updates last move
 
-    void capture(unsigned char to);
-    // select the bitboard where capture occurs; updates last move
-    void capturePiece(unsigned char to, uint64_t& pieceBoard);
-    // executes the capture (removes piece in the correct bitmap)
-
+    void updateCapturePiece(uint64_t capturedPieceBitmap);
+    // updates last move
 
 
     // GAME TREE (Current is stored by Chessboard class, therefore those pointers are made public)
@@ -87,6 +95,9 @@ public:
     long long getMoves(int position) const;
     double getBoardEval() const;
     void setBoardEval(double eval);
+    unsigned int getTurnNumber() const;
+    void increaseTurnNumber();
+    int getOrderingScore() const;
 
     void printRootLength() const;
 
@@ -108,7 +119,6 @@ public:
     void blockBlackLongCastle();
     void blockWhiteShortCastle();
     void blockWhiteLongCastle();
-    void increaseTurnNumber();
     char getLastMoveFrom() const;
     char getLastMoveTo() const;
     bool getLastMoveEnPassant() const;
@@ -116,7 +126,6 @@ public:
     bool getBlackLongCastlePossible() const;
     bool getWhiteShortCastlePossible() const;
     bool getWhiteLongCastlePossible() const;
-    unsigned int getTurnNumber() const;
     unsigned int getGameState() const;
 
     uint64_t getLastMove() const;
