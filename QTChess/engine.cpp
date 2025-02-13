@@ -66,23 +66,6 @@ void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected,
     }
 }
 
-// DEPRECATED
-// FINISHED
-/*
-void Engine::findAndApplyMove(Board** board, unsigned char from, unsigned char to, unsigned short promotion) { // Function creating new Board instance on next and perfoming move on it
-    for(Board *comparator = (*board)->next;comparator!=nullptr;comparator=comparator->right){
-        if(comparator->getLastMoveFrom() == from && comparator->getLastMoveTo() == to && comparator->getLastMovePromotion() == promotion){
-            (*board)->next=comparator;
-            (*board)=(*board)->next;
-            comparator->cutSideBranches();
-            return;
-        }
-    }
-    QMessageBox::critical(nullptr, "Error", "Move coudn't be found!! (ERROR EK02)");
-    QCoreApplication::quit();
-}
-*/
-
 // FINISHED
 Board* Engine::getBestMove(Board* startingBoard){
     Board* best=nullptr;
@@ -114,40 +97,6 @@ bool Engine::hasLegalMoves(Board* board) {
 
     return false;
 }
-
-/*
-// Builds game tree without evaluating - used mainly for 1 depth (players move)
-void Engine::buildFutureGameTree(Board* startingBoard) {
-
-    Board* current = startingBoard;
-
-    for (short from = 0; from < 64; from++) {
-        if(startingBoard->isOccupied(from) && !startingBoard->isEnemyOccupied(from)){
-            long long moves = getLegalMoves(from, startingBoard);
-            short promotion;
-            while (moves) {
-                short to = __builtin_ctzll(moves);
-                moves &= ~(1LL << to);
-                if(isPromotion(startingBoard,to,from,UINT64_MAX)) promotion = 4;
-                else promotion = 0;
-                do{
-                    Board* possibleMove = new Board(startingBoard, from, to, promotion,false);
-                    allCount++;
-                    if (current == startingBoard) {
-                        current = current->next = possibleMove;
-                    } else {
-                        current->right = possibleMove;
-                        possibleMove->left = current;
-                        current = possibleMove;
-                    }
-
-                } while(promotion-->0);
-            }
-        }
-    }
-
-}
-*/
 
 // TODO Check & Fix
 unsigned long long Engine::getLegalMoves(short from, Board *startingBoard) {

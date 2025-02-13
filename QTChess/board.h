@@ -11,6 +11,7 @@ private:
 
     uint64_t lastMove;
     int orderingScore;
+
     /*
      * Used for ordering boards in alpha-beta pruning with following priority:
      *
