@@ -198,6 +198,23 @@ short Board::getLastMovePromotion() const {
     return 0;
 }
 
+short Board::getCapturedPieceScore() const {
+    if (lastMove & 0x0000800000000000) return 40; // queen - most valuable victim
+    if (lastMove & 0x0000400000000000) return 30; // rook
+    if (lastMove & 0x0000300000000000) return 20; // bishop or knight - same order
+    if (lastMove & 0x0000080000000000) return 10; // pawn
+    return 0;
+}
+
+short Board::getMovingPieceScore() const {
+    if (lastMove & 0x0000040000000000) return 5; // pawn - least valuable attacker
+    if (lastMove & 0x0000030000000000) return 4; // bishop or knight
+    if (lastMove & 0x0000008000000000) return 3; // rook
+    if (lastMove & 0x0000004000000000) return 2; // queen
+    if (lastMove & 0x0000002000000000) return 1; // king
+    return 0;
+}
+
 void Board::setLastMovePromotion(short promotion) {
     lastMove &= ~(0x000F000000000000);
     switch (promotion) {

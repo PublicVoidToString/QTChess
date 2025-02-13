@@ -37,11 +37,11 @@ void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected,
     }
     // If selected is a possible move
     if (*moves & (1ULL << buttonId)) {
-        if((*board)->next==nullptr) {
-            QMessageBox::critical(nullptr, "Error", "Next Board does not exist!! (ERROR EK01)");
-            QCoreApplication::quit();
-        }
-        findAndApplyMove(board, *selected, buttonId, promotion);
+
+        (*board)->next = new Board(*board, *selected, buttonId, promotion);
+        (*board) = (*board)->next;
+        setIfGameEnded(*board);
+
         (*board)->cutSideBranches();
 
         if(isGameEnded(*board)&0b11) return;
@@ -53,13 +53,6 @@ void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected,
             (*board)=(*board)->next;
             (*board)->cutSideBranches();
         }
-
-        Engine::minimaxTreeSearch(*board, 1);
-
-        //QFuture<void> future = QtConcurrent::run([=]() {
-        //    Engine::buildFutureGameTree(*board, botDepth);
-        //    Evaluation::calcEvalFromBranchTips(*board);
-        //});
 
         //Reset selection on board
         *moves = 0;
@@ -73,7 +66,9 @@ void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected,
     }
 }
 
+// DEPRECATED
 // FINISHED
+/*
 void Engine::findAndApplyMove(Board** board, unsigned char from, unsigned char to, unsigned short promotion) { // Function creating new Board instance on next and perfoming move on it
     for(Board *comparator = (*board)->next;comparator!=nullptr;comparator=comparator->right){
         if(comparator->getLastMoveFrom() == from && comparator->getLastMoveTo() == to && comparator->getLastMovePromotion() == promotion){
@@ -81,15 +76,12 @@ void Engine::findAndApplyMove(Board** board, unsigned char from, unsigned char t
             (*board)=(*board)->next;
             comparator->cutSideBranches();
             return;
-        } else if (comparator->getLastMoveFrom() == 0){
-            qWarning() << "LAST MOVE " << comparator->getLastMove()
-                       << "WHITE: " << comparator->whitePieces
-                       << "BLACK: " << comparator->blackPieces;
         }
     }
     QMessageBox::critical(nullptr, "Error", "Move coudn't be found!! (ERROR EK02)");
     QCoreApplication::quit();
 }
+*/
 
 // FINISHED
 Board* Engine::getBestMove(Board* startingBoard){
@@ -361,6 +353,6 @@ short Engine::isGameEnded(Board* startingBoard) {
 }
 
 bool Engine::setIfGameEnded(Board* startingBoard){
-    return startingBoard->getWhiteCheckmate() || startingBoard->getBlackCheckmate();
+    return startingBoard->getWhiteCheckmate() || startingBoard->getBlackCheckmate() || startingBoard->isPossibleMove();
 }
 

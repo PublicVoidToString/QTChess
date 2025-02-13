@@ -127,6 +127,8 @@ public:
     bool getBlackLongCastlePossible() const;
     bool getWhiteShortCastlePossible() const;
     bool getWhiteLongCastlePossible() const;
+    short getCapturedPieceScore() const;
+    short getMovingPieceScore() const;
     unsigned int getGameState() const;
 
     uint64_t getLastMove() const;

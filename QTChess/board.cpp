@@ -382,7 +382,24 @@ bool Board::isAttacked(int tileId, bool isWhite) const {
 }
 
 void Board::calculateOrderingScore() {
+    // Queen promotion - most points
+    if(getLastMovePromotion() == 1) {
+        orderingScore = 100;
+        return;
+    } else if(getLastMoveEnPassant() != 0) {     // underpromotion = negative points (checked last)
+        orderingScore = -1;
+        return;
+    }
 
+    // WHERE captures occured -> most valuable victim, then least valuable attacker
+    if(getCapturedPieceScore() != 0) {
+        orderingScore += getCapturedPieceScore() + getMovingPieceScore();
+        return;
+    }
+
+
+    // quiet moves - where no promotion or capture happens receive score 0
+    orderingScore = 0;
 }
 
 Board::~Board() {
