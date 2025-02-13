@@ -43,6 +43,9 @@ New version
 moved  moved  QRBN QRBNP PNBRQK E SLSL WB 50rule  3 move counter
 from   to     prom capt  moving   WWBB WW   
 
+Bits zeroed for every new Board:
+111111 111111 1111 11111 111111 1 0000 00 0000000 1 0000000000000000000000
+
 
 
 moved from - old position of moved piece

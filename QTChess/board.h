@@ -123,6 +123,14 @@ public:
 
 
     void printLastMove() const;
+
+    bool checkFiftyRule(bool checkMate=false);
+    void resetFiftyRule();
+    unsigned int getFiftyRuleNumber() const;
+
+    bool checkThreeRule();
+    unsigned int getThreeRuleNumber() const;
+
 };
 #endif // Board_H
 

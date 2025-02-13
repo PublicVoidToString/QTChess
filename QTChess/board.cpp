@@ -64,7 +64,7 @@ Board::Board(bool debug) {
 
 Board::Board(Board* previousBoard,unsigned char from, unsigned char to, unsigned short promotion, bool debug) {
     if(!debug) existingBoards+=1;
-    lastMove=previousBoard->lastMove;
+    lastMove=previousBoard->lastMove & ~(0b1111111111111111111111111111000000000000010000000000000000000000);
     increaseTurnNumber();
 
     setLastMovePromotion(promotion);
@@ -92,6 +92,10 @@ Board::Board(Board* previousBoard,unsigned char from, unsigned char to, unsigned
     right = nullptr;
     left = nullptr;
     next = nullptr;
+    if(getGameState()==0){
+        checkThreeRule();
+    }
+    checkFiftyRule(getGameState()==0);
 }
 
 void Board::makeMove(unsigned char from, unsigned char to, unsigned short promotion) // Making move on board without checking it's legality
@@ -100,7 +104,10 @@ void Board::makeMove(unsigned char from, unsigned char to, unsigned short promot
     setLastMoveFrom(from);
     setLastMoveTo(to);
     uint64_t* bitboard = getBitboard(to);
-    if(bitboard!=nullptr) *bitboard &= ~(1ULL<<to);
+    if(bitboard!=nullptr) {
+        *bitboard &= ~(1ULL<<to);
+        resetFiftyRule();
+    }
     bitboard = getBitboard(from);
     if (bitboard == nullptr) {
         qWarning() << "Invalid move: no bitboard found for tile: " << to << " (ERROR BK01)";
@@ -108,9 +115,11 @@ void Board::makeMove(unsigned char from, unsigned char to, unsigned short promot
     }
     *bitboard ^= ((1ULL<<from)|(1ULL<<to));
     if((*bitboard)==whitePawns){
+        resetFiftyRule();
         if(promotion > 0) promote(to, promotion);
         if((to-from==9 || to-from==7) && to<=47 && to>=40 && !isOccupied(to))  { blackPawns &= ~(1ULL<<(to-8)); }
     }else if((*bitboard)==blackPawns){
+        resetFiftyRule();
         if(promotion > 0) promote(to, promotion);
         if((from-to==9 || from-to==7) && to<=23 && to>=16 && !isOccupied(to))  { whitePawns &= ~(1ULL<<(to+8)); }
     }

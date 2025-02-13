@@ -188,7 +188,6 @@ int Engine::printPossibleMoveCount(Board* startingBoard, int count) {
 // FINISHED
 void Engine::printMoveDebug(Board* startingBoard){
     printPossibleMoveCount(startingBoard);
-    qWarning() << (startingBoard)->getLastMove();
     qWarning() << "All calculated boards: " << allCount;
     qWarning() << "Boards in memory: " << (startingBoard)->existingBoards;
     qWarning() << "Current board evaluation (taking depth into consideration) " <<(startingBoard)->getBoardEval();

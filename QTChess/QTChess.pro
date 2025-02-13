@@ -18,6 +18,7 @@ SOURCES += \
     finalmessage.cpp \
     king.cpp \
     knight.cpp \
+    lastMovegetset.cpp \
     main.cpp \
     mainmenu.cpp \
     pawn.cpp \
