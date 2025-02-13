@@ -20,7 +20,6 @@ private:
      * 4. Quiet moves (no capture occurs)
      * 5. Underpromotions (very rarely useful)
      *
-     *
      */
 
     // Bitboards representing figure positions

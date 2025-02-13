@@ -103,40 +103,55 @@ void Board::makeMove(unsigned char from, unsigned char to, unsigned short promot
     // clearing last move - move, capture, en passant
     lastMove&=0xFFFF000FFFFFFFFF;
 
-    uint64_t* bitboard = getBitboard(to);
+    uint64_t* bitboardTO = getBitboard(to);
 
-    if(bitboard!=nullptr) {
-        updateCapturePiece(*bitboard);
+    if(bitboardTO!=nullptr) {
+        updateCapturePiece(*bitboardTO);
         // update last move
-        *bitboard &= ~(1ULL<<to);
+        *bitboardTO &= ~(1ULL<<to);
         // removes the captured piece
+
+        // rook capture disableing castling
+        if((*bitboardTO)==whiteRooks){
+            if (to == 0) {
+                blockWhiteLongCastle();
+            } else if (to == 7) {
+                blockWhiteShortCastle();
+            }
+        }else if((*bitboardTO)==blackRooks) {
+            if (to == 56) {
+                blockBlackLongCastle();
+            } else if (to == 63) {
+                blockBlackShortCastle();
+            }
+        }
     }
 
-    bitboard = getBitboard(from);
-    if (bitboard == nullptr) {
+    uint64_t* bitboardFROM = getBitboard(from);
+    if (bitboardFROM == nullptr) {
         qWarning() << "Invalid move: no bitboard found for tile: " << to << " (ERROR BK01)";
         return;
     }
 
-    updateMovingPiece(*bitboard);
-    *bitboard ^= ((1ULL<<from)|(1ULL<<to));
+    updateMovingPiece(*bitboardFROM);
+    *bitboardFROM ^= ((1ULL<<from)|(1ULL<<to));
     // moves the piece
 
     // special cases: promotion, en passant, castling, rook/king move disableing castling
-    if((*bitboard)==whitePawns){
+    if((*bitboardFROM)==whitePawns){
         if(promotion > 0) promote(to, promotion);
         if((to-from==9 || to-from==7) && to<=47 && to>=40 && !isOccupied(to))  {
             setLastMoveEnPassant();
             blackPawns &= ~(1ULL<<(to-8));
         }
-    }else if((*bitboard)==blackPawns){
+    }else if((*bitboardFROM)==blackPawns){
         if(promotion > 0) promote(to, promotion);
         if((from-to==9 || from-to==7) && to<=23 && to>=16 && !isOccupied(to))  {
             setLastMoveEnPassant();
             whitePawns &= ~(1ULL<<(to+8));
         }
     }
-    else if((*bitboard)==whiteKings){
+    else if((*bitboardFROM)==whiteKings){
         if (from == 4 && to == 6) {
             whiteRooks &= ~(1ULL << 7);
             whiteRooks |= (1ULL << 5);
@@ -147,7 +162,7 @@ void Board::makeMove(unsigned char from, unsigned char to, unsigned short promot
         blockWhiteLongCastle();
         blockWhiteShortCastle();
 
-    }else if((*bitboard)==blackKings){
+    }else if((*bitboardFROM)==blackKings){
         blackKings &= ~(1ULL << from);
         blackKings |= (1ULL << to);
         if (from == 60 && to == 62) {
@@ -159,19 +174,20 @@ void Board::makeMove(unsigned char from, unsigned char to, unsigned short promot
         }
         blockBlackShortCastle();
         blockBlackLongCastle();
-    }else if((*bitboard)==whiteRooks){
+    }else if((*bitboardFROM)==whiteRooks){
         if (from == 0) {
             blockWhiteLongCastle();
         } else if (from == 7) {
             blockWhiteShortCastle();
         }
-    }else if((*bitboard)==blackRooks) {
+    }else if((*bitboardFROM)==blackRooks) {
         if (from == 56) {
             blockBlackLongCastle();
         } else if (from == 63) {
             blockBlackShortCastle();
         }
     }
+
 }
 
 void Board::promote(unsigned char tile, unsigned char promotion) {
