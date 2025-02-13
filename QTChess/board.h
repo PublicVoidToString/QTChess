@@ -31,8 +31,7 @@ private:
     uint64_t whiteQueens; uint64_t blackQueens;
     uint64_t whiteKings; uint64_t blackKings;
 
-    uint64_t blackPieces;
-    uint64_t whitePieces;
+
     uint64_t allPieces;
 
 
@@ -43,6 +42,9 @@ public:
     Board(Board* previousBoard,bool debug=false);
     Board(Board* previousBoard,unsigned char from, unsigned char to, unsigned short promotion, bool debug=false);
     ~Board();
+
+    uint64_t blackPieces;
+    uint64_t whitePieces;
 
     // Logic Functions
     bool isOccupied(int tileId) const; // Is any figure on tileId tile

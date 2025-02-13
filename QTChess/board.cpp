@@ -100,11 +100,10 @@ void Board::makeMove(unsigned char from, unsigned char to, unsigned short promot
     setLastMoveFrom(from);
     setLastMoveTo(to);
 
-    // clearing last move - both move and capture
+    // clearing last move - move, capture, en passant
     lastMove&=0xFFFF000FFFFFFFFF;
 
     uint64_t* bitboard = getBitboard(to);
-
 
     if(bitboard!=nullptr) {
         updateCapturePiece(*bitboard);
@@ -257,10 +256,10 @@ void Board::updateCapturePiece(uint64_t capturedPieceBitmap) {
             lastMove|=0x0000100000000000;
         }
         else if (capturedPieceBitmap == blackBishops) {
-            lastMove&=0x0000200000000000;
+            lastMove|=0x0000200000000000;
         }
         else if (capturedPieceBitmap == blackRooks) {
-            lastMove&=0x0000400000000000;
+            lastMove|=0x0000400000000000;
         }
         else if (capturedPieceBitmap == blackQueens) {
             lastMove|=0x0000800000000000;

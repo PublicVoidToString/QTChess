@@ -43,8 +43,7 @@ New version
 moved  moved  QRBN QRBNP PNBRQK E SLSL WB 50rule  3 move counter
 from   to     prom capt  moving   WWBB WW   
 
-000000 000000 0000 00000 000000 1 0000 00 0000000 0 0000000000000000000000
-
+000000 000000 0000 00000 000001 0 0000 00 0000000 0 0000000000000000000000
 
 moved from - old position of moved piece
 moved to - new position of moved piece
