@@ -241,7 +241,7 @@ void Engine::alphaBetaTreeSearch (Board* startingBoard, int n, double alpha, dou
         return;
     }
 
-    Board* current = startingBoard;
+    Board* tail = nullptr;
 
     // getting all moves in and ordering them by orderScore
     for (short from = 0; from < 64; from++) {
@@ -256,12 +256,46 @@ void Engine::alphaBetaTreeSearch (Board* startingBoard, int n, double alpha, dou
                 Board* temp = new Board(startingBoard, from, to, promotion, false);
                 allCount++;
 
-                if (current == startingBoard) {
-                    current = current->next = temp;
+                if (startingBoard->next == nullptr) {
+                    startingBoard->next = temp;
+                    tail = temp;
                 } else {
-                    current->right = temp;
-                    temp->left = current;
-                    current = temp;
+                    if (temp->getOrderingScore() > 0) {
+                        // Insert from front (for captures and queen promotions)
+                        Board* current = startingBoard->next;
+                        while (current != nullptr && temp->getOrderingScore() < current->getOrderingScore()) {
+                            current = current->right;
+                        }
+                        if (current != nullptr) {
+                            temp->right = current;
+                            temp->left = current->left;
+                            if (current->left) current->left->right = temp;
+                            current->left = temp;
+                            if (current == startingBoard->next) startingBoard->next = temp;
+                        } else {
+                            tail->right = temp;
+                            temp->left = tail;
+                            tail = temp;
+                        }
+                    } else {
+                        // Insert from the back (for quiet moves and underpromotions)
+                        Board* current = tail;
+                        while (current != nullptr && temp->getOrderingScore() > current->getOrderingScore()) {
+                            current = current->left;
+                        }
+                        if (current != nullptr) {
+                            temp->left = current;
+                            temp->right = current->right;
+                            if (current->right) current->right->left = temp;
+                            current->right = temp;
+                            if (current == tail) tail = temp;
+                        } else {
+                            temp->right = startingBoard->next;
+                            startingBoard->next->left = temp;
+                            startingBoard->next = temp;
+                        }
+                    }
+
                 }
 
             } while (promotion --> 0);
@@ -290,6 +324,7 @@ void Engine::alphaBetaTreeSearch (Board* startingBoard, int n, double alpha, dou
 
         // Pruning condition
         if (beta <= alpha) {
+            current->cutRightBranches();
             break;
         }
     }
