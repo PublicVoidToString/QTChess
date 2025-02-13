@@ -242,8 +242,8 @@ void Engine::alphaBetaTreeSearch (Board* startingBoard, int n, double alpha, dou
     }
 
     Board* current = startingBoard;
-    double bestValue = startingBoard->isWhiteMove() ? -INFINITY : INFINITY;
 
+    // getting all moves in and ordering them by orderScore
     for (short from = 0; from < 64; from++) {
         long long moves = getLegalMoves(from, startingBoard);
         while (moves) {
@@ -263,32 +263,34 @@ void Engine::alphaBetaTreeSearch (Board* startingBoard, int n, double alpha, dou
                     temp->left = current;
                     current = temp;
                 }
-                alphaBetaTreeSearch(current, n - 1, alpha, beta);
-
-                if (startingBoard->isWhiteMove()) {
-                    if(bestValue < temp->getBoardEval()) {
-                        bestValue = temp->getBoardEval();
-                    }
-                    alpha = std::max(alpha, bestValue);
-
-                } else {
-                    if(bestValue > temp->getBoardEval()) {
-                        bestValue = temp->getBoardEval();
-                    }
-                    beta = std::min(beta, bestValue);
-                }
-
-                // Pruning condition
-                if (beta <= alpha) {
-                    break;
-                }
 
             } while (promotion --> 0);
+        }
+    }
 
-            // Pruning condition
-            if (beta <= alpha) {
-                break;
+    double bestValue = startingBoard->isWhiteMove() ? -INFINITY : INFINITY;
+
+    // evaluation
+    for(Board* current=startingBoard->next;current!=nullptr;current=current->right){
+
+        alphaBetaTreeSearch(current, n - 1, alpha, beta);
+
+        if (startingBoard->isWhiteMove()) {
+            if(bestValue < current->getBoardEval()) {
+                bestValue = current->getBoardEval();
             }
+            alpha = std::max(alpha, bestValue);
+
+        } else {
+            if(bestValue > current->getBoardEval()) {
+                bestValue = current->getBoardEval();
+            }
+            beta = std::min(beta, bestValue);
+        }
+
+        // Pruning condition
+        if (beta <= alpha) {
+            break;
         }
     }
 

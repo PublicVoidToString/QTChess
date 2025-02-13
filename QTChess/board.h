@@ -66,15 +66,12 @@ public:
     void updateCapturePiece(uint64_t capturedPieceBitmap);
     // updates last move
 
-
     // GAME TREE (Current is stored by Chessboard class, therefore those pointers are made public)
     Board* prev; //Pointer to previous move (empty if first)
     Board* next; //Pointer to next move (can be also pointing at the first move that needs to be calculated by engine)
     // Engine pointers (If those pointers exists for current board the move has not yet been made)
     Board* right; // Next possible move
     Board* left; // Previous possible move
-
-
 
     // Getters
     bool isWhiteMove() const;
