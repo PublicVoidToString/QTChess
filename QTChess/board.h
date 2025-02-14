@@ -10,6 +10,19 @@ private:
     double boardEval; // + White, - Black, Calculated when creating board, making a move, or when Engine is calculating Moves
 
     uint64_t lastMove;
+    int orderingScore;
+
+    /*
+     * Used for ordering boards in alpha-beta pruning with following priority:
+     *
+     * 1. Queen promotions
+     * 2. MVV - most valuable victim
+     * 3. LVA - least valuable attacker (only when capture occurs)
+     * 4. Quiet moves (no capture occurs)
+     * 5. Underpromotions (very rarely useful)
+     *
+     */
+
     // Bitboards representing figure positions
     uint64_t whitePawns; uint64_t blackPawns;
     uint64_t whiteKnights; uint64_t blackKnights;
@@ -18,8 +31,7 @@ private:
     uint64_t whiteQueens; uint64_t blackQueens;
     uint64_t whiteKings; uint64_t blackKings;
 
-    uint64_t blackPieces;
-    uint64_t whitePieces;
+
     uint64_t allPieces;
 
 
@@ -31,6 +43,9 @@ public:
     Board(Board* previousBoard,unsigned char from, unsigned char to, unsigned short promotion, bool debug=false);
     ~Board();
 
+    uint64_t blackPieces;
+    uint64_t whitePieces;
+
     // Logic Functions
     bool isOccupied(int tileId) const; // Is any figure on tileId tile
     bool isEnemyOccupied(int tileId) const; // Is enemy on tileId tile
@@ -41,20 +56,22 @@ public:
     bool isAttacked(int tileId, bool isWhite) const;
     uint64_t* getBitboard(int tileId);
 
-
+    void calculateOrderingScore();
     void makeMove(unsigned char from, unsigned char to, unsigned short promotion=0); // Function making moving figure from->to on current board
     void promote(unsigned char tile, unsigned char promotion);
-    void capture(unsigned char to, bool isWhiteMove);
-    void movePiece(unsigned char to, uint64_t& pieceBoard);
-    void capturePiece(unsigned char to, uint64_t& pieceBoard);
+
+    void updateMovingPiece(uint64_t movingPieceBitmap);
+    // updates last move
+
+    void updateCapturePiece(uint64_t capturedPieceBitmap);
+    // updates last move
+
     // GAME TREE (Current is stored by Chessboard class, therefore those pointers are made public)
     Board* prev; //Pointer to previous move (empty if first)
     Board* next; //Pointer to next move (can be also pointing at the first move that needs to be calculated by engine)
     // Engine pointers (If those pointers exists for current board the move has not yet been made)
     Board* right; // Next possible move
     Board* left; // Previous possible move
-
-
 
     // Getters
     bool isWhiteMove() const;
@@ -77,6 +94,9 @@ public:
     long long getMoves(int position) const;
     double getBoardEval() const;
     void setBoardEval(double eval);
+    unsigned int getTurnNumber() const;
+    void increaseTurnNumber();
+    int getOrderingScore() const;
 
     void printRootLength() const;
 
@@ -98,7 +118,6 @@ public:
     void blockBlackLongCastle();
     void blockWhiteShortCastle();
     void blockWhiteLongCastle();
-    void increaseTurnNumber();
     char getLastMoveFrom() const;
     char getLastMoveTo() const;
     bool getLastMoveEnPassant() const;
@@ -106,7 +125,8 @@ public:
     bool getBlackLongCastlePossible() const;
     bool getWhiteShortCastlePossible() const;
     bool getWhiteLongCastlePossible() const;
-    unsigned int getTurnNumber() const;
+    short getCapturedPieceScore() const;
+    short getMovingPieceScore() const;
     unsigned int getGameState() const;
 
     uint64_t getLastMove() const;

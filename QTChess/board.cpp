@@ -67,7 +67,6 @@ Board::Board(Board* previousBoard,unsigned char from, unsigned char to, unsigned
     lastMove=previousBoard->lastMove;
     increaseTurnNumber();
 
-    setLastMovePromotion(promotion);
     whitePawns   = previousBoard->whitePawns;
     whiteRooks   = previousBoard->whiteRooks;
     whiteKnights = previousBoard->whiteKnights;
@@ -83,6 +82,7 @@ Board::Board(Board* previousBoard,unsigned char from, unsigned char to, unsigned
     blackKings   = previousBoard->blackKings;
 
     makeMove(from, to, promotion);
+    calculateOrderingScore();
 
     whitePieces = (whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKings);
     blackPieces = (blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKings);
@@ -99,22 +99,59 @@ void Board::makeMove(unsigned char from, unsigned char to, unsigned short promot
     setLastMovePromotion(promotion);
     setLastMoveFrom(from);
     setLastMoveTo(to);
-    uint64_t* bitboard = getBitboard(to);
-    if(bitboard!=nullptr) *bitboard &= ~(1ULL<<to);
-    bitboard = getBitboard(from);
-    if (bitboard == nullptr) {
+
+    // clearing last move - move, capture, en passant
+    lastMove&=0xFFFF000FFFFFFFFF;
+
+    uint64_t* bitboardTO = getBitboard(to);
+
+    if(bitboardTO!=nullptr) {
+        updateCapturePiece(*bitboardTO);
+        // update last move
+        *bitboardTO &= ~(1ULL<<to);
+        // removes the captured piece
+
+        // rook capture disableing castling
+        if((*bitboardTO)==whiteRooks){
+            if (to == 0) {
+                blockWhiteLongCastle();
+            } else if (to == 7) {
+                blockWhiteShortCastle();
+            }
+        }else if((*bitboardTO)==blackRooks) {
+            if (to == 56) {
+                blockBlackLongCastle();
+            } else if (to == 63) {
+                blockBlackShortCastle();
+            }
+        }
+    }
+
+    uint64_t* bitboardFROM = getBitboard(from);
+    if (bitboardFROM == nullptr) {
         qWarning() << "Invalid move: no bitboard found for tile: " << to << " (ERROR BK01)";
         return;
     }
-    *bitboard ^= ((1ULL<<from)|(1ULL<<to));
-    if((*bitboard)==whitePawns){
+
+    updateMovingPiece(*bitboardFROM);
+    *bitboardFROM ^= ((1ULL<<from)|(1ULL<<to));
+    // moves the piece
+
+    // special cases: promotion, en passant, castling, rook/king move disableing castling
+    if((*bitboardFROM)==whitePawns){
         if(promotion > 0) promote(to, promotion);
-        if((to-from==9 || to-from==7) && to<=47 && to>=40 && !isOccupied(to))  { blackPawns &= ~(1ULL<<(to-8)); }
-    }else if((*bitboard)==blackPawns){
+        if((to-from==9 || to-from==7) && to<=47 && to>=40 && !isOccupied(to))  {
+            setLastMoveEnPassant();
+            blackPawns &= ~(1ULL<<(to-8));
+        }
+    }else if((*bitboardFROM)==blackPawns){
         if(promotion > 0) promote(to, promotion);
-        if((from-to==9 || from-to==7) && to<=23 && to>=16 && !isOccupied(to))  { whitePawns &= ~(1ULL<<(to+8)); }
+        if((from-to==9 || from-to==7) && to<=23 && to>=16 && !isOccupied(to))  {
+            setLastMoveEnPassant();
+            whitePawns &= ~(1ULL<<(to+8));
+        }
     }
-    else if((*bitboard)==whiteKings){
+    else if((*bitboardFROM)==whiteKings){
         if (from == 4 && to == 6) {
             whiteRooks &= ~(1ULL << 7);
             whiteRooks |= (1ULL << 5);
@@ -125,7 +162,7 @@ void Board::makeMove(unsigned char from, unsigned char to, unsigned short promot
         blockWhiteLongCastle();
         blockWhiteShortCastle();
 
-    }else if((*bitboard)==blackKings){
+    }else if((*bitboardFROM)==blackKings){
         blackKings &= ~(1ULL << from);
         blackKings |= (1ULL << to);
         if (from == 60 && to == 62) {
@@ -137,19 +174,20 @@ void Board::makeMove(unsigned char from, unsigned char to, unsigned short promot
         }
         blockBlackShortCastle();
         blockBlackLongCastle();
-    }else if((*bitboard)==whiteRooks){
+    }else if((*bitboardFROM)==whiteRooks){
         if (from == 0) {
             blockWhiteLongCastle();
         } else if (from == 7) {
             blockWhiteShortCastle();
         }
-    }else if((*bitboard)==blackRooks) {
+    }else if((*bitboardFROM)==blackRooks) {
         if (from == 56) {
             blockBlackLongCastle();
         } else if (from == 63) {
             blockBlackShortCastle();
         }
     }
+
 }
 
 void Board::promote(unsigned char tile, unsigned char promotion) {
@@ -182,60 +220,83 @@ void Board::promote(unsigned char tile, unsigned char promotion) {
     *promotionTarget |= tileMask;
 }
 
-void Board::capture(unsigned char to, bool isWhiteMove) {
-    if (isWhiteMove) {
-        if (blackPawns & (1ULL << to)) {
-            capturePiece(to, blackPawns);
-            lastMove&=0xFFFFF8FFFFFFFFFF;
+void Board::updateMovingPiece(uint64_t movingPieceBitmap) {
+
+    if (isWhiteMove()) {
+        if (movingPieceBitmap == blackPawns) {
+            lastMove|=0x0000040000000000;
         }
-        else if (blackKnights & (1ULL << to)) {
-            capturePiece(to, blackKnights);
-            lastMove&=0xFFFF1FFFFFFFFFFF;
+        else if (movingPieceBitmap == blackKnights) {
+            lastMove|=0x0000020000000000;
         }
-        else if (blackBishops & (1ULL << to)) {
-            capturePiece(to, blackBishops);
-            lastMove&=0xFFFF2FFFFFFFFFFF;
+        else if (movingPieceBitmap == blackBishops) {
+            lastMove|=0x0000010000000000;
         }
-        else if (blackRooks & (1ULL << to)) {
-            capturePiece(to, blackRooks);
-            lastMove&=0xFFFF4FFFFFFFFFFF;
+        else if (movingPieceBitmap == blackRooks) {
+            lastMove|=0x0000008000000000;
         }
-        else if (blackQueens & (1ULL << to)) {
-            capturePiece(to, blackQueens);
-            lastMove&=0xFFFF8FFFFFFFFFFF;
+        else if (movingPieceBitmap == blackQueens) {
+            lastMove|=0x0000004000000000;
         }
-        blackKings &= ~(1ULL << to);
+        else {
+            lastMove|=0x0000002000000000;
+        }
     } else {
-        if (whitePawns & (1ULL << to)) {
-            capturePiece(to, whitePawns);
-            lastMove&=0xFFFFF8FFFFFFFFFF;
+        if (movingPieceBitmap == whitePawns) {
+            lastMove|=0x0000040000000000;
         }
-        else if (whiteKnights & (1ULL << to)) {
-            capturePiece(to, whiteKnights);
-            lastMove&=0xFFFF1FFFFFFFFFFF;
+        else if (movingPieceBitmap == whiteKnights) {
+            lastMove|=0x0000020000000000;
         }
-        else if (whiteBishops & (1ULL << to)) {
-            capturePiece(to, whiteBishops);
-            lastMove&=0xFFFF2FFFFFFFFFFF;
+        else if (movingPieceBitmap == whiteBishops) {
+            lastMove|=0x0000010000000000;
         }
-        else if (whiteRooks & (1ULL << to)) {
-            capturePiece(to, whiteRooks);
-            lastMove&=0xFFFF4FFFFFFFFFFF;
+        else if (movingPieceBitmap == whiteRooks) {
+            lastMove|=0x0000008000000000;
         }
-        else if (whiteQueens & (1ULL << to)) {
-            capturePiece(to, whiteQueens);
-            lastMove&=0xFFFF8FFFFFFFFFFF;
+        else if (movingPieceBitmap == whiteQueens) {
+            lastMove|=0x0000004000000000;
+        } else {
+            lastMove|=0x0000002000000000;
         }
-        whiteKings &= ~(1ULL << to);
     }
 }
 
-void Board::capturePiece(unsigned char to, uint64_t& pieceBoard) {
-    pieceBoard &= ~(1ULL << to);
-}
+void Board::updateCapturePiece(uint64_t capturedPieceBitmap) {
 
-void Board::movePiece(unsigned char to, uint64_t& pieceBoard) {
-    pieceBoard |= 1ULL << to;
+    if (!isWhiteMove()) {
+        if (capturedPieceBitmap == blackPawns) {
+            lastMove|=0x0000080000000000;
+        }
+        else if (capturedPieceBitmap == blackKnights) {
+            lastMove|=0x0000100000000000;
+        }
+        else if (capturedPieceBitmap == blackBishops) {
+            lastMove|=0x0000200000000000;
+        }
+        else if (capturedPieceBitmap == blackRooks) {
+            lastMove|=0x0000400000000000;
+        }
+        else if (capturedPieceBitmap == blackQueens) {
+            lastMove|=0x0000800000000000;
+        }
+    } else {
+        if (capturedPieceBitmap == whitePawns) {
+            lastMove|=0x0000080000000000;
+        }
+        else if (capturedPieceBitmap == whiteKnights) {
+            lastMove|=0x0000100000000000;
+        }
+        else if (capturedPieceBitmap == whiteBishops) {
+            lastMove|=0x0000200000000000;
+        }
+        else if (capturedPieceBitmap == whiteRooks) {
+            lastMove|=0x0000400000000000;
+        }
+        else if (capturedPieceBitmap == whiteQueens) {
+            lastMove|=0x0000800000000000;
+        }
+    }
 }
 
 // Logic Functions
@@ -318,6 +379,27 @@ bool Board::isAttacked(int tileId, bool isWhite) const {
     }
 
     return false;
+}
+
+void Board::calculateOrderingScore() {
+    // Queen promotion - most points
+    if(getLastMovePromotion() == 1) {
+        orderingScore = 100;
+        return;
+    } else if(getLastMoveEnPassant() != 0) {     // underpromotion = negative points (checked last)
+        orderingScore = -1;
+        return;
+    }
+
+    // WHERE captures occured -> most valuable victim, then least valuable attacker
+    if(getCapturedPieceScore() != 0) {
+        orderingScore += getCapturedPieceScore() + getMovingPieceScore();
+        return;
+    }
+
+
+    // quiet moves - where no promotion or capture happens receive score 0
+    orderingScore = 0;
 }
 
 Board::~Board() {

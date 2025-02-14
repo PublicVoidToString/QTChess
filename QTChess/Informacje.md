@@ -31,19 +31,11 @@ Current board is stored inside chessboard pointer Board* board
 Move representation <br/>
 promotion as 4 different moves
 
-Board lastMove explanation:
-100000 000000 0000 00000 00 0 0000 00 0 0
-|||||| |||||| |||| ||||| || | |||| || | |
-moved   moved QRBN PRNBQ SL E SLSL WB L S
-from      to  prom capt       WWBB WW   B
-
 New version
 100000 000000 0000 00000 000000 0 0000 00 0000000 0 0000000000000000000000  
 |||||| |||||| |||| ||||| |||||| | |||| || ||||||| | ||||||||||||||||||||||
 moved  moved  QRBN QRBNP PNBRQK E SLSL WB 50rule  3 move counter
 from   to     prom capt  moving   WWBB WW   
-
-
 
 moved from - old position of moved piece
 moved to - new position of moved piece
