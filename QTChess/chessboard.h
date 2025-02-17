@@ -23,6 +23,7 @@ private slots:
     // Slots are QT environment specific functions
     // that can be connected to signals
     void handleButtonClick(int buttonId);
+    void reprintBoard();
 
 protected:
     void resizeEvent(QResizeEvent *event) override;

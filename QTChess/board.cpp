@@ -64,7 +64,7 @@ Board::Board(bool debug) {
 
 Board::Board(Board* previousBoard,unsigned char from, unsigned char to, unsigned short promotion, bool debug) {
     if(!debug) existingBoards+=1;
-    lastMove=previousBoard->lastMove;
+    lastMove=previousBoard->lastMove & ~(0b1111111111111111111111111111000000000000010000000000000000000000);
     increaseTurnNumber();
 
     whitePawns   = previousBoard->whitePawns;
@@ -92,6 +92,11 @@ Board::Board(Board* previousBoard,unsigned char from, unsigned char to, unsigned
     right = nullptr;
     left = nullptr;
     next = nullptr;
+    if(getGameState()==0){
+        checkThreeRule();
+    }
+    checkFiftyRule(getGameState()==0);
+    checkInSufficientMaterial();
 }
 
 void Board::makeMove(unsigned char from, unsigned char to, unsigned short promotion) // Making move on board without checking it's legality
@@ -109,6 +114,7 @@ void Board::makeMove(unsigned char from, unsigned char to, unsigned short promot
         updateCapturePiece(*bitboardTO);
         // update last move
         *bitboardTO &= ~(1ULL<<to);
+        resetFiftyRule();
         // removes the captured piece
 
         // rook capture disableing castling
@@ -139,12 +145,14 @@ void Board::makeMove(unsigned char from, unsigned char to, unsigned short promot
 
     // special cases: promotion, en passant, castling, rook/king move disableing castling
     if((*bitboardFROM)==whitePawns){
+        resetFiftyRule();
         if(promotion > 0) promote(to, promotion);
         if((to-from==9 || to-from==7) && to<=47 && to>=40 && !isOccupied(to))  {
             setLastMoveEnPassant();
             blackPawns &= ~(1ULL<<(to-8));
         }
     }else if((*bitboardFROM)==blackPawns){
+        resetFiftyRule();
         if(promotion > 0) promote(to, promotion);
         if((from-to==9 || from-to==7) && to<=23 && to>=16 && !isOccupied(to))  {
             setLastMoveEnPassant();
@@ -400,6 +408,27 @@ void Board::calculateOrderingScore() {
 
     // quiet moves - where no promotion or capture happens receive score 0
     orderingScore = 0;
+}
+
+bool Board::checkInSufficientMaterial(){
+    if(__builtin_popcountll(allPieces) > 4) return false;
+    if(__builtin_popcountll(allPieces) == 4){
+        if(__builtin_popcountll(whiteKnights) == 2) {
+            lastMove |= 0xC0000000; // Set state to draw
+            return true;
+        }
+        if(__builtin_popcountll(blackKnights) == 2) {
+            lastMove |= 0xC0000000; // Set state to draw
+            return true;
+        }
+    }
+    else if(__builtin_popcountll(allPieces) == 3) {
+        if(whiteKnights | blackKnights | whiteBishops | blackBishops) {
+            lastMove |= 0xC0000000; // Set state to draw
+            return true;
+        }
+    }
+    return false;
 }
 
 Board::~Board() {

@@ -18,22 +18,34 @@ bool Engine::isPromotion(Board* board, int buttonId, unsigned char selected, uns
     return false;
 }
 
-// FINISHED /maybe change into smaller functions
-void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected, unsigned long long* moves, char botDepth, unsigned short promotion) // Reads input and calls most of other functions
-{
+void Engine::engineMove(Board** board, char botDepth) {
     if(isGameEnded(*board)&0b11) return;
-    if(promotion == 5) return;
+    if(botDepth>1) {
+        //Engine::minimaxTreeSearch(*board, botDepth);
+        Engine::alphaBetaTreeSearch(*board, botDepth, -INFINITY, INFINITY);
+        (*board)->next = Engine::getBestMove(*board);
+        (*board)=(*board)->next;
+        (*board)->cutSideBranches();
+        printMoveDebug(*board);
+    }
+}
+
+// FINISHED /maybe change into smaller functions
+bool Engine::madePlayerMove(Board** board, int buttonId, unsigned char* selected, unsigned long long* moves, char botDepth, unsigned short promotion) // Reads input and calls most of other functions
+{
+    if(isGameEnded(*board)&0b11) return false;
+    if(promotion == 5) return false;
     // If pressed the same tile twice
     if (*selected == buttonId) {
         *selected = 64;
         *moves = 0;
-        return;
+        return false;
     }
     // If selected current players piece
     if ((*board)->isOccupied(buttonId) && !(*board)->isEnemyOccupied(buttonId)) {
         *selected = buttonId;
         *moves = getLegalMoves(buttonId, *board);
-        return;
+        return false;
     }
     // If selected is a possible move
     if (*moves & (1ULL << buttonId)) {
@@ -44,25 +56,19 @@ void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected,
 
         (*board)->cutSideBranches();
 
-        if(isGameEnded(*board)&0b11) return;
-        if(botDepth>1){
-            printMoveDebug(*board);
-            //Engine::minimaxTreeSearch(*board, botDepth);
-            Engine::alphaBetaTreeSearch(*board, botDepth, -INFINITY, INFINITY);
-            (*board)->next = Engine::getBestMove(*board);
-            (*board)=(*board)->next;
-            (*board)->cutSideBranches();
-        }
-
         //Reset selection on board
         *moves = 0;
         *selected = 64;
         printMoveDebug(*board);
+
+        return true;
     }
     // If tile not in move list
     else {
         *selected = 64;
         *moves = 0;
+
+        return false;
     }
 }
 
@@ -133,7 +139,6 @@ int Engine::printPossibleMoveCount(Board* startingBoard, int count) {
 // FINISHED
 void Engine::printMoveDebug(Board* startingBoard){
     printPossibleMoveCount(startingBoard);
-    qWarning() << (startingBoard)->getLastMove();
     qWarning() << "All calculated boards: " << allCount;
     qWarning() << "Boards in memory: " << (startingBoard)->existingBoards;
     qWarning() << "Current board evaluation (taking depth into consideration) " <<(startingBoard)->getBoardEval();

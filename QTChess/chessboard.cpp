@@ -21,9 +21,19 @@ void ChessBoard::handleButtonClick(int buttonId)
         promotion = promoWindow.getPromotionChoice();
         qWarning() << "promotion: " << promotion;
     }
-    Engine::pressedButton(&board,buttonId,&selected,&moves,botDepth, promotion);
 
-    //Reprinting board
+    bool madePlayerMove = Engine::madePlayerMove(&board,buttonId,&selected,&moves,botDepth, promotion);
+
+    reprintBoard();
+
+    if (madePlayerMove && botDepth>1) {
+        Engine::engineMove(&board, botDepth);
+        reprintBoard();
+    }
+
+}
+
+void ChessBoard::reprintBoard() {
     clearSelectedFromBoard();
     printAllPieces();
     switch(Engine::isGameEnded(board)){
@@ -38,6 +48,7 @@ void ChessBoard::handleButtonClick(int buttonId)
         return;
     }
     printSelection();
+    QApplication::processEvents();
 }
 
 ChessBoard::ChessBoard(QWidget *parent)
@@ -55,7 +66,6 @@ ChessBoard::ChessBoard(QWidget *parent)
     ui->setupUi(this);
     initBoard();
     printAllPieces();
-
 }
 
 void ChessBoard::setDepth(char level){
