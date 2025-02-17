@@ -17,7 +17,6 @@ class ChessBoard : public QWidget
 public:
     explicit ChessBoard(QWidget *parent = nullptr);
     void setDepth(char level);
-    void botVsBot();
     ~ChessBoard();
 
 private slots:

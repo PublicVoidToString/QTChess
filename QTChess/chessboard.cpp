@@ -33,18 +33,6 @@ void ChessBoard::handleButtonClick(int buttonId)
 
 }
 
-void ChessBoard::botVsBot() {
-
-    QApplication::processEvents();
-
-    do {
-        Engine::engineMove(&board, botDepth);
-        reprintBoard();
-    } while(!Engine::isGameEnded(board));
-
-}
-
-
 void ChessBoard::reprintBoard() {
     clearSelectedFromBoard();
     printAllPieces();
