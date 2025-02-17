@@ -14,7 +14,7 @@ void Board::printLastMove() const {
     << " " << getBlackShortCastlePossible()
     << " " << getBlackLongCastlePossible()
     << " Rules:" << (getFiftyRuleNumber()+1)/2 << "/50"
-    << " " << getThreeRuleNumber();
+    << " Repetition: " << getThreeRuleNumber();
 }
 
 
@@ -140,7 +140,7 @@ void Board::resetFiftyRule(){
 bool Board::checkFiftyRule(bool checkMate){
     lastMove += 0x800000;
     if ((lastMove & 0x30000000) == 0x30000000 && (lastMove & 0x0E000000)) {
-        if (checkMate) lastMove |= 0xC0000000;
+        if (checkMate) lastMove |= 0xC0000000; // Set state to draw
         return true;
     }
     return false;
@@ -152,29 +152,20 @@ unsigned int Board::getFiftyRuleNumber() const{
 
 // 3 repeating position counter (1/42)
 bool Board::checkThreeRule(){
+    bool fityRuleBreak=false;
     for(Board* temp=this->prev;temp!=nullptr;temp=temp->prev){
-        if(temp->whitePawns==this->whitePieces
-            && temp->whiteRooks==this->whiteRooks
-            && temp->whiteKnights==this->whiteKnights
-            && temp->whiteBishops==this->whiteBishops
-            && temp->whiteQueens==this->whiteQueens
-            && temp->whiteKings==this->whiteKings
-            && temp->blackPawns==this->blackPawns
-            && temp->blackRooks==this->blackRooks
-            && temp->blackKnights==this->blackKnights
-            && temp->blackBishops==this->blackBishops
-            && temp->blackQueens==this->blackQueens
-            && temp->blackKings==this->blackKings){
-                if(lastMove & 0x400000) {
-                    lastMove |= 0xC0000000;
+        if(*temp == *this){
+                if(temp->lastMove & 0x400000) { // Check repetition
+                    lastMove |= 0xC0000000; // Set state to draw
                     return true;
                 }
                 else {
-                    lastMove |= 0x400000;
+                    lastMove |= 0x400000; // Set repetition
                     return false;
                 }
-        } else
-        if(!(temp->lastMove & 0x3F000000)) return false;
+        }
+        if(fityRuleBreak) return false;
+        if(!(temp->lastMove & 0x3F000000)) fityRuleBreak=true; // Check if fiftyRule different value equals 1
     }
     return false;
 }

@@ -96,6 +96,7 @@ Board::Board(Board* previousBoard,unsigned char from, unsigned char to, unsigned
         checkThreeRule();
     }
     checkFiftyRule(getGameState()==0);
+    checkInSufficientMaterial();
 }
 
 void Board::makeMove(unsigned char from, unsigned char to, unsigned short promotion) // Making move on board without checking it's legality
@@ -326,6 +327,27 @@ bool Board::isAttacked(int tileId, bool isWhite) const {
         return true;
     }
 
+    return false;
+}
+
+bool Board::checkInSufficientMaterial(){
+    if(__builtin_popcountll(allPieces) > 4) return false;
+    if(__builtin_popcountll(allPieces) == 4){
+        if(__builtin_popcountll(whiteKnights) == 2) {
+            lastMove |= 0xC0000000; // Set state to draw
+            return true;
+        }
+        if(__builtin_popcountll(blackKnights) == 2) {
+            lastMove |= 0xC0000000; // Set state to draw
+            return true;
+        }
+    }
+    else if(__builtin_popcountll(allPieces) == 3) {
+        if(whiteKnights | blackKnights | whiteBishops | blackBishops) {
+            lastMove |= 0xC0000000; // Set state to draw
+            return true;
+        }
+    }
     return false;
 }
 

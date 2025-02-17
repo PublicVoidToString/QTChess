@@ -120,6 +120,7 @@ public:
     bool getWhiteCheckmate();
     bool getBlackCheckmate();
     bool isPossibleMove();
+    bool checkInSufficientMaterial ();
 
 
     void printLastMove() const;
