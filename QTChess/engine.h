@@ -15,7 +15,8 @@ public:
     // Main Functions
     static bool isPromotion(Board* board, int buttonId, unsigned char selected, unsigned long long moves);
 
-    static void pressedButton(Board** board, int buttonId, unsigned char* selected, unsigned long long* moves, char botDepth, unsigned short promotion=0);
+    static void engineMove(Board** board, char botDepth);
+    static bool madePlayerMove(Board** board, int buttonId, unsigned char* selected, unsigned long long* moves, char botDepth, unsigned short promotion=0);
 
     static bool hasLegalMoves(Board* board);
 

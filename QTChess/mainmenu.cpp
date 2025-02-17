@@ -17,6 +17,7 @@ MainMenu::MainMenu(QWidget *parent)
     // Tworzenie przycisków
     QPushButton *playAgainstPlayerButton = new QPushButton("Play Against Player", this);
     QPushButton *playAgainstBotButton = new QPushButton("Play Against Bot", this);
+    QPushButton *botAgainstBotButton = new QPushButton("Bot Against Bot", this);
 
     // Tworzenie slidera do ustawiania poziomu trudności
     QLabel *levelLabel = new QLabel("Difficulty Level: 1", this);
@@ -65,12 +66,14 @@ MainMenu::MainMenu(QWidget *parent)
     // Ustawienie większej czcionki dla przycisków i etykiety
     playAgainstPlayerButton->setStyleSheet("font-size: 18px;");
     playAgainstBotButton->setStyleSheet("font-size: 18px;");
+    botAgainstBotButton->setStyleSheet("font-size: 18px;");
     levelLabel->setStyleSheet("font-size: 18px;");
 
     // Layout
     QVBoxLayout *layout = new QVBoxLayout;
     layout->addWidget(playAgainstPlayerButton);
     layout->addWidget(playAgainstBotButton);
+    layout->addWidget(botAgainstBotButton);
     layout->addWidget(levelLabel);  // Dodanie etykiety
     layout->addWidget(levelSlider); // Dodanie slidera
 
@@ -80,10 +83,12 @@ MainMenu::MainMenu(QWidget *parent)
 
     playAgainstPlayerButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     playAgainstBotButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    botAgainstBotButton->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     // Połączenia przycisków
     connect(playAgainstPlayerButton, &QPushButton::clicked, this, &MainMenu::openChessBoard);
     connect(playAgainstBotButton, &QPushButton::clicked, this, &MainMenu::openChessBoardBot);
+    connect(botAgainstBotButton, &QPushButton::clicked, this, &MainMenu::openBotVsBotChessboard);
 
     // Połączenie, które aktualizuje poziom w obiekcie chessBoard
     connect(levelSlider, &QSlider::valueChanged, this, [this](int value) {
@@ -113,3 +118,13 @@ void MainMenu::openChessBoardBot()
     chessBoard->setDepth(level);
     chessBoard->show();
 }
+
+void MainMenu::openBotVsBotChessboard()
+{
+    chessBoard = new ChessBoard();
+    chessBoard->setDepth(level);
+    chessBoard->show();
+    chessBoard->botVsBot();
+}
+
+
