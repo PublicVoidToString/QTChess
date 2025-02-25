@@ -189,11 +189,11 @@ private:
     static const constexpr double isolatedPawnPenalty = -0.20;
 
     // Two pawns of the same color on the same file
-    static const constexpr double doubledPawnPenalty = -0.12;
+    static const constexpr double doubledPawnPenalty = -0.10;
 
     // Cannot be supported by another pawn from behind.
     // Is blocked by an enemy pawn - directly in front or adjacent
-    static const constexpr double backwardPawnPenalty = -0.12;
+    static const constexpr double backwardPawnPenalty = -0.10;
 
     // Adjecent and the same files are clear from the opposite color pawns
     static const constexpr double passedPawnBonus = 0.9;

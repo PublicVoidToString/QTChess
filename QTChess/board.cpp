@@ -105,43 +105,12 @@ void Board::makeMove(unsigned char from, unsigned char to, unsigned short promot
     setLastMoveFrom(from);
     setLastMoveTo(to);
 
-    // clearing last move - move, capture, en passant
-    lastMove&=0xFFFF000FFFFFFFFF;
-
     uint64_t* bitboardTO = getBitboard(to);
-
-    if(bitboardTO!=nullptr) {
-        updateCapturePiece(*bitboardTO);
-        // update last move
-        *bitboardTO &= ~(1ULL<<to);
-        resetFiftyRule();
-        // removes the captured piece
-
-        // rook capture disableing castling
-        if((*bitboardTO)==whiteRooks){
-            if (to == 0) {
-                blockWhiteLongCastle();
-            } else if (to == 7) {
-                blockWhiteShortCastle();
-            }
-        }else if((*bitboardTO)==blackRooks) {
-            if (to == 56) {
-                blockBlackLongCastle();
-            } else if (to == 63) {
-                blockBlackShortCastle();
-            }
-        }
-    }
-
     uint64_t* bitboardFROM = getBitboard(from);
     if (bitboardFROM == nullptr) {
         qWarning() << "Invalid move: no bitboard found for tile: " << to << " (ERROR BK01)";
         return;
     }
-
-    updateMovingPiece(*bitboardFROM);
-    *bitboardFROM ^= ((1ULL<<from)|(1ULL<<to));
-    // moves the piece
 
     // special cases: promotion, en passant, castling, rook/king move disableing castling
     if((*bitboardFROM)==whitePawns){
@@ -195,6 +164,33 @@ void Board::makeMove(unsigned char from, unsigned char to, unsigned short promot
             blockBlackShortCastle();
         }
     }
+
+
+    // capturing (if there something to capture
+    if(bitboardTO!=nullptr) {
+        updateCapturePiece(*bitboardTO);
+        // update last move
+        *bitboardTO &= ~(1ULL<<to);
+        resetFiftyRule();
+        // removes the captured piece
+
+        // rook capture disableing castling
+        if((*bitboardTO)==whiteRooks){
+            if (to == 0) {
+                blockWhiteLongCastle();
+            } else if (to == 7) {
+                blockWhiteShortCastle();
+            }
+        }else if((*bitboardTO)==blackRooks) {
+            if (to == 56) {
+                blockBlackLongCastle();
+            } else if (to == 63) {
+                blockBlackShortCastle();
+            }
+        }
+    }
+    updateMovingPiece(*bitboardFROM);
+    *bitboardFROM ^= ((1ULL<<from)|(1ULL<<to));
 
 }
 

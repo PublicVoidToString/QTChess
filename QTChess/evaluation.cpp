@@ -192,8 +192,8 @@ int Evaluation::passedPawnCount(unsigned long long whitePawns, unsigned long lon
     uint64_t whiteAreaOfControl = upShift(whitePawns | leftShift(whitePawns) | rightShift(whitePawns)) ;
 
     for(int i=0; i<6; i++) {
-        blackAreaOfControl |= downShift(blackAreaOfControl | leftShift(blackAreaOfControl) | rightShift(blackAreaOfControl));
-        whiteAreaOfControl |= upShift(whiteAreaOfControl | leftShift(whiteAreaOfControl) | rightShift(whiteAreaOfControl));
+        blackAreaOfControl |= downShift(blackAreaOfControl);
+        whiteAreaOfControl |= upShift(whiteAreaOfControl);
     }
     uint64_t whitePassers = whitePawns & (~blackAreaOfControl);
     uint64_t blackPassers = blackPawns & (~whiteAreaOfControl);
