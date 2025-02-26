@@ -19,10 +19,21 @@ void ChessBoard::handleButtonClick(int buttonId)
         PromotionWindow promoWindow;
         promoWindow.exec();
         promotion = promoWindow.getPromotionChoice();
+        qWarning() << "promotion: " << promotion;
     }
-    Engine::pressedButton(&board,buttonId,&selected,&moves,botDepth, promotion);
 
-    //Reprinting board
+    bool madePlayerMove = Engine::madePlayerMove(&board,buttonId,&selected,&moves,botDepth, promotion);
+
+    reprintBoard();
+
+    if (madePlayerMove && botDepth>1) {
+        Engine::engineMove(&board, botDepth);
+        reprintBoard();
+    }
+
+}
+
+void ChessBoard::reprintBoard() {
     clearSelectedFromBoard();
     printAllPieces();
     switch(Engine::isGameEnded(board)){
@@ -37,6 +48,7 @@ void ChessBoard::handleButtonClick(int buttonId)
         return;
     }
     printSelection();
+    QApplication::processEvents();
 }
 
 ChessBoard::ChessBoard(QWidget *parent)
@@ -54,12 +66,10 @@ ChessBoard::ChessBoard(QWidget *parent)
     ui->setupUi(this);
     initBoard();
     printAllPieces();
-
 }
 
 void ChessBoard::setDepth(char level){
     botDepth = level*2;
-    Engine::minimaxTreeSearch(board, 1);
 }
 
 ChessBoard::~ChessBoard()
@@ -74,7 +84,6 @@ ChessBoard::~ChessBoard()
 void ChessBoard::initBoard()
 {
     board = new Board();
-    Engine::minimaxTreeSearch(board, 1);
 
     // Main layout (where later the grid is added)
     QHBoxLayout *mainLayout = new QHBoxLayout(this);

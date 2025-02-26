@@ -113,3 +113,5 @@ void MainMenu::openChessBoardBot()
     chessBoard->setDepth(level);
     chessBoard->show();
 }
+
+

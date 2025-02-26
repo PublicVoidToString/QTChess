@@ -8,17 +8,17 @@ class Engine
 {
 private:
     // Engine Functions
-    static void findAndApplyMove(Board** board, unsigned char from, unsigned char to, unsigned short promotion = 0); // Function creating new Board instance on next and perfoming move on it
-
     static Board* getBestMove(Board* startingBoard);
+
 public:
     Engine();
     // Main Functions
     static bool isPromotion(Board* board, int buttonId, unsigned char selected, unsigned long long moves);
 
-    static void pressedButton(Board** board, int buttonId, unsigned char* selected, unsigned long long* moves, char botDepth, unsigned short promotion=0);
+    static void engineMove(Board** board, char botDepth);
+    static bool madePlayerMove(Board** board, int buttonId, unsigned char* selected, unsigned long long* moves, char botDepth, unsigned short promotion=0);
 
-    static void buildFutureGameTree(Board* startingBoard, int n); // Function to calculate all possible moves for a n depth in the game tree.
+    static bool hasLegalMoves(Board* board);
 
     static unsigned long long getLegalMoves(short from, Board* startingBoard);
 

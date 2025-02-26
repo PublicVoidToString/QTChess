@@ -24,80 +24,57 @@ bool Engine::isPromotion(Board* board, int buttonId, unsigned char selected, uns
     return false;
 }
 
-
+void Engine::engineMove(Board** board, char botDepth) {
+    if(isGameEnded(*board)&0b11) return;
+    if(botDepth>1) {
+        //Engine::minimaxTreeSearch(*board, botDepth);
+        Engine::alphaBetaTreeSearch(*board, botDepth, -INFINITY, INFINITY);
+        (*board)->next = Engine::getBestMove(*board);
+        (*board)=(*board)->next;
+        (*board)->cutSideBranches();
+        printMoveDebug(*board);
+    }
+}
 
 // FINISHED /maybe change into smaller functions
-void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected, unsigned long long* moves, char botDepth, unsigned short promotion) // Reads input and calls most of other functions
+bool Engine::madePlayerMove(Board** board, int buttonId, unsigned char* selected, unsigned long long* moves, char botDepth, unsigned short promotion) // Reads input and calls most of other functions
 {
-    //
-    *moves = Knight::fastMoves(buttonId,&board);
-    *selected = buttonId;
-    return;
-    //*/
-    if(isGameEnded(*board)&0b11) return;
-    if(promotion == 5) return;
+    if(isGameEnded(*board)&0b11) return false;
+    if(promotion == 5) return false;
     // If pressed the same tile twice
     if (*selected == buttonId) {
         *selected = 64;
         *moves = 0;
-        return;
+        return false;
     }
     // If selected current players piece
     if ((*board)->isOccupied(buttonId) && !(*board)->isEnemyOccupied(buttonId)) {
         *selected = buttonId;
         *moves = getLegalMoves(buttonId, *board);
-        return;
+        return false;
     }
     // If selected is a possible move
     if (*moves & (1ULL << buttonId)) {
-        if((*board)->next==nullptr) {
-            QMessageBox::critical(nullptr, "Error", "Next Board does not exist!! (ERROR EK01)");
-            QCoreApplication::quit();
-        }
-        findAndApplyMove(board, *selected, buttonId, promotion);
+        (*board)->next = new Board(*board, *selected, buttonId, promotion);
+        (*board) = (*board)->next;
+        setIfGameEnded(*board);
+
         (*board)->cutSideBranches();
-
-        if(isGameEnded(*board)&0b11) return;
-        if(botDepth>1){
-            printMoveDebug(*board);
-            //Engine::minimaxTreeSearch(*board, botDepth);
-            Engine::alphaBetaTreeSearch(*board, botDepth, -INFINITY, INFINITY);
-            (*board)->next = Engine::getBestMove(*board);
-            (*board)=(*board)->next;
-            (*board)->cutSideBranches();
-        }
-        qWarning() << "Debug";
-        Engine::minimaxTreeSearch(*board, 1);
-
-        //QFuture<void> future = QtConcurrent::run([=]() {
-        //    Engine::buildFutureGameTree(*board, botDepth);
-        //    Evaluation::calcEvalFromBranchTips(*board);
-        //});
 
         //Reset selection on board
         *moves = 0;
         *selected = 64;
         printMoveDebug(*board);
+
+        return true;
     }
     // If tile not in move list
     else {
         *selected = 64;
         *moves = 0;
-    }
-}
 
-// FINISHED
-void Engine::findAndApplyMove(Board** board, unsigned char from, unsigned char to, unsigned short promotion) { // Function creating new Board instance on next and perfoming move on it
-    for(Board *comparator = (*board)->next;comparator!=nullptr;comparator=comparator->right){
-        if(comparator->getLastMoveFrom() == from && comparator->getLastMoveTo() == to && comparator->getLastMovePromotion() == promotion){
-            (*board)->next=comparator;
-            (*board)=(*board)->next;
-            comparator->cutSideBranches();
-            return;
-        }
+        return false;
     }
-    QMessageBox::critical(nullptr, "Error", "Move coudn't be found!! (ERROR EK02)");
-    QCoreApplication::quit();
 }
 
 // FINISHED
@@ -119,49 +96,18 @@ Board* Engine::getBestMove(Board* startingBoard){
     return best;
 }
 
-// Builds game tree without evaluating - used mainly for 1 depth (players move)
-
-void Engine::buildFutureGameTree(Board* startingBoard, int n) {
-    if (n <= 0) return;
-    Board* current = startingBoard;
-    if (current->next!=nullptr){
-        for(current=current->next;current!=nullptr;current=current->right){
-            buildFutureGameTree(current, n - 1);
-        }
-        return;
-    }
+bool Engine::hasLegalMoves(Board* board) {
     for (short from = 0; from < 64; from++) {
-        if(startingBoard->isOccupied(from) && !startingBoard->isEnemyOccupied(from)){
-            long long moves = getLegalMoves(from, startingBoard);
-            short promotion;
-            while (moves) {
-                short to = __builtin_ctzll(moves);
-                moves &= ~(1LL << to);
-                if(isPromotion(startingBoard,to,from,UINT64_MAX)) promotion = 4;
-                else promotion = 0;
-                do{
-                    Board* possibleMove = new Board(startingBoard, from, to, promotion,false);
-                    allCount++;
-                    if (current == startingBoard) {
-                        current = current->next = possibleMove;
-                    } else {
-                        current->right = possibleMove;
-                        possibleMove->left = current;
-                        current = possibleMove;
-                    }
-
-                    //ALFA BETA GOES HERE
-
-
-                    buildFutureGameTree(current, n - 1);
-
-
-                } while(promotion-->0);
+        if(board->isOccupied(from) && !board->isEnemyOccupied(from)){
+            long long moves = getLegalMoves(from, board);
+            if(moves != 0) {
+                return true;
             }
         }
     }
-}
 
+    return false;
+}
 
 // TODO Check & Fix
 unsigned long long Engine::getLegalMoves(short from, Board *startingBoard) {
@@ -174,8 +120,7 @@ unsigned long long Engine::getLegalMoves(short from, Board *startingBoard) {
     for (short to = 0; to < 64; ++to) {
         if (moves & (1ULL << to)) {
             newBoard = new Board(startingBoard, from, to,0,false);
-            newBoard->setTurnNumber(startingBoard->getTurnNumber());
-            //qWarning() << "Bishop bitboard:  " << newBoard->getBlackBishops();
+            newBoard->increaseTurnNumber();
 
             short kingPosition = newBoard->getKingPosition();
 
@@ -203,10 +148,10 @@ int Engine::printPossibleMoveCount(Board* startingBoard, int count) {
 // FINISHED
 void Engine::printMoveDebug(Board* startingBoard){
     printPossibleMoveCount(startingBoard);
-    (startingBoard)->printRootLength();
     qWarning() << "All calculated boards: " << allCount;
     qWarning() << "Boards in memory: " << (startingBoard)->existingBoards;
-    qWarning() << "Current board evaluation " <<(startingBoard)->getBoardEval();
+    qWarning() << "Current board evaluation (taking depth into consideration) " <<(startingBoard)->getBoardEval();
+    qWarning() << "Current board static evaluation (not taking depth into account)";
     qWarning() << "PST board eval: " <<
         Evaluation::pieceSquareTables(startingBoard) <<
         "Pawn structure evaluation: " <<
@@ -241,7 +186,7 @@ void Engine::minimaxTreeSearch (Board* startingBoard, int n) {
     } else if (startingBoard->getWhiteCheckmate()){
         startingBoard->setBoardEval(-10000-n);
         return;
-    } else if (false) {      // TODO remis
+    } else if(!startingBoard->isPossibleMove()){ // stalemate
         startingBoard->setBoardEval(0);
         return;
     }
@@ -252,7 +197,6 @@ void Engine::minimaxTreeSearch (Board* startingBoard, int n) {
     }
 
     Board* current = startingBoard;
-    Board* bestBoard = nullptr;
     double bestValue = startingBoard->isWhiteMove() ? -INFINITY : INFINITY;
 
     for (short from = 0; from < 64; from++) {
@@ -278,21 +222,18 @@ void Engine::minimaxTreeSearch (Board* startingBoard, int n) {
                 if (startingBoard->isWhiteMove()) {
                     if(bestValue < temp->getBoardEval()) {
                         bestValue = temp->getBoardEval();
-                        bestBoard = temp;
                     }
 
                 } else {
                     if(bestValue > temp->getBoardEval()) {
                         bestValue = temp->getBoardEval();
-                        bestBoard = temp;
                     }
                 }
 
             } while(promotion-->0);
         }
     }
-    //bestBoard->cutAllBranches();
-    //startingBoard->next = bestBoard;
+
     startingBoard->setBoardEval(bestValue);
 }
 
@@ -304,7 +245,7 @@ void Engine::alphaBetaTreeSearch (Board* startingBoard, int n, double alpha, dou
     } else if (startingBoard->getWhiteCheckmate()){
         startingBoard->setBoardEval(-10000-n);
         return;
-    } else if (false) {      // TODO remis
+    } else if(!startingBoard->isPossibleMove()){ // stalemate
         startingBoard->setBoardEval(0);
         return;
     }
@@ -314,10 +255,9 @@ void Engine::alphaBetaTreeSearch (Board* startingBoard, int n, double alpha, dou
         return;
     }
 
-    Board* current = startingBoard;
-    Board* bestBoard = nullptr;
-    double bestValue = startingBoard->isWhiteMove() ? -INFINITY : INFINITY;
+    Board* tail = nullptr;
 
+    // getting all moves in and ordering them by orderScore
     for (short from = 0; from < 64; from++) {
         long long moves = getLegalMoves(from, startingBoard);
         while (moves) {
@@ -330,56 +270,90 @@ void Engine::alphaBetaTreeSearch (Board* startingBoard, int n, double alpha, dou
                 Board* temp = new Board(startingBoard, from, to, promotion, false);
                 allCount++;
 
-                if (current == startingBoard) {
-                    current = current->next = temp;
+                if (startingBoard->next == nullptr) {
+                    startingBoard->next = temp;
+                    tail = temp;
                 } else {
-                    current->right = temp;
-                    temp->left = current;
-                    current = temp;
-                }
-                alphaBetaTreeSearch(current, n - 1, alpha, beta);
-
-                if (startingBoard->isWhiteMove()) {
-                    if(bestValue < temp->getBoardEval()) {
-                        bestValue = temp->getBoardEval();
-                        bestBoard = temp;
+                    if (temp->getOrderingScore() > 0) {
+                        // Insert from front (for captures and queen promotions)
+                        Board* current = startingBoard->next;
+                        while (current != nullptr && temp->getOrderingScore() < current->getOrderingScore()) {
+                            current = current->right;
+                        }
+                        if (current != nullptr) {
+                            temp->right = current;
+                            temp->left = current->left;
+                            if (current->left) current->left->right = temp;
+                            current->left = temp;
+                            if (current == startingBoard->next) startingBoard->next = temp;
+                        } else {
+                            tail->right = temp;
+                            temp->left = tail;
+                            tail = temp;
+                        }
+                    } else {
+                        // Insert from the back (for quiet moves and underpromotions)
+                        Board* current = tail;
+                        while (current != nullptr && temp->getOrderingScore() > current->getOrderingScore()) {
+                            current = current->left;
+                        }
+                        if (current != nullptr) {
+                            temp->left = current;
+                            temp->right = current->right;
+                            if (current->right) current->right->left = temp;
+                            current->right = temp;
+                            if (current == tail) tail = temp;
+                        } else {
+                            temp->right = startingBoard->next;
+                            startingBoard->next->left = temp;
+                            startingBoard->next = temp;
+                        }
                     }
-                    alpha = std::max(alpha, bestValue);
 
-                } else {
-                    if(bestValue > temp->getBoardEval()) {
-                        bestValue = temp->getBoardEval();
-                        bestBoard = temp;
-                    }
-                    beta = std::min(beta, bestValue);
-                }
-
-                // Pruning condition
-                if (beta <= alpha) {
-                    break;
                 }
 
             } while (promotion --> 0);
-
-            // Pruning condition
-            if (beta <= alpha) {
-                break;
-            }
         }
     }
-    //bestBoard->cutAllBranches();
-    //startingBoard->next = bestBoard;
+
+    double bestValue = startingBoard->isWhiteMove() ? -INFINITY : INFINITY;
+
+    // evaluation
+    for(Board* current=startingBoard->next;current!=nullptr;current=current->right){
+
+        alphaBetaTreeSearch(current, n - 1, alpha, beta);
+
+        if (startingBoard->isWhiteMove()) {
+            if(bestValue < current->getBoardEval()) {
+                bestValue = current->getBoardEval();
+            }
+            alpha = std::max(alpha, bestValue);
+
+        } else {
+            if(bestValue > current->getBoardEval()) {
+                bestValue = current->getBoardEval();
+            }
+            beta = std::min(beta, bestValue);
+        }
+
+        // Pruning condition
+        if (beta <= alpha) {
+            current->cutRightBranches();
+            break;
+        }
+    }
+
     startingBoard->setBoardEval(bestValue);
 }
 
 // FINISHED
 short Engine::isGameEnded(Board* startingBoard) {
     //return 1 - black win, return 2 - white win, return 3 draw, return anything else - game continuous
-    return startingBoard->getGameState() >> 2;
+    return startingBoard->getGameState();
 }
 
 bool Engine::setIfGameEnded(Board* startingBoard){
-    return startingBoard->getWhiteCheckmate() || startingBoard->getBlackCheckmate();
+    return startingBoard->getWhiteCheckmate() || startingBoard->getBlackCheckmate() || startingBoard->isPossibleMove();
 }
 
 void Engine::calcMoves(){

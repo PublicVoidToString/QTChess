@@ -214,7 +214,7 @@ private:
     static const constexpr unsigned long long undesiredWhiteKingLocations = 0b1111111111111111111111111111111111111111111111111111111100111000;
     static const constexpr unsigned long long undesiredBlackKingLocations = 0b0011100011111111111111111111111111111111111111111111111111111111;
 
-    static const constexpr double undesiredKingLocationPenalty = -0.9;
+    static const constexpr double undesiredKingLocationPenalty = -0.8;
 
 public:
     Evaluation();
@@ -225,7 +225,6 @@ public:
     static double pieceSquareTables(Board* board);
     static double pawnStructure(Board* board);
 
-    static Board* calcEvalFromBranchTips(Board* startingBoard);
 };
 
 #endif // EVALUATION_H

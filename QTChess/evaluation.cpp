@@ -11,35 +11,18 @@ int Evaluation::flipSquare(int value) {
 
 double Evaluation::evaluatePosition(Board* board) { // Main eval function, calculating based on private eval functions
 
-    // Sprawdzenie czy nastąpił mat, pat TODO
+    double evaluation = 0;
+    double pstBoardsEvaluation = pieceSquareTables(board);
+    double pawnStructureEvaluation = pawnStructure(board);
 
-    if(board->getWhiteCheckmate()) {
-        board->setBoardEval(-1000);
-        return board->getBoardEval();
+    evaluation = pstBoardsEvaluation + pawnStructureEvaluation;
+
+    if (board->getTurnNumber() < openingPhaseMoveCount) {
+        evaluation += pieceDevelopmentEvaluation(board);
     }
-    else if(board->getBlackCheckmate()) {
-        board->setBoardEval(1000);
-        return board->getBoardEval();
-    } else if(!board->isPossibleMove()){
-        board->setBoardEval(0);
-        return board->getBoardEval();
-    }
-    else if(false) board->setBoardEval(0);
-    else {
-        double evaluation = 0;
-        double pstBoardsEvaluation = pieceSquareTables(board);
-        double pawnStructureEvaluation = pawnStructure(board);
-        // qWarning() << "PST pesto eval: " << pstBoardsEvaluation;
-        // qWarning() << "Pawn structure evaluation: " << pawnStructureEvaluation;
 
-        evaluation = pstBoardsEvaluation + pawnStructureEvaluation;
+    board->setBoardEval(evaluation);
 
-        if (board->getTurnNumber() < openingPhaseMoveCount) {
-            evaluation += pieceDevelopmentEvaluation(board);
-        }
-
-        board->setBoardEval(evaluation);
-    }
 
     return board->getBoardEval();
 }
@@ -308,43 +291,3 @@ double Evaluation::pieceDevelopmentEvaluation(Board* board) {
 
     return whiteDevelopmentPenalty - blackDevelopmentPenalty;
 }
-
-
-//TODO Add Alpha Beta pruning, adjust minmaxing
-Board* Evaluation::calcEvalFromBranchTips(Board* startingBoard) {
-
-    if (startingBoard == nullptr)
-        return nullptr;
-    if (startingBoard->getWhiteKings()==0 ) {
-        startingBoard->setBoardEval(-1001);
-        return startingBoard;
-    } else if (startingBoard->getBlackKings()==0){
-        startingBoard->setBoardEval(1001);
-        return startingBoard;
-    }
-
-    // Evaluate leaf nodes first
-    if (startingBoard->next == nullptr) {
-        evaluatePosition(startingBoard);
-        return startingBoard;
-    }
-
-    // Recursively evaluate child nodes and propagate evaluations
-    double bestChildEval = startingBoard->isWhiteMove() ? -INFINITY : INFINITY;
-    for (Board* current = startingBoard->next; current != nullptr; current = current->right) {
-        calcEvalFromBranchTips(current);
-
-        if (startingBoard->isWhiteMove() && current->getBoardEval() > bestChildEval) {
-            bestChildEval = current->getBoardEval();
-        } else if (!startingBoard->isWhiteMove() && current->getBoardEval() < bestChildEval) {
-            bestChildEval = current->getBoardEval();
-        }
-    }
-
-
-    startingBoard->setBoardEval(bestChildEval);
-
-    return startingBoard;
-}
-
-
