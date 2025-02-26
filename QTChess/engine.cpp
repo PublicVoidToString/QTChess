@@ -2,6 +2,12 @@
 #include "evaluation.h"
 #include <QtConcurrent/QtConcurrent>
 
+#include "knight.h"
+#include "rook.h"
+#include "bishop.h"
+#include "king.h"
+#include "pawn.h"
+
 Engine::Engine() {}
 long allCount=0;
 
@@ -23,6 +29,11 @@ bool Engine::isPromotion(Board* board, int buttonId, unsigned char selected, uns
 // FINISHED /maybe change into smaller functions
 void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected, unsigned long long* moves, char botDepth, unsigned short promotion) // Reads input and calls most of other functions
 {
+    //
+    *moves = Knight::fastMoves(buttonId,&board);
+    *selected = buttonId;
+    return;
+    //*/
     if(isGameEnded(*board)&0b11) return;
     if(promotion == 5) return;
     // If pressed the same tile twice
@@ -55,7 +66,7 @@ void Engine::pressedButton(Board** board, int buttonId, unsigned char* selected,
             (*board)=(*board)->next;
             (*board)->cutSideBranches();
         }
-
+        qWarning() << "Debug";
         Engine::minimaxTreeSearch(*board, 1);
 
         //QFuture<void> future = QtConcurrent::run([=]() {
@@ -155,21 +166,26 @@ void Engine::buildFutureGameTree(Board* startingBoard, int n) {
 // TODO Check & Fix
 unsigned long long Engine::getLegalMoves(short from, Board *startingBoard) {
     unsigned long long moves = startingBoard->getMoves(from);
-    unsigned long long legalMoves = 0ULL;
+    //qWarning() << "From: " << from;
+    //qWarning() << "Possible Moves bitboard: " << moves;
+    unsigned long long legalMoves = moves;
     Board *newBoard = nullptr;
 
     for (short to = 0; to < 64; ++to) {
         if (moves & (1ULL << to)) {
             newBoard = new Board(startingBoard, from, to,0,false);
             newBoard->setTurnNumber(startingBoard->getTurnNumber());
+            //qWarning() << "Bishop bitboard:  " << newBoard->getBlackBishops();
 
             short kingPosition = newBoard->getKingPosition();
-            if (!newBoard->isAttacked(kingPosition, startingBoard->isWhiteMove())) { legalMoves |= (1ULL << to); }
+
+            if (newBoard->isAttacked(kingPosition, startingBoard->isWhiteMove())) { legalMoves &= ~(1ULL << to); }
 
             delete newBoard;
         }
     }
 
+    //qWarning() << "Legal Moves bitboard: " << legalMoves;
     return legalMoves;
 }
 
@@ -366,3 +382,10 @@ bool Engine::setIfGameEnded(Board* startingBoard){
     return startingBoard->getWhiteCheckmate() || startingBoard->getBlackCheckmate();
 }
 
+void Engine::calcMoves(){
+    Pawn::calcMoves();
+    Rook::calcMoves();
+    Knight::calcMoves();
+    Bishop::calcMoves();
+    King::calcMoves();
+}

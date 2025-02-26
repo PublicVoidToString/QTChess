@@ -1,5 +1,10 @@
 #include "pawn.h"
 
+uint64_t Pawn::movesWhite[]={};
+uint64_t Pawn::movesBlack[]={};
+uint64_t Pawn::attackWhite[]={};
+uint64_t Pawn::attackBlack[]={};
+
 unsigned long long Pawn::allMoves(int positionId, const Board& board, bool isWhite) {
 
     unsigned long long legalMovesBitmap = 0;
@@ -62,3 +67,54 @@ unsigned long long Pawn::allMoves(int positionId, const Board& board, bool isWhi
 
     return legalMovesBitmap;
 }
+
+unsigned long long Pawn::fastMoves(int positionId, const Board& board) {
+    uint64_t moves = 0;
+    if(board.isWhiteMove()) {
+        if(!board.isOccupied(positionId+8)) moves = movesWhite[positionId] & ~(board.getPieces());
+        moves |= (attackWhite[positionId] & board.getBlackPieces());
+        if (board.isEnPassantEligible(positionId - 1)) {
+            moves |= (1ULL << (positionId + 7));
+        }
+        if (board.isEnPassantEligible(positionId + 1)) {
+            moves |= (1ULL << (positionId + 9));
+        }
+    }
+    else{
+        if(!board.isOccupied(positionId-8)) moves = movesBlack[positionId] & ~(board.getPieces());
+        moves |= (attackBlack[positionId] & board.getWhitePieces());
+        if (board.isEnPassantEligible(positionId - 1)) {
+            moves |= (1ULL << (positionId - 9));
+        }
+        if (board.isEnPassantEligible(positionId + 1)) {
+            moves |= (1ULL << (positionId - 7));
+        }
+    }
+    return moves;
+}
+
+void Pawn::calcMoves() {
+    for (int clear = 0; clear < 64; ++clear) {
+        movesWhite[clear] = 0;
+        movesBlack[clear] = 0;
+        attackWhite[clear] = 0;
+        attackBlack[clear] = 0;
+    }
+    for(int tile =0; tile<64;tile++){
+        if(tile<56) movesWhite[tile] |= 1ULL << (tile+8);
+        if(tile>7) movesBlack[tile] |= 1ULL << (tile-8);
+        if(tile>=8 && tile<=15) movesWhite[tile] |= 1ULL << (tile+16);
+        if(tile>=48 && tile<=55) movesBlack[tile] |= 1ULL << (tile-16);
+
+
+        if(tile%8>0){
+            if(tile<56) attackWhite[tile] |= 1ULL << (tile+7);
+            if(tile>7) attackBlack[tile] |= 1ULL << (tile-9);
+        }
+        if(tile%8<7){
+            if(tile<56) attackWhite[tile] |= 1ULL << (tile+9);
+            if(tile>7) attackBlack[tile] |= 1ULL << (tile-7);
+        }
+    }
+}
+

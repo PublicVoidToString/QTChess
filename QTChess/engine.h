@@ -32,6 +32,8 @@ public:
 
     static short isGameEnded(Board* startingBoard);
     static bool setIfGameEnded(Board* startingBoard);
+
+    static void calcMoves();
 };
 
 #endif // ENGINE_H

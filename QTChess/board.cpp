@@ -54,6 +54,26 @@ Board::Board(bool debug) {
     blackQueens  = 0b0000100000000000000000000000000000000000000000000000000000000000;
     blackKings   = 0b0001000000000000000000000000000000000000000000000000000000000000;
 
+    //TODO REMOVE THIS (testing moves purposes)
+
+    whitePawns   = 0b0100100000111000000010000000100000100100000000000000000000000000;
+    whiteRooks   = 0;
+    whiteKnights = 0;
+    whiteBishops = 0;
+    whiteQueens  = 0;
+    whiteKings   = 1;
+
+    blackPawns   = 0b0101110100001000000100000000001000000101010001000000000000000000 & ~(whitePawns);
+    blackRooks   = 0;
+    blackKnights = 0;
+    blackBishops = 0;
+    blackQueens  = 0;
+    blackKings   = 0;
+
+    //*/
+
+
+
     whitePieces = (whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKings);
     blackPieces = (blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKings);
     allPieces = (whitePieces | blackPieces);
@@ -95,7 +115,7 @@ Board::Board(Board* previousBoard,unsigned char from, unsigned char to, unsigned
     next = nullptr;
 }
 
-void Board::makeMove(unsigned char from, unsigned char to, unsigned short promotion) // Making move on board without checking it's legality
+void Board::makeMove(unsigned char from, unsigned char to, unsigned short promotion, bool debug) // Making move on board without checking it's legality
 {
     setLastMovePromotion(promotion);
     setLastMoveFrom(from);
@@ -138,23 +158,46 @@ void Board::makeMove(unsigned char from, unsigned char to, unsigned short promot
         }
         blockBlackShortCastle();
         blockBlackLongCastle();
+    }else if((*bitboard)==whiteRooks){
+        if (from == 0) {
+            blockWhiteLongCastle();
+        } else if (from == 7) {
+            blockWhiteShortCastle();
+        }
+    }else if((*bitboard)==blackRooks) {
+        if (from == 56) {
+            blockBlackLongCastle();
+        } else if (from == 63) {
+            blockBlackShortCastle();
+        }
+    }
+}
+
+void Board::removeFrom(uint64_t tileMask, bool isWhite) {
+    if(isWhite){
+        blackPawns   &= ~(tileMask);
+        blackRooks   &= ~(tileMask);
+        blackKnights &= ~(tileMask);
+        blackBishops &= ~(tileMask);
+        blackQueens  &= ~(tileMask);
+        blackKings   &= ~(tileMask);
+    }else{
+        whitePawns   &= ~(tileMask);
+        whiteRooks   &= ~(tileMask);
+        whiteKnights &= ~(tileMask);
+        whiteBishops &= ~(tileMask);
+        whiteQueens  &= ~(tileMask);
+        whiteKings   &= ~(tileMask);
     }
 }
 
 void Board::promote(unsigned char tile, unsigned char promotion) {
     uint64_t tileMask = 1ULL << tile;
 
-    bool isWhite = (getWhitePawns() & tileMask) != 0;
-    bool isBlack = (getBlackPawns() & tileMask) != 0;
+    bool isWhite = (getWhitePawns() & tileMask);
 
-    if (!isWhite && !isBlack) {
-        QMessageBox::critical(nullptr, "Error", "Wrong tile passed to promote!! (ERROR EB01)");
-        QCoreApplication::quit();
-        return;
-    }
-
-    if (isWhite) whitePawns &= ~tileMask;
-    else blackPawns &= ~tileMask;
+    whitePawns &= ~tileMask;
+    blackPawns &= ~tileMask;
 
     uint64_t* promotionTarget = nullptr;
     switch (promotion) {
@@ -167,7 +210,6 @@ void Board::promote(unsigned char tile, unsigned char promotion) {
         QCoreApplication::quit();
         return;
     }
-
     *promotionTarget |= tileMask;
 }
 
@@ -257,37 +299,31 @@ bool Board::isEnPassantEligible(int tileId) const {
 
 bool Board::isAttacked(int tileId, bool isWhite) const {
     long long moves;
-
     //qWarning() << "IsWhite: " << isWhite << " Pos " << tileId;
     moves = Rook::allMoves(tileId, *this);
     if ((moves & (isWhite ? (this->getBlackRooks() | this->getBlackQueens())
-                          : (this->getWhiteRooks() | this->getWhiteQueens()))) != 0) {
-        //qWarning() << "Attacker: Rook";
+                          : (this->getWhiteRooks() | this->getWhiteQueens())))) {
         return true;
     }
 
     moves = Bishop::allMoves(tileId, *this);
     if ((moves & (isWhite ? (this->getBlackBishops() | this->getBlackQueens())
-                          : (this->getWhiteBishops() | this->getWhiteQueens()))) != 0) {
-        //qWarning() << "Attacker: Bishop";
+                          : (this->getWhiteBishops() | this->getWhiteQueens())))) {
         return true;
     }
 
-    moves = Knight::allMoves(tileId, *this);
-    if ((moves & (isWhite ? this->getBlackKnights() : this->getWhiteKnights())) != 0) {
-        //qWarning() << "Attacker: Knight";
+    moves = Knight::fastMoves(tileId, *this);
+    if ((moves & (isWhite ? this->getBlackKnights() : this->getWhiteKnights()))) {
         return true;
     }
 
     long long kingPos = 1ULL << tileId;
     if (isWhite) {
-        if ((this->getBlackPawns() & (kingPos << 7)) != 0 || (this->getBlackPawns() & (kingPos << 9)) != 0) {
-            //qWarning() << "Attacker: BlackPawn";
+        if ((this->getBlackPawns() & (kingPos << 7)) != 0 || (this->getBlackPawns() & (kingPos << 9))) {
             return true;
         }
     } else {
-        if ((this->getWhitePawns() & (kingPos >> 7)) != 0 || (this->getWhitePawns() & (kingPos >> 9)) != 0) {
-            //qWarning() << "Attacker: WhitePawn";
+        if ((this->getWhitePawns() & (kingPos >> 7)) != 0 || (this->getWhitePawns() & (kingPos >> 9))) {
             return true;
         }
     }
@@ -302,7 +338,7 @@ bool Board::isAttacked(int tileId, bool isWhite) const {
     kingAttacks |= (kingPos >> 9) & ~0x8080808080808080ULL;
     kingAttacks |= (kingPos >> 7) & ~0x0101010101010101ULL;
 
-    if ((kingAttacks & (isWhite ? this->getBlackKings() : this->getWhiteKings())) != 0) {
+    if ((kingAttacks & (isWhite ? this->getBlackKings() : this->getWhiteKings()))) {
         return true;
     }
 

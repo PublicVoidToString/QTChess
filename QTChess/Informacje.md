@@ -49,8 +49,6 @@ WW - white won
 BW - black won (if WW & WB draw)
 L - last move (for unduing moves)
 SB - starting board = if starting board leave as 0, otherwise 1
-               
-
 
 # Image Sources:
 https://www.flaticon.com/free-icon/queen_1626844?related_id=1626879&origin=search <br/>

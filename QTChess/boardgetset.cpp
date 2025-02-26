@@ -36,6 +36,9 @@ short Board::getKingPosition() const {
     : __builtin_ctzll(getBlackKings());
 }
 
+long long Board::getPieces() const { return allPieces; }
+
+long long Board::getWhitePieces() const { return whitePieces; }
 long long Board::getWhitePawns() const { return whitePawns; }
 long long Board::getWhiteKnights() const { return whiteKnights; }
 long long Board::getWhiteRooks() const { return whiteRooks; }
@@ -43,6 +46,7 @@ long long Board::getWhiteBishops() const { return whiteBishops; }
 long long Board::getWhiteQueens() const { return whiteQueens; }
 long long Board::getWhiteKings() const { return whiteKings; }
 
+long long Board::getBlackPieces() const { return blackPieces; }
 long long Board::getBlackPawns() const { return blackPawns; }
 long long Board::getBlackKnights() const { return blackKnights; }
 long long Board::getBlackRooks() const { return blackRooks; }
@@ -53,21 +57,41 @@ long long Board::getBlackKings() const { return blackKings; }
 //TODO Fix
 long long Board::getMoves(int position) const {
     long long figureMoves=0;
-    if(isWhiteMove()){
-        if (getWhitePawns()  & 1ULL <<  position)    figureMoves = Pawn::allMoves(position, *this, isWhiteMove());
-        else if (getWhiteRooks()  & 1ULL <<  position)    figureMoves = Rook::allMoves(position, *this);
-        else if (getWhiteKnights()  & 1ULL <<  position)  figureMoves = Knight::allMoves(position, *this);
-        else if (getWhiteBishops()  & 1ULL <<  position)  figureMoves = Bishop::allMoves(position, *this);
-        else if (getWhiteQueens()  & 1ULL <<  position)   figureMoves = Bishop::allMoves(position, *this) | Rook::allMoves(position, *this);
-        else if (getWhiteKings()  & 1ULL <<  position)    figureMoves = King::legalMoves(position, *this);
+    if(false) {
+        if(isWhiteMove()){
+            if (getWhitePawns()  & 1ULL <<  position)    figureMoves = Pawn::allMoves(position, *this, true);
+            else if (getWhiteRooks()  & 1ULL <<  position)    figureMoves = Rook::allMoves(position, *this);
+            else if (getWhiteKnights()  & 1ULL <<  position)  figureMoves = Knight::allMoves(position, *this);
+            else if (getWhiteBishops()  & 1ULL <<  position)  figureMoves = Bishop::allMoves(position, *this);
+            else if (getWhiteQueens()  & 1ULL <<  position)   figureMoves = Bishop::allMoves(position, *this) | Rook::allMoves(position, *this);
+            else if (getWhiteKings()  & 1ULL <<  position)    figureMoves = King::legalMoves(position, *this);
+        }
+        else {
+            if (getBlackPawns() & 1ULL <<  position)    figureMoves = Pawn::allMoves(position, *this, false);
+            else if (getBlackRooks() & 1ULL <<  position)    figureMoves = Rook::allMoves(position, *this);
+            else if (getBlackKnights() & 1ULL <<  position)  figureMoves = Knight::allMoves(position, *this);
+            else if (getBlackBishops() & 1ULL <<  position)  figureMoves = Bishop::allMoves(position, *this);
+            else if (getBlackQueens() & 1ULL <<  position)   figureMoves = Bishop::allMoves(position, *this) | Rook::allMoves(position, *this);
+            else if (getBlackKings() & 1ULL <<  position)    figureMoves = King::legalMoves(position, *this);
+        }
     }
     else {
-        if (getBlackPawns() & 1ULL <<  position)    figureMoves = Pawn::allMoves(position, *this, isWhiteMove());
-        else if (getBlackRooks() & 1ULL <<  position)    figureMoves = Rook::allMoves(position, *this);
-        else if (getBlackKnights() & 1ULL <<  position)  figureMoves = Knight::allMoves(position, *this);
-        else if (getBlackBishops() & 1ULL <<  position)  figureMoves = Bishop::allMoves(position, *this);
-        else if (getBlackQueens() & 1ULL <<  position)   figureMoves = Bishop::allMoves(position, *this) | Rook::allMoves(position, *this);
-        else if (getBlackKings() & 1ULL <<  position)    figureMoves = King::legalMoves(position, *this);
+        if(isWhiteMove()){
+            if (getWhitePawns()  & 1ULL <<  position)    figureMoves = Pawn::fastMoves(position, *this);
+            else if (getWhiteRooks()  & 1ULL <<  position)    figureMoves = Rook::allMoves(position, *this);
+            else if (getWhiteKnights()  & 1ULL <<  position)  figureMoves = Knight::fastMoves(position, *this);
+            else if (getWhiteBishops()  & 1ULL <<  position)  figureMoves = Bishop::allMoves(position, *this);
+            else if (getWhiteQueens()  & 1ULL <<  position)   figureMoves = Bishop::allMoves(position, *this) | Rook::allMoves(position, *this);
+            else if (getWhiteKings()  & 1ULL <<  position)    figureMoves = King::fastMoves(position, *this);
+        }
+        else {
+            if (getBlackPawns() & 1ULL <<  position)    figureMoves = Pawn::fastMoves(position, *this);
+            else if (getBlackRooks() & 1ULL <<  position)    figureMoves = Rook::allMoves(position, *this);
+            else if (getBlackKnights() & 1ULL <<  position)  figureMoves = Knight::fastMoves(position, *this);
+            else if (getBlackBishops() & 1ULL <<  position)  figureMoves = Bishop::allMoves(position, *this);
+            else if (getBlackQueens() & 1ULL <<  position)   figureMoves = Bishop::allMoves(position, *this) | Rook::allMoves(position, *this);
+            else if (getBlackKings() & 1ULL <<  position)    figureMoves = King::fastMoves(position, *this);
+        }
     }
     return figureMoves;
 }

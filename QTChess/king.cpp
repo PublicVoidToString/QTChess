@@ -3,6 +3,7 @@
 #include "rook.h"
 #include "knight.h"
 
+uint64_t King::moves[]={};
 
 unsigned long long King::legalMoves(int positionId, const Board& board) {
 
@@ -74,4 +75,34 @@ unsigned long long King::legalMoves(int positionId, const Board& board) {
 
     return legalMovesBitmap;
 
+}
+
+
+unsigned long long King::fastMoves(int positionId, const Board& board) {
+    if(board.isWhiteMove()){
+        return moves[positionId] & ~(board.getWhitePieces());
+    } else{
+        return moves[positionId] & ~(board.getBlackPieces());
+    }
+}
+
+void King::calcMoves() {
+    for (int clear = 0; clear < 64; ++clear) moves[clear] = 0;
+
+    for (int tile = 0; tile < 64; ++tile) {
+        int file = tile % 8;
+
+        int moveOffsets[] = {-9, -8, -7, -1, 1, 7, 8, 9};
+
+        for (int offset : moveOffsets) {
+            int target = tile + offset;
+            int targetFile = target % 8;
+
+            if (target >= 0 && target < 64) {
+                if (abs(targetFile - file) <= 1) {
+                    moves[tile] |= 1ULL << target;
+                }
+            }
+        }
+    }
 }

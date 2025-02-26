@@ -19,7 +19,6 @@ void ChessBoard::handleButtonClick(int buttonId)
         PromotionWindow promoWindow;
         promoWindow.exec();
         promotion = promoWindow.getPromotionChoice();
-        qWarning() << "promowion: " << promotion;
     }
     Engine::pressedButton(&board,buttonId,&selected,&moves,botDepth, promotion);
 
