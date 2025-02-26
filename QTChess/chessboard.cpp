@@ -142,7 +142,7 @@ void ChessBoard::clearSelectedFromBoard(){
         int row = i / 8;
         int col = i % 8;
 
-        // Zmieniamy kolor tła na podstawie naprzemiennych kolorów na planszy szachowej
+        // changing colors - board TODO - changing colors multiple times, should be a function
         if ((row + col) % 2 == 0) {
             chessTiles[i]->setStyleSheet("background-color: #7aad7e;");
         } else {
@@ -155,15 +155,14 @@ void ChessBoard::printAllPieces(){
     int size = windowSize/13;
     for (int i = 0; i < 64; ++i) {
         QString pieceName;
-        // Sprawdzenie obecności figury białej
+        // checking white piece presence
         if (board->getWhitePawns() & (1ULL << i)) pieceName = "WhitePawn.png";
         else if (board->getWhiteRooks() & (1ULL << i)) pieceName = "WhiteRook.png";
         else if (board->getWhiteKnights() & (1ULL << i)) pieceName = "WhiteKnight.png";
         else if (board->getWhiteBishops() & (1ULL << i)) pieceName = "WhiteBishop.png";
         else if (board->getWhiteQueens() & (1ULL << i)) pieceName = "WhiteQueen.png";
         else if (board->getWhiteKings() & (1ULL << i)) pieceName = "WhiteKing.png";
-
-        // Sprawdzenie obecności figury czarnej
+        // checking black piece presence
         else if (board->getBlackPawns() & (1ULL << i)) pieceName = "Pawn.png";
         else if (board->getBlackRooks() & (1ULL << i)) pieceName = "Rook.png";
         else if (board->getBlackKnights() & (1ULL << i)) pieceName = "Knight.png";
@@ -171,7 +170,6 @@ void ChessBoard::printAllPieces(){
         else if (board->getBlackQueens() & (1ULL << i)) pieceName = "Queen.png";
         else if (board->getBlackKings() & (1ULL << i)) pieceName = "King.png";
         else pieceName = "empty.png";
-
         // Jeżeli znalazł się obrazek do przypisania, ustawiamy ikonę
         QPixmap piecePixmap(":/images/" + pieceName);
         if (!piecePixmap.isNull()) {
@@ -192,7 +190,6 @@ void ChessBoard::printSelection(){
         int row = clearSelected / 8;
         int col = clearSelected % 8;
 
-        // Zmieniamy kolor tła na podstawie naprzemiennych kolorów na planszy szachowej
         if ((row + col) % 2 == 0) {
             chessTiles[clearSelected]->setStyleSheet("background-color: #7aad7e;");
         } else {
@@ -205,7 +202,6 @@ void ChessBoard::printSelection(){
             int row = i / 8;
             int col = i % 8;
 
-            // Zmieniamy kolor tła na podstawie naprzemiennych kolorów na planszy szachowej
             if ((row + col) % 2 == 0) {
                 chessTiles[i]->setStyleSheet("background-color: #7aad7e;");
             } else {
