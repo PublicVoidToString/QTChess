@@ -47,6 +47,9 @@ public:
     uint64_t whitePieces;
 
     // Logic Functions
+
+    void removeFrom(uint64_t tileMask,bool isWhite);
+
     bool isOccupied(int tileId) const; // Is any figure on tileId tile
     bool isEnemyOccupied(int tileId) const; // Is enemy on tileId tile
     bool isWhite(int tileId) const;
@@ -57,8 +60,7 @@ public:
     uint64_t* getBitboard(int tileId);
 
     void calculateOrderingScore();
-    void makeMove(unsigned char from, unsigned char to, unsigned short promotion=0); // Function making moving figure from->to on current board
-    void promote(unsigned char tile, unsigned char promotion);
+    void makeMove(unsigned char from, unsigned char to, unsigned short promotion=0, bool debug=false); // Function making moving figure from->to on current board
 
     void updateMovingPiece(uint64_t movingPieceBitmap);
     // updates last move
@@ -76,8 +78,10 @@ public:
     // Getters
     bool isWhiteMove() const;
     bool isOnMoveList() const;
+    long long getPieces() const;
 
     short getKingPosition() const;
+    long long getWhitePieces() const;
     long long getWhitePawns() const;
     long long getWhiteKnights() const;
     long long getWhiteRooks() const;
@@ -85,6 +89,7 @@ public:
     long long getWhiteQueens() const;
     long long getWhiteKings() const;
 
+    long long getBlackPieces() const;
     long long getBlackPawns() const;
     long long getBlackKnights() const;
     long long getBlackRooks() const;

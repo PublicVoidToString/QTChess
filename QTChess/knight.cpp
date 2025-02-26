@@ -1,5 +1,6 @@
 #include "knight.h"
 
+uint64_t Knight::moves[] = {};
 
 unsigned long long Knight::allMoves(int positionId, const Board& board) {
 
@@ -42,4 +43,36 @@ unsigned long long Knight::allMoves(int positionId, const Board& board) {
 
 
     return legalMovesBitmap;
+}
+
+unsigned long long Knight::fastMoves(int positionId, const Board& board) {
+    if(board.isWhiteMove()){
+        return moves[positionId] & ~(board.getWhitePieces());
+    } else{
+        return moves[positionId] & ~(board.getBlackPieces());
+    }
+}
+
+void Knight::calcMoves() {
+    for (int clear = 0; clear < 64; ++clear) moves[clear] = 0;
+
+    // All 8 possible knight moves
+    int knightOffsets[] = {15, 17, 6, 10, -15, -17, -6, -10};
+
+    for (int tile = 0; tile < 64; ++tile) {
+        for (int offset : knightOffsets) {
+            int newTile = tile + offset;
+
+            // Ensure newTile is within bounds (0-63)
+            if (newTile >= 0 && newTile < 64) {
+                int oldCol = tile % 8;
+                int newCol = newTile % 8;
+
+                // The knight must move only 1 or 2 columns away
+                if (std::abs(oldCol - newCol) == 1 || std::abs(oldCol - newCol) == 2) {
+                    moves[tile] |= (1ULL << newTile);  // Use 1ULL to avoid shift overflow
+                }
+            }
+        }
+    }
 }
