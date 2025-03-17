@@ -54,12 +54,12 @@ BW - black won (if WW & WB draw)
 move counter - counts plies (or half-moves)
 
 # Image Sources:
-https://www.flaticon.com/free-icon/queen_1626844?related_id=1626879&origin=search <br/>
-https://www.flaticon.com/free-icon/chess_11497350?term=chess+pieces&related_id=11497350 <br/>
-https://www.flaticon.com/free-icon/rook_1626848?related_id=1626883&origin=search <br/>
-https://www.flaticon.com/free-icon/pawn_657487?related_id=657588&origin=search <br/>
-https://www.flaticon.com/free-icon/king_3522646?related_id=3522656&origin=search <br/>
-https://www.flaticon.com/free-icon/bishop_5077021?term=bishop&page=1&position=1&origin=search&related_id=5077021 </br>
+https://www.flaticon.com/free-icon/rook_1626848 <br/>
+https://www.flaticon.com/free-icon/queen_1626844 <br/>
+https://www.flaticon.com/free-icon/king_1626843 <br/>
+https://www.flaticon.com/free-icon/bishop_1626845 <br/>
+https://www.flaticon.com/free-icon/knight_1626846 <br/>
+https://www.flaticon.com/free-icon/pawn_1626847 </br>
 
 # Evaluation
 PeSTO's Evaluation Function based on Pawel Koziol's implementation in TSCP by Tom Kerrigan 
