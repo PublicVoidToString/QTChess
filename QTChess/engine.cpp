@@ -269,26 +269,34 @@ void Engine::alphaBetaTreeSearch (Board* startingBoard, int n, double alpha, dou
                     temp->left = current;
                     current = temp;
                 }
+
                 alphaBetaTreeSearch(current, n - 1, alpha, beta);
 
                 if (startingBoard->isWhiteMove()) {
                     if(bestValue < temp->getBoardEval()) {
                         bestValue = temp->getBoardEval();
+                        alpha = std::max(alpha, bestValue);
                     }
-                    alpha = std::max(alpha, bestValue);
                 } else {
                     if(bestValue > temp->getBoardEval()) {
                         bestValue = temp->getBoardEval();
                         beta = std::min(beta, bestValue);
                     }
-
-                    // Pruning condition
-                    if (beta <= alpha) {
-                        break;
-                    }
                 }
 
+                // Pruning condition
+                if (beta <= alpha) {
+                    break;
+                }
+
+
             } while (promotion --> 0);
+
+            // Pruning condition
+            if (beta <= alpha) {
+                break;
+            }
+
         }
     }
 
