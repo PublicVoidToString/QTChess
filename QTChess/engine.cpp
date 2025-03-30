@@ -22,7 +22,8 @@ void Engine::engineMove(Board** board, char botDepth) {
     if(isGameEnded(*board)&0b11) return;
     if(botDepth>1) {
         //Engine::minimaxTreeSearch(*board, botDepth);
-        Engine::alphaBetaTreeSearch(*board, botDepth, -INFINITY, INFINITY);
+        //Engine::alphaBetaTreeSearch(*board, botDepth, -INFINITY, INFINITY);
+        Engine::alphaBetaTreeSearchMVVLVA(*board, botDepth, -INFINITY, INFINITY);
         (*board)->next = Engine::getBestMove(*board);
         (*board)=(*board)->next;
         (*board)->cutSideBranches();
@@ -246,6 +247,72 @@ void Engine::alphaBetaTreeSearch (Board* startingBoard, int n, double alpha, dou
         return;
     }
 
+    Board* current = startingBoard;
+    double bestValue = startingBoard->isWhiteMove() ? -INFINITY : INFINITY;
+    // getting all moves
+    for (short from = 0; from < 64; from++) {
+        long long moves = getLegalMoves(from, startingBoard);
+        while (moves) {
+            short to = __builtin_ctzll(moves);
+            moves &= ~(1LL << to);
+            short promotion = 0;
+            if (isPromotion(startingBoard, to, from, UINT64_MAX)) promotion = 4;
+
+            do {
+                Board* temp = new Board(startingBoard, from, to, promotion, false);
+                allCount++;
+
+                if (current == startingBoard) {
+                    current = current->next = temp;
+                } else {
+                    current->right = temp;
+                    temp->left = current;
+                    current = temp;
+                }
+                alphaBetaTreeSearch(current, n - 1, alpha, beta);
+
+                if (startingBoard->isWhiteMove()) {
+                    if(bestValue < temp->getBoardEval()) {
+                        bestValue = temp->getBoardEval();
+                    }
+                    alpha = std::max(alpha, bestValue);
+                } else {
+                    if(bestValue > temp->getBoardEval()) {
+                        bestValue = temp->getBoardEval();
+                        beta = std::min(beta, bestValue);
+                    }
+
+                    // Pruning condition
+                    if (beta <= alpha) {
+                        break;
+                    }
+                }
+
+            } while (promotion --> 0);
+        }
+    }
+
+    startingBoard->setBoardEval(bestValue);
+}
+
+void Engine::alphaBetaTreeSearchMVVLVA (Board* startingBoard, int n, double alpha, double beta) {
+
+    if (startingBoard->getBlackCheckmate()) {
+        startingBoard->setBoardEval(10000+n); // adding n --> makes sure that the engine goes for the quicker checkmate
+        return;
+    } else if (startingBoard->getWhiteCheckmate()){
+        startingBoard->setBoardEval(-10000-n);
+        return;
+    } else if(!startingBoard->isPossibleMove()){ // stalemate
+        startingBoard->setBoardEval(0);
+        return;
+    }
+
+    if (n <= 0) {
+        Evaluation::evaluatePosition(startingBoard);
+        return;
+    }
+
     Board* tail = nullptr;
 
     // getting all moves in and ordering them by orderScore
@@ -312,7 +379,7 @@ void Engine::alphaBetaTreeSearch (Board* startingBoard, int n, double alpha, dou
     // evaluation
     for(Board* current=startingBoard->next;current!=nullptr;current=current->right){
 
-        alphaBetaTreeSearch(current, n - 1, alpha, beta);
+        alphaBetaTreeSearchMVVLVA(current, n - 1, alpha, beta);
 
         if (startingBoard->isWhiteMove()) {
             if(bestValue < current->getBoardEval()) {
