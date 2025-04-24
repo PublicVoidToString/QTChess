@@ -23,7 +23,6 @@ public:
 private slots:
     void openChessBoard();
     void openChessBoardBot();
-    void openBotVsBotChessboard();
 
 private:
     char level;

@@ -29,6 +29,7 @@ public:
     // diffrent variations of minimax algorithm
     static void minimaxTreeSearch(Board* board, int n);
     static void alphaBetaTreeSearch(Board* board, int n, double alpha, double beta);
+    static void alphaBetaTreeSearchMVVLVA(Board* board, int n, double alpha, double beta);
 
     static short isGameEnded(Board* startingBoard);
     static bool setIfGameEnded(Board* startingBoard);
