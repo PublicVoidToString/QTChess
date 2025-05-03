@@ -1,11 +1,11 @@
 #ifndef PAWN_H
 #define PAWN_H
-#include "Board.h"
+#include "board.h"
 
 class Pawn
 {
 public:
-    static unsigned long long legalMoves(int positionId, const Board& board);
+    static unsigned long long allMoves(int positionId, const Board& board, bool isWhite);
 };
 
 #endif // PAWN_H

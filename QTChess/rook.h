@@ -1,11 +1,11 @@
 #ifndef ROOK_H
 #define ROOK_H
-#include "Board.h"
+#include "board.h"
 
 class Rook
 {
 public:
-    static unsigned long long legalMoves(int positionId, const Board& board);
+    static unsigned long long allMoves(int positionId, const Board& board);
 };
 
 #endif // ROOK_H

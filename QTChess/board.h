@@ -1,49 +1,70 @@
 #ifndef Board_H
 #define Board_H
+#include <stdint.h>
+#include <QFuture>
+#include <QFutureWatcher>
 
 class Board
 {
 private:
-    bool whiteMove;
+    double boardEval; // + White, - Black, Calculated when creating board, making a move, or when Engine is calculating Moves
 
-    bool whiteLongCastlePossible;
-    bool whiteShortCastlePossible;
-    bool blackLongCastlePossible;
-    bool blackShortCastlePossible;
+    uint64_t lastMove;
+    int orderingScore;
+
+    /*
+     * Used for ordering boards in alpha-beta pruning with following priority:
+     *
+     * 1. Queen promotions
+     * 2. MVV - most valuable victim
+     * 3. LVA - least valuable attacker (only when capture occurs)
+     * 4. Quiet moves (no capture occurs)
+     * 5. Underpromotions (very rarely useful)
+     *
+     */
 
     // Bitboards representing figure positions
-    unsigned long long whitePawns;
-    unsigned long long whiteKnights;
-    unsigned long long whiteRooks;
-    unsigned long long whiteBishops;
-    unsigned long long whiteQueens;
-    unsigned long long whiteKings;
+    uint64_t whitePawns; uint64_t blackPawns;
+    uint64_t whiteKnights; uint64_t blackKnights;
+    uint64_t whiteRooks; uint64_t blackRooks;
+    uint64_t whiteBishops; uint64_t blackBishops;
+    uint64_t whiteQueens; uint64_t blackQueens;
+    uint64_t whiteKings; uint64_t blackKings;
 
-    unsigned long long blackPawns;
-    unsigned long long blackKnights;
-    unsigned long long blackRooks;
-    unsigned long long blackBishops;
-    unsigned long long blackQueens;
-    unsigned long long blackKings;
 
-    // Other variables
-    unsigned char selected; //Selected tile on the board remembered after clicked
-    unsigned char clearSelected; //Previous selected tile to be cleared in next move
-    unsigned long long moves; //Moves bitboard of all possible moves of figure on selected tile
-    unsigned long long clearMoves; //Previous Moves bitboard to be cleared in next move
-    unsigned char lastMove[2];
+    uint64_t allPieces;
 
-    // Functions
-    void move(unsigned char from, unsigned char to); // Function making moving figure from->to on current board
-
-    // Evaluation functions
-    unsigned char sumBits(unsigned long long variable) const;
-    long long sumWhiteMaterial() const;
-    long long sumBlackMaterial() const;
 
 public:
-    Board();
-    Board(Board* previousBoard);
+    bool operator == (const Board &c);
+    static unsigned long existingBoards;
+    Board(bool debug=false);
+    Board(Board* previousBoard,bool debug=false);
+    Board(Board* previousBoard,unsigned char from, unsigned char to, unsigned short promotion, bool debug=false);
+    ~Board();
+
+    uint64_t blackPieces;
+    uint64_t whitePieces;
+
+    // Logic Functions
+    bool isOccupied(int tileId) const; // Is any figure on tileId tile
+    bool isEnemyOccupied(int tileId) const; // Is enemy on tileId tile
+    bool isWhite(int tileId) const;
+    bool isBlack(int tileId) const;
+
+    bool isEnPassantEligible(int tileId) const;
+    bool isAttacked(int tileId, bool isWhite) const;
+    uint64_t* getBitboard(int tileId);
+
+    void calculateOrderingScore();
+    void makeMove(unsigned char from, unsigned char to, unsigned short promotion=0); // Function making moving figure from->to on current board
+    void promote(unsigned char tile, unsigned char promotion);
+
+    void updateMovingPiece(uint64_t movingPieceBitmap);
+    // updates last move
+
+    void updateCapturePiece(uint64_t capturedPieceBitmap);
+    // updates last move
 
     // GAME TREE (Current is stored by Chessboard class, therefore those pointers are made public)
     Board* prev; //Pointer to previous move (empty if first)
@@ -52,30 +73,11 @@ public:
     Board* right; // Next possible move
     Board* left; // Previous possible move
 
-    // Main Functions
-    bool pressedButton(int buttonId); // Reads input and calls all other functions
-    long long evaluatePosition() const; // Main eval function, calculating based on private eval functions
-
-    // Logic Functions
-    bool isOccupied(int buttonId) const; // Is any figure on buttonID tile
-    bool isEnemyOccupied(int buttonId) const; // Is enemy on buttonID tile
-    bool isEnPassantEligible(int buttonId) const;
-    // TODO
-    bool isDraw() const;
-    bool isBlackMated() const;
-    bool isWhiteMated() const;
-
-    // Engine Functions
-    void nextMove(unsigned char from, unsigned char to); // Function creating new Board instance on next and perfoming move on it
-
     // Getters
     bool isWhiteMove() const;
+    bool isOnMoveList() const;
 
-    bool getWhiteLongCastlePossible() const;
-    bool getWhiteShortCastlePossible() const;
-    bool getBlackLongCastlePossible() const;
-    bool getBlackShortCastlePossible() const;
-
+    short getKingPosition() const;
     long long getWhitePawns() const;
     long long getWhiteKnights() const;
     long long getWhiteRooks() const;
@@ -89,12 +91,67 @@ public:
     long long getBlackBishops() const;
     long long getBlackQueens() const;
     long long getBlackKings() const;
+    long long getMoves(int position) const;
+    double getBoardEval() const;
+    void setBoardEval(double eval);
+    unsigned int getTurnNumber() const;
+    void increaseTurnNumber();
+    int getOrderingScore() const;
 
-    unsigned char getSelected() const;
-    unsigned char getClearSelected() const;
-    long long getMoves() const;
-    long long getClearMoves() const;
+    void printRootLength() const;
+
+    void cutSideBranches(); //Recursive delete of all "next"/"right" boards
+    void cutRightBranches(); //Recursive delete of all "next"/"left" boards
+    void cutLeftBranches(); //Recursive delete of all "next"/"left" boards
+    void cutAllBranches(); //Recursive delete of all "next"/"left" boards
+    void cutNextBranches(); //Recursive delete of all "next"/"left" boards
+
+    void removeKing(bool isWhite);
+
+
+    void setLastMoveFrom(char from);
+    void setLastMoveTo(char to);
+    void setLastMoveShortCastle();
+    void setLastMoveLongCastle();
+    void setLastMoveEnPassant();
+    void blockBlackShortCastle();
+    void blockBlackLongCastle();
+    void blockWhiteShortCastle();
+    void blockWhiteLongCastle();
+    char getLastMoveFrom() const;
+    char getLastMoveTo() const;
+    bool getLastMoveEnPassant() const;
+    bool getBlackShortCastlePossible() const;
+    bool getBlackLongCastlePossible() const;
+    bool getWhiteShortCastlePossible() const;
+    bool getWhiteLongCastlePossible() const;
+    short getCapturedPieceScore() const;
+    short getMovingPieceScore() const;
+    unsigned int getGameState() const;
+
+    uint64_t getLastMove() const;
+
+    short getLastMovePromotion() const;
+    void setLastMovePromotion(short promotion) ;
+
+    void setLastMoveWin(bool white);
+    void setLastMoveWhiteWin();
+    void setLastMoveBlackWin();
+    bool getWhiteCheckmate();
+    bool getBlackCheckmate();
+    bool isPossibleMove();
+    bool checkInSufficientMaterial ();
+
+
+    void printLastMove() const;
+
+    bool checkFiftyRule(bool checkMate=false);
+    void resetFiftyRule();
+    unsigned int getFiftyRuleNumber() const;
+
+    bool checkThreeRule();
+    unsigned int getThreeRuleNumber() const;
 
 };
-
 #endif // Board_H
+

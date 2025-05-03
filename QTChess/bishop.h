@@ -1,11 +1,11 @@
 #ifndef BISHOP_H
 #define BISHOP_H
-#include "Board.h"
+#include "board.h"
 
 class Bishop
 {
 public:
-    static unsigned long long legalMoves(int positionId, const Board& board);
+    static unsigned long long allMoves(int positionId, const Board& board);
 };
 
 #endif // BISHOP_H

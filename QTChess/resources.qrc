@@ -12,5 +12,9 @@
         <file>images/WhitePawn.png</file>
         <file>images/WhiteQueen.png</file>
         <file>images/WhiteRook.png</file>
+        <file>images/empty.png</file>
+        <file>images/BlackWin.png</file>
+        <file>images/Draw.png</file>
+        <file>images/WhiteWin.png</file>
     </qresource>
 </RCC>

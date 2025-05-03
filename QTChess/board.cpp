@@ -1,196 +1,43 @@
 #include "Board.h"
 //pieces
+#include <cstddef>
+#include <QMessageBox>
 #include "pawn.h"
 #include "bishop.h"
 #include "knight.h"
 #include "rook.h"
 #include "king.h"
-#include <cstddef>
-#include <QMessageBox>
+#include "engine.h"
 
 // PRIVATE:
 
 // Functions
-void Board::move(unsigned char from, unsigned char to) // Function making moving figure from->to on current board
-{
-    bool isWhitePiece = false;
-    bool isEnPassant = false;
-    unsigned char capturedPawnPosition = -1; // variable used in case of enPassant
-
-    // Checking move type by piece and from location
-    if (whitePawns & (1ULL << from)) {
-        whitePawns &= ~(1ULL << from); // remove a piece from old location
-        whitePawns |= (1ULL << to);    // adding a piece to a new location
-        isWhitePiece = true;
-
-        if ((to - from) == 9 || (to - from) == 7) { // checking special move - en passant
-            if (!this->isEnemyOccupied(to)) {
-                isEnPassant = true;
-                capturedPawnPosition = to - 8;
-            }
-        }
-
-    } else if (whiteRooks & (1ULL << from)) {
-
-        if (from == 0) {
-            whiteLongCastlePossible = false;
-        } else if (from == 7) {
-            whiteShortCastlePossible = false;
-        }
-
-        whiteRooks &= ~(1ULL << from);
-        whiteRooks |= (1ULL << to);
-        isWhitePiece = true;
-    } else if (whiteKnights & (1ULL << from)) {
-        whiteKnights &= ~(1ULL << from);
-        whiteKnights |= (1ULL << to);
-        isWhitePiece = true;
-    } else if (whiteBishops & (1ULL << from)) {
-        whiteBishops &= ~(1ULL << from);
-        whiteBishops |= (1ULL << to);
-        isWhitePiece = true;
-    } else if (whiteQueens & (1ULL << from)) {
-        whiteQueens &= ~(1ULL << from);
-        whiteQueens |= (1ULL << to);
-        isWhitePiece = true;
-    } else if (whiteKings & (1ULL << from)) {
-        whiteKings &= ~(1ULL << from);
-        whiteKings |= (1ULL << to);
-
-        // Castles
-        if (from == 4 && to == 6 && whiteShortCastlePossible) { // 0-0 short castles
-            whiteRooks &= ~(1ULL << 7);
-            whiteRooks |= (1ULL << 5);
-        } else if (from == 4 && to == 2 && whiteLongCastlePossible) { // 0-0-0 long castles
-            whiteRooks &= ~(1ULL << 0);
-            whiteRooks |= (1ULL << 3);
-        }
-
-        // Updating castling legality after moving
-        whiteShortCastlePossible = false;
-        whiteLongCastlePossible = false;
-
-        isWhitePiece = true;
-    } else if (blackPawns & (1ULL << from)) {
-        blackPawns &= ~(1ULL << from);
-        blackPawns |= (1ULL << to);
-
-        if ((from - to) == 9 || (from - to) == 7) {
-            if (!this->isEnemyOccupied(to)) {
-                isEnPassant = true;
-                capturedPawnPosition = to + 8;
-            }
-        }
-
-    } else if (blackRooks & (1ULL << from)) {
-
-        if (from == 56) {
-            blackLongCastlePossible = false;
-        } else if (from == 63) {
-            blackShortCastlePossible = false;
-        }
-
-        blackRooks &= ~(1ULL << from);
-        blackRooks |= (1ULL << to);
-    } else if (blackKnights & (1ULL << from)) {
-        blackKnights &= ~(1ULL << from);
-        blackKnights |= (1ULL << to);
-    } else if (blackBishops & (1ULL << from)) {
-        blackBishops &= ~(1ULL << from);
-        blackBishops |= (1ULL << to);
-    } else if (blackQueens & (1ULL << from)) {
-        blackQueens &= ~(1ULL << from);
-        blackQueens |= (1ULL << to);
-    } else if (blackKings & (1ULL << from)) {
-        blackKings &= ~(1ULL << from);
-        blackKings |= (1ULL << to);
-
-        if (from == 60 && to == 62 && blackShortCastlePossible) {
-            blackRooks &= ~(1ULL << 63);
-            blackRooks |= (1ULL << 61);
-        } else if (from == 60 && to == 58 && blackLongCastlePossible) {
-            blackRooks &= ~(1ULL << 56);
-            blackRooks |= (1ULL << 59);
-        }
-        blackShortCastlePossible = false;
-        blackLongCastlePossible = false;
-    }
-
-    // Usunięcie figury przeciwnika z docelowego pola, jeśli tam była
-    if (isEnPassant) {
-        if (isWhitePiece) {
-            blackPawns &= ~(1ULL << capturedPawnPosition);
-        } else {
-            whitePawns &= ~(1ULL << capturedPawnPosition);
-        }
-    } else {
-        if (isWhitePiece) {
-            // Czarna figura na docelowym polu
-            blackPawns &= ~(1ULL << to);
-            blackRooks &= ~(1ULL << to);
-            blackKnights &= ~(1ULL << to);
-            blackBishops &= ~(1ULL << to);
-            blackQueens &= ~(1ULL << to);
-            blackKings &= ~(1ULL << to);
-        } else {
-            // Biała figura na docelowym polu
-            whitePawns &= ~(1ULL << to);
-            whiteRooks &= ~(1ULL << to);
-            whiteKnights &= ~(1ULL << to);
-            whiteBishops &= ~(1ULL << to);
-            whiteQueens &= ~(1ULL << to);
-            whiteKings &= ~(1ULL << to);
-        }
-    }
-}
-
-// Evaluation functions
-unsigned char Board::sumBits(unsigned long long variable) const {
-    unsigned char sum = 0;
-    unsigned long long buffer = variable;
-    for (sum = 0; buffer; sum++)
-    {
-        buffer &= buffer - 1; // Removing least significant bit
-    }
-
-    return sum;
-}
-long long Board::sumWhiteMaterial() const {
-    long long score = 0;
-    score += sumBits(whitePawns);
-    score += sumBits(whiteBishops)*3;
-    score += sumBits(whiteKnights)*3;
-    score += sumBits(whiteRooks)*5;
-    score += sumBits(whiteQueens)*9;
-
-    return score;
-}
-long long Board::sumBlackMaterial() const {
-    long long score = 0;
-    score += sumBits(blackPawns);
-    score += sumBits(blackBishops)*3;
-    score += sumBits(blackKnights)*3;
-    score += sumBits(blackRooks)*5;
-    score += sumBits(blackQueens)*9;
-
-    return score;
-}
-
 // PUBLIC:
 
-Board::Board() {
-    whiteMove = true; //TODO: Zmienić na numer rundy %2 i masz ruch
-    selected = 64;
-    clearSelected = 64;
-    lastMove[0] = 64; // initiated out of the chessboard
-    lastMove[1] = 64;
-    moves        = 0b0000000000000000000000000000000000000000000000000000000000000000;
-    clearMoves   = 0b0000000000000000000000000000000000000000000000000000000000000000;
+unsigned long Board::existingBoards=0;
 
-    whiteLongCastlePossible = true;
-    whiteShortCastlePossible = true;
-    blackLongCastlePossible = true;
-    blackShortCastlePossible = true;
+bool Board::operator == (const Board &b)
+{
+    if(whitePawns != b.whitePawns) return false;
+    if(whiteRooks != b.whiteRooks) return false;
+    if(whiteKnights != b.whiteKnights) return false;
+    if(whiteBishops != b.whiteBishops) return false;
+    if(whiteQueens != b.whiteQueens) return false;
+    if(whiteKings != b.whiteKings) return false;
+
+    if(blackPawns != b.blackPawns) return false;
+    if(blackRooks != b.blackRooks) return false;
+    if(blackKnights != b.blackKnights) return false;
+    if(blackBishops != b.blackBishops) return false;
+    if(blackQueens != b.blackQueens) return false;
+    if(blackKings != b.blackKings) return false;
+    return true;
+}
+
+Board::Board(bool debug) {
+    if(!debug) existingBoards+=1;
+    boardEval=0;
+    lastMove = 0xF00000000; //castles are possible
 
     whitePawns   = 0b0000000000000000000000000000000000000000000000001111111100000000;
     whiteRooks   = 0b0000000000000000000000000000000000000000000000000000000010000001;
@@ -206,22 +53,19 @@ Board::Board() {
     blackQueens  = 0b0000100000000000000000000000000000000000000000000000000000000000;
     blackKings   = 0b0001000000000000000000000000000000000000000000000000000000000000;
 
-    prev = NULL;
-    right = NULL;
-    left = NULL;
-    next = NULL;
+    whitePieces = (whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKings);
+    blackPieces = (blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKings);
+    allPieces = (whitePieces | blackPieces);
+    prev = nullptr;
+    right = nullptr;
+    left = nullptr;
+    next = nullptr;
 }
-Board::Board(Board* previousBoard) {
-    whiteMove = !previousBoard->whiteMove; //TODO: Zmienić na numer rundy %2 i masz ruch
-    selected = 64;
-    clearSelected = 64;
-    moves        = 0b0000000000000000000000000000000000000000000000000000000000000000;
-    clearMoves   = 0b0000000000000000000000000000000000000000000000000000000000000000;
 
-    whiteShortCastlePossible = previousBoard->whiteShortCastlePossible;
-    whiteLongCastlePossible = previousBoard->whiteLongCastlePossible;
-    blackShortCastlePossible = previousBoard->blackShortCastlePossible;
-    blackLongCastlePossible = previousBoard->blackLongCastlePossible;
+Board::Board(Board* previousBoard,unsigned char from, unsigned char to, unsigned short promotion, bool debug) {
+    if(!debug) existingBoards+=1;
+    lastMove=previousBoard->lastMove & ~(0b1111111111111111111111111111000000000000010000000000000000000000);
+    increaseTurnNumber();
 
     whitePawns   = previousBoard->whitePawns;
     whiteRooks   = previousBoard->whiteRooks;
@@ -237,153 +81,357 @@ Board::Board(Board* previousBoard) {
     blackQueens  = previousBoard->blackQueens;
     blackKings   = previousBoard->blackKings;
 
+    makeMove(from, to, promotion);
+    calculateOrderingScore();
 
+    whitePieces = (whitePawns | whiteRooks | whiteKnights | whiteBishops | whiteQueens | whiteKings);
+    blackPieces = (blackPawns | blackRooks | blackKnights | blackBishops | blackQueens | blackKings);
+    allPieces = (whitePieces | blackPieces);
 
     prev = previousBoard;
-    right = NULL;
-    left = NULL;
-    //next = NULL //miłego szukania errora
+    right = nullptr;
+    left = nullptr;
+    next = nullptr;
+    if(getGameState()==0){
+        checkThreeRule();
+    }
+    checkFiftyRule(getGameState()==0);
+    checkInSufficientMaterial();
 }
 
-// Main Functions
-bool Board::pressedButton(int buttonId) // Reads input and calls most of other functions
+void Board::makeMove(unsigned char from, unsigned char to, unsigned short promotion) // Making move on board without checking it's legality
 {
-    clearSelected = selected;
-    clearMoves = moves;
-    if(isOccupied(buttonId) && !isEnemyOccupied(buttonId)){
-        selected = buttonId;
-        if(whiteMove){
-            if (whitePawns  & 1ULL << selected)   moves = Pawn::legalMoves(buttonId, *this);
-            else if (whiteRooks  & 1ULL << selected)   moves = Rook::legalMoves(buttonId, *this);
-            else if (whiteKnights  & 1ULL << selected) moves = Knight::legalMoves(buttonId, *this);
-            else if (whiteBishops  & 1ULL << selected) moves = Bishop::legalMoves(buttonId, *this);
-            else if (whiteQueens  & 1ULL << selected)  moves = Bishop::legalMoves(buttonId, *this) | Rook::legalMoves(buttonId, *this);
-            else if (whiteKings  & 1ULL << selected)   moves = King::legalMoves(buttonId, *this);
-        }
-        else {
-            if (blackPawns & 1ULL << selected)   moves = Pawn::legalMoves(buttonId, *this);
-            else if (blackRooks & 1ULL << selected)   moves = Rook::legalMoves(buttonId, *this);
-            else if (blackKnights & 1ULL << selected) moves = Knight::legalMoves(buttonId, *this);
-            else if (blackBishops & 1ULL << selected) moves = Bishop::legalMoves(buttonId, *this);
-            else if (blackQueens & 1ULL << selected)  moves = Bishop::legalMoves(buttonId, *this) | Rook::legalMoves(buttonId, *this);
-            else if (blackKings & 1ULL << selected)   moves = King::legalMoves(buttonId, *this);
-        }
-    } else{
-        // Gdy zostało wciśnięte pole z tablicy ruchu
-        if (moves & (1ULL << buttonId)) {
-            nextMove(selected, buttonId);
-            lastMove[0] = selected; // ustawienie ostatniego ruchu (do sprawdzania en passant)
-            lastMove[1] = buttonId;
-            moves = 0b0000000000000000000000000000000000000000000000000000000000000000;
-            selected = 64;
-            return true;
-        }
+    setLastMovePromotion(promotion);
+    setLastMoveFrom(from);
+    setLastMoveTo(to);
 
-        // Gdy zostało wciśnięte puste pole
-        else {
-            selected = 64;
-            moves = 0b0000000000000000000000000000000000000000000000000000000000000000;
+    // clearing last move - move, capture, en passant
+    lastMove&=0xFFFF000FFFFFFFFF;
+
+    uint64_t* bitboardTO = getBitboard(to);
+
+    if(bitboardTO!=nullptr) {
+        updateCapturePiece(*bitboardTO);
+        // update last move
+        *bitboardTO &= ~(1ULL<<to);
+        resetFiftyRule();
+        // removes the captured piece
+
+        // rook capture disableing castling
+        if((*bitboardTO)==whiteRooks){
+            if (to == 0) {
+                blockWhiteLongCastle();
+            } else if (to == 7) {
+                blockWhiteShortCastle();
+            }
+        }else if((*bitboardTO)==blackRooks) {
+            if (to == 56) {
+                blockBlackLongCastle();
+            } else if (to == 63) {
+                blockBlackShortCastle();
+            }
         }
     }
 
-    // Sprawdzanie, czy zmieniła się pozycja, i resetowanie zaznaczenia, jeśli nie
-    if (selected == clearSelected) {
-        selected = 64;
-        moves = 0b0000000000000000000000000000000000000000000000000000000000000000;
+    uint64_t* bitboardFROM = getBitboard(from);
+    if (bitboardFROM == nullptr) {
+        qWarning() << "Invalid move: no bitboard found for tile: " << to << " (ERROR BK01)";
+        return;
     }
-    return false;
+
+    updateMovingPiece(*bitboardFROM);
+    *bitboardFROM ^= ((1ULL<<from)|(1ULL<<to));
+    // moves the piece
+
+    // special cases: promotion, en passant, castling, rook/king move disableing castling
+    if((*bitboardFROM)==whitePawns){
+        resetFiftyRule();
+        if(promotion > 0) promote(to, promotion);
+        if((to-from==9 || to-from==7) && to<=47 && to>=40 && !isOccupied(to))  {
+            setLastMoveEnPassant();
+            blackPawns &= ~(1ULL<<(to-8));
+        }
+    }else if((*bitboardFROM)==blackPawns){
+        resetFiftyRule();
+        if(promotion > 0) promote(to, promotion);
+        if((from-to==9 || from-to==7) && to<=23 && to>=16 && !isOccupied(to))  {
+            setLastMoveEnPassant();
+            whitePawns &= ~(1ULL<<(to+8));
+        }
+    }
+    else if((*bitboardFROM)==whiteKings){
+        if (from == 4 && to == 6) {
+            whiteRooks &= ~(1ULL << 7);
+            whiteRooks |= (1ULL << 5);
+        } else if (from == 4 && to == 2) {
+            whiteRooks &= ~(1ULL << 0);
+            whiteRooks |= (1ULL << 3);
+        }
+        blockWhiteLongCastle();
+        blockWhiteShortCastle();
+
+    }else if((*bitboardFROM)==blackKings){
+        blackKings &= ~(1ULL << from);
+        blackKings |= (1ULL << to);
+        if (from == 60 && to == 62) {
+            blackRooks &= ~(1ULL << 63);
+            blackRooks |= (1ULL << 61);
+        } else if (from == 60 && to == 58) {
+            blackRooks &= ~(1ULL << 56);
+            blackRooks |= (1ULL << 59);
+        }
+        blockBlackShortCastle();
+        blockBlackLongCastle();
+    }else if((*bitboardFROM)==whiteRooks){
+        if (from == 0) {
+            blockWhiteLongCastle();
+        } else if (from == 7) {
+            blockWhiteShortCastle();
+        }
+    }else if((*bitboardFROM)==blackRooks) {
+        if (from == 56) {
+            blockBlackLongCastle();
+        } else if (from == 63) {
+            blockBlackShortCastle();
+        }
+    }
+
 }
-long long Board::evaluatePosition() const { // Main eval function, calculating based on private eval functions
-    long long finalScore = 0;
 
-    // Sprawdzenie czy nastąpił mat, pat TODO
+void Board::promote(unsigned char tile, unsigned char promotion) {
+    uint64_t tileMask = 1ULL << tile;
 
-    if(isDraw()) {
-        return 0;
+    bool isWhite = (getWhitePawns() & tileMask) != 0;
+    bool isBlack = (getBlackPawns() & tileMask) != 0;
+
+    if (!isWhite && !isBlack) {
+        QMessageBox::critical(nullptr, "Error", "Wrong tile passed to promote!! (ERROR EB01)");
+        QCoreApplication::quit();
+        return;
     }
 
-    if(isBlackMated()) {
-        return 1000;
+    if (isWhite) whitePawns &= ~tileMask;
+    else blackPawns &= ~tileMask;
+
+    uint64_t* promotionTarget = nullptr;
+    switch (promotion) {
+    case 1: promotionTarget = isWhite ? &whiteQueens : &blackQueens; break;
+    case 2: promotionTarget = isWhite ? &whiteRooks : &blackRooks; break;
+    case 3: promotionTarget = isWhite ? &whiteBishops : &blackBishops; break;
+    case 4: promotionTarget = isWhite ? &whiteKnights : &blackKnights; break;
+    default:
+        QMessageBox::critical(nullptr, "Error", "Wrong promotion ID passed to promote!! (ERROR EB02)");
+        QCoreApplication::quit();
+        return;
     }
 
-    if(isWhiteMated()) {
-        return -1000;
+    *promotionTarget |= tileMask;
+}
+
+void Board::updateMovingPiece(uint64_t movingPieceBitmap) {
+
+    if (isWhiteMove()) {
+        if (movingPieceBitmap == blackPawns) {
+            lastMove|=0x0000040000000000;
+        }
+        else if (movingPieceBitmap == blackKnights) {
+            lastMove|=0x0000020000000000;
+        }
+        else if (movingPieceBitmap == blackBishops) {
+            lastMove|=0x0000010000000000;
+        }
+        else if (movingPieceBitmap == blackRooks) {
+            lastMove|=0x0000008000000000;
+        }
+        else if (movingPieceBitmap == blackQueens) {
+            lastMove|=0x0000004000000000;
+        }
+        else {
+            lastMove|=0x0000002000000000;
+        }
+    } else {
+        if (movingPieceBitmap == whitePawns) {
+            lastMove|=0x0000040000000000;
+        }
+        else if (movingPieceBitmap == whiteKnights) {
+            lastMove|=0x0000020000000000;
+        }
+        else if (movingPieceBitmap == whiteBishops) {
+            lastMove|=0x0000010000000000;
+        }
+        else if (movingPieceBitmap == whiteRooks) {
+            lastMove|=0x0000008000000000;
+        }
+        else if (movingPieceBitmap == whiteQueens) {
+            lastMove|=0x0000004000000000;
+        } else {
+            lastMove|=0x0000002000000000;
+        }
     }
+}
 
-    // Policzenie materiału
+void Board::updateCapturePiece(uint64_t capturedPieceBitmap) {
 
-    finalScore += sumWhiteMaterial();
-    finalScore -= sumBlackMaterial();
-
-    // Wzięcie pod uwagę lokalizację materiału TODO
-
-
-    return finalScore;
+    if (!isWhiteMove()) {
+        if (capturedPieceBitmap == blackPawns) {
+            lastMove|=0x0000080000000000;
+        }
+        else if (capturedPieceBitmap == blackKnights) {
+            lastMove|=0x0000100000000000;
+        }
+        else if (capturedPieceBitmap == blackBishops) {
+            lastMove|=0x0000200000000000;
+        }
+        else if (capturedPieceBitmap == blackRooks) {
+            lastMove|=0x0000400000000000;
+        }
+        else if (capturedPieceBitmap == blackQueens) {
+            lastMove|=0x0000800000000000;
+        }
+    } else {
+        if (capturedPieceBitmap == whitePawns) {
+            lastMove|=0x0000080000000000;
+        }
+        else if (capturedPieceBitmap == whiteKnights) {
+            lastMove|=0x0000100000000000;
+        }
+        else if (capturedPieceBitmap == whiteBishops) {
+            lastMove|=0x0000200000000000;
+        }
+        else if (capturedPieceBitmap == whiteRooks) {
+            lastMove|=0x0000400000000000;
+        }
+        else if (capturedPieceBitmap == whiteQueens) {
+            lastMove|=0x0000800000000000;
+        }
+    }
 }
 
 // Logic Functions
-bool Board::isOccupied(int buttonId) const { // Is any figure on buttonID tile
-    return (whitePawns | whiteKnights | whiteRooks | whiteBishops | whiteQueens | whiteKings |
-            blackPawns | blackKnights | blackRooks | blackBishops | blackQueens | blackKings) & (1ULL << buttonId);
+bool Board::isOccupied(int tileId) const {
+    return (allPieces & (1ULL << tileId));
 }
-bool Board::isEnemyOccupied(int buttonId) const { // Is enemy on buttonID tile
-    if(whiteMove) {
-        return (blackPawns | blackKnights | blackRooks | blackBishops | blackQueens | blackKings) & (1ULL << buttonId);
+
+bool Board::isEnemyOccupied(int tileId) const { // Is enemy on tileId tile
+    if(isWhiteMove()) {
+        return isBlack(tileId);
     } else {
-        return (whitePawns | whiteKnights | whiteRooks | whiteBishops | whiteQueens | whiteKings) & (1ULL << buttonId);
+        return isWhite(tileId);
     }
 }
-bool Board::isEnPassantEligible(int buttonId) const {
 
-    // Sprawdza czy ostatni ruch był wyjściem o dwa pola do przodu
+bool Board::isWhite(int tileId) const { return whitePieces & (1ULL << tileId); }
+bool Board::isBlack(int tileId) const { return blackPieces & (1ULL << tileId); }
 
+bool Board::isEnPassantEligible(int tileId) const {
+
+    // checks if last move was a 2 forward advance
     if(Board::isWhiteMove()) {
-        return (blackPawns & (1ULL << buttonId)) && lastMove[0] == buttonId+16 && lastMove[1] == buttonId;
+        return (blackPawns & (1ULL << tileId)) && this->getLastMoveFrom() == tileId+16
+               && this->getLastMoveTo() == tileId;
     } else {
-        return (whitePawns & (1ULL << buttonId)) && lastMove[0] == buttonId-16 && lastMove[1] == buttonId;
+        return (whitePawns & (1ULL << tileId)) && this->getLastMoveFrom() == tileId-16
+               && this->getLastMoveTo() == tileId;
     }
 }
-//TODO
-bool Board::isDraw() const {
+
+bool Board::isAttacked(int tileId, bool isWhite) const {
+    long long moves;
+
+    //qWarning() << "IsWhite: " << isWhite << " Pos " << tileId;
+    moves = Rook::allMoves(tileId, *this);
+    if ((moves & (isWhite ? (this->getBlackRooks() | this->getBlackQueens())
+                          : (this->getWhiteRooks() | this->getWhiteQueens()))) != 0) {
+        //qWarning() << "Attacker: Rook";
+        return true;
+    }
+
+    moves = Bishop::allMoves(tileId, *this);
+    if ((moves & (isWhite ? (this->getBlackBishops() | this->getBlackQueens())
+                          : (this->getWhiteBishops() | this->getWhiteQueens()))) != 0) {
+        //qWarning() << "Attacker: Bishop";
+        return true;
+    }
+
+    moves = Knight::allMoves(tileId, *this);
+    if ((moves & (isWhite ? this->getBlackKnights() : this->getWhiteKnights())) != 0) {
+        //qWarning() << "Attacker: Knight";
+        return true;
+    }
+
+    long long kingPos = 1ULL << tileId;
+    if (isWhite) {
+        if ((this->getBlackPawns() & (kingPos << 7)) != 0 || (this->getBlackPawns() & (kingPos << 9)) != 0) {
+            //qWarning() << "Attacker: BlackPawn";
+            return true;
+        }
+    } else {
+        if ((this->getWhitePawns() & (kingPos >> 7)) != 0 || (this->getWhitePawns() & (kingPos >> 9)) != 0) {
+            //qWarning() << "Attacker: WhitePawn";
+            return true;
+        }
+    }
+
+    long long kingAttacks = 0;
+    kingAttacks |= (kingPos << 8);
+    kingAttacks |= (kingPos >> 8);
+    kingAttacks |= (kingPos << 1) & ~0x0101010101010101ULL;
+    kingAttacks |= (kingPos >> 1) & ~0x8080808080808080ULL;
+    kingAttacks |= (kingPos << 9) & ~0x0101010101010101ULL;
+    kingAttacks |= (kingPos << 7) & ~0x8080808080808080ULL;
+    kingAttacks |= (kingPos >> 9) & ~0x8080808080808080ULL;
+    kingAttacks |= (kingPos >> 7) & ~0x0101010101010101ULL;
+
+    if ((kingAttacks & (isWhite ? this->getBlackKings() : this->getWhiteKings())) != 0) {
+        return true;
+    }
+
     return false;
 }
-bool Board::isBlackMated() const {
+
+void Board::calculateOrderingScore() {
+    // Queen promotion - most points
+    if(getLastMovePromotion() == 1) {
+        orderingScore = 100;
+        return;
+    } else if(getLastMoveEnPassant() != 0) {     // underpromotion = negative points (checked last)
+        orderingScore = -1;
+        return;
+    }
+
+    // WHERE captures occured -> most valuable victim, then least valuable attacker
+    if(getCapturedPieceScore() != 0) {
+        orderingScore += getCapturedPieceScore() + getMovingPieceScore();
+        return;
+    }
+
+
+    // quiet moves - where no promotion or capture happens receive score 0
+    orderingScore = 0;
+}
+
+bool Board::checkInSufficientMaterial(){
+    if(__builtin_popcountll(allPieces) > 4) return false;
+    if(__builtin_popcountll(allPieces) == 4){
+        if(__builtin_popcountll(whiteKnights) == 2) {
+            lastMove |= 0xC0000000; // Set state to draw
+            return true;
+        }
+        if(__builtin_popcountll(blackKnights) == 2) {
+            lastMove |= 0xC0000000; // Set state to draw
+            return true;
+        }
+    }
+    else if(__builtin_popcountll(allPieces) == 3) {
+        if(whiteKnights | blackKnights | whiteBishops | blackBishops) {
+            lastMove |= 0xC0000000; // Set state to draw
+            return true;
+        }
+    }
     return false;
 }
-bool Board::isWhiteMated() const {
-    return false;
+
+Board::~Board() {
+    existingBoards-=1;
 }
 
-
-// Engine Functions
-void Board::nextMove(unsigned char from, unsigned char to) { // Function creating new Board instance on next and perfoming move on it
-    next = new Board(this);
-    next->move(from,to);
-}
-
-// Getters
-bool Board::isWhiteMove() const { return whiteMove; }
-
-bool Board::getWhiteLongCastlePossible() const { return whiteLongCastlePossible; }
-bool Board::getWhiteShortCastlePossible() const { return whiteShortCastlePossible; }
-bool Board::getBlackLongCastlePossible() const { return blackLongCastlePossible; }
-bool Board::getBlackShortCastlePossible() const { return blackShortCastlePossible; }
-
-long long Board::getWhitePawns() const { return whitePawns; }
-long long Board::getWhiteKnights() const { return whiteKnights; }
-long long Board::getWhiteRooks() const { return whiteRooks; }
-long long Board::getWhiteBishops() const { return whiteBishops; }
-long long Board::getWhiteQueens() const { return whiteQueens; }
-long long Board::getWhiteKings() const { return whiteKings; }
-
-long long Board::getBlackPawns() const { return blackPawns; }
-long long Board::getBlackKnights() const { return blackKnights; }
-long long Board::getBlackRooks() const { return blackRooks; }
-long long Board::getBlackBishops() const { return blackBishops; }
-long long Board::getBlackQueens() const { return blackQueens; }
-long long Board::getBlackKings() const { return blackKings; }
-
-unsigned char Board::getSelected() const { return selected; }
-unsigned char Board::getClearSelected() const { return clearSelected; }
-long long Board::getMoves() const { return moves; }
-long long Board::getClearMoves() const { return clearMoves; }

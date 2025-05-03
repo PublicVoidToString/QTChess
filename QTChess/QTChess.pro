@@ -11,27 +11,39 @@ CONFIG += c++17
 SOURCES += \
     bishop.cpp \
     board.cpp \
+    boardgetset.cpp \
     chessboard.cpp \
+    engine.cpp \
+    evaluation.cpp \
+    finalmessage.cpp \
     king.cpp \
     knight.cpp \
+    lastMovegetset.cpp \
     main.cpp \
     mainmenu.cpp \
     pawn.cpp \
+    promotionwindow.cpp \
     rook.cpp
 
 HEADERS += \
     bishop.h \
     board.h \
     chessboard.h \
+    engine.h \
+    evaluation.h \
+    finalmessage.h \
     king.h \
     knight.h \
     mainmenu.h \
     pawn.h \
+    promotionwindow.h \
     rook.h
 
 FORMS += \
     chessboard.ui \
-    mainmenu.ui
+    finalmessage.ui \
+    mainmenu.ui \
+    promotionwindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

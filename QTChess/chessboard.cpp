@@ -1,23 +1,83 @@
 #include "chessboard.h"
 #include "ui_chessboard.h"
-#include "Board.h"
+#include "engine.h"
+#include "promotionwindow.h"
 #include <QResizeEvent>
 #include <QMessageBox>
 #include <QIcon>
+
+#include "finalmessage.h"
+
+
+
+void ChessBoard::handleButtonClick(int buttonId)
+{
+    if(gameEnded) return;
+    short promotion = 0;
+    bool isPromotion = Engine::isPromotion(board,buttonId,selected,moves);
+    if (isPromotion) {
+        PromotionWindow promoWindow;
+        promoWindow.exec();
+        promotion = promoWindow.getPromotionChoice();
+        qWarning() << "promotion: " << promotion;
+    }
+
+    bool madePlayerMove = Engine::madePlayerMove(&board,buttonId,&selected,&moves,botDepth, promotion);
+
+    reprintBoard();
+
+    if (madePlayerMove && botDepth>1) {
+        Engine::engineMove(&board, botDepth);
+        reprintBoard();
+    }
+
+}
+
+void ChessBoard::reprintBoard() {
+    clearSelectedFromBoard();
+    printAllPieces();
+    switch(Engine::isGameEnded(board)){
+    case 1:
+        printOutcome("BlackWin.png");
+        return;
+    case 2:
+        printOutcome("WhiteWin.png");
+        return;
+    case 3:
+        printOutcome("Draw.png");
+        return;
+    }
+    printSelection();
+    QApplication::processEvents();
+}
 
 ChessBoard::ChessBoard(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::ChessBoard)
 {
+    setAttribute(Qt::WA_DeleteOnClose);
+    selected = 64;
+    clearSelected = 64;
+    windowSize=640;
+    moves        = 0b0000000000000000000000000000000000000000000000000000000000000000;
+    clearMoves   = 0b0000000000000000000000000000000000000000000000000000000000000000;
+    botDepth     = 1;
     chessTiles = (QPushButton**)malloc(sizeof(QPushButton*)*64);
     ui->setupUi(this);
     initBoard();
     printAllPieces();
 }
 
+void ChessBoard::setDepth(char level){
+    botDepth = level*2;
+}
+
 ChessBoard::~ChessBoard()
 {
     free(chessTiles);
+    for(;board->prev!=nullptr;board=board->prev);
+    board->cutAllBranches();
+    delete board;
     delete ui;
 }
 
@@ -57,52 +117,24 @@ void ChessBoard::initBoard()
         }
     }
 
-    // Button "Cofnij ruch"
-    QPushButton *undoButton = new QPushButton("Cofnij ruch", this);
-    undoButton->setStyleSheet("background-color: black; color: white;");
-    undoButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    connect(undoButton, &QPushButton::clicked, this, &ChessBoard::undoMove);
-
     // Adding chessbouard and additional buttons to the background
     mainLayout->addLayout(gridLayout);
-    mainLayout->addWidget(undoButton);
 
     // Setting main layout
     this->setLayout(mainLayout);
 }
 
-void ChessBoard::undoMove(){
-    if(board->prev!=nullptr){
-        board=board->prev;
-        printAllPieces();
-        clearSelectedFromBoard();
-    }
-}
-
-void ChessBoard::handleButtonClick(int buttonId)
-{
-    bool moved = board->pressedButton(buttonId);
-    if(moved) {
-        if (board->next != nullptr) {
-            board = board->next;
-            printAllPieces();
-            clearSelectedFromBoard();
-        } else {
-            QMessageBox::warning(nullptr, "Warning", "No next board available!");
-        }
-    } else{
-        printSelection();
-        printAllPieces();
-    }
-}
 
 void ChessBoard::resizeEvent(QResizeEvent *event)
 {
-    // Obliczamy mniejszy z dwóch wymiarów okna
-    int size = qMin(event->size().width(), event->size().height());
-
-    // Ustawiamy nowy rozmiar okna, aby było kwadratowe
-    this->resize(size, size);
+    if(!gameEnded){
+        // Obliczamy mniejszy z dwóch wymiarów okna
+        int size = qMin(event->size().width(), event->size().height());
+        windowSize=size;
+        // Ustawiamy nowy rozmiar okna, aby było kwadratowe
+        printAllPieces();
+    }
+    this->resize(windowSize, windowSize);
 }
 
 void ChessBoard::clearSelectedFromBoard(){
@@ -117,10 +149,10 @@ void ChessBoard::clearSelectedFromBoard(){
             chessTiles[i]->setStyleSheet("background-color: #b9efbd;");
         }
     }
-
 }
 
 void ChessBoard::printAllPieces(){
+    int size = windowSize/13;
     for (int i = 0; i < 64; ++i) {
         QString pieceName;
         // Sprawdzenie obecności figury białej
@@ -138,43 +170,38 @@ void ChessBoard::printAllPieces(){
         else if (board->getBlackBishops() & (1ULL << i)) pieceName = "Bishop.png";
         else if (board->getBlackQueens() & (1ULL << i)) pieceName = "Queen.png";
         else if (board->getBlackKings() & (1ULL << i)) pieceName = "King.png";
+        else pieceName = "empty.png";
 
         // Jeżeli znalazł się obrazek do przypisania, ustawiamy ikonę
-        if (!pieceName.isEmpty()) {
-            QPixmap piecePixmap(":/images/" + pieceName);
-            if (!piecePixmap.isNull()) {
-                piecePixmap = piecePixmap.scaled(80, 80, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-                chessTiles[i]->setIcon(QIcon(piecePixmap));
-                chessTiles[i]->setIconSize(QSize(80, 80));
-            } else {
-                qWarning() << "Nie udało się załadować obrazka figury: " << pieceName;
-            }
+        QPixmap piecePixmap(":/images/" + pieceName);
+        if (!piecePixmap.isNull()) {
+            piecePixmap = piecePixmap.scaled(size, size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            chessTiles[i]->setIcon(QIcon(piecePixmap));
+            chessTiles[i]->setIconSize(QSize(size, size));
         } else {
-            // Jeśli nie ma figury na danym polu, zostawiamy ikonę pustą
-            chessTiles[i]->setIcon(QIcon());
-            chessTiles[i]->setIconSize(QSize(80, 80));
+            qWarning() << "Nie udało się załadować obrazka figury: " << pieceName;
         }
     }
 }
 
 void ChessBoard::printSelection(){
-    if(board->getSelected()!=64) {
-        chessTiles[board->getSelected()]->setStyleSheet("background-color: #76b5ff;");
+    if(selected!=64) {
+        chessTiles[selected]->setStyleSheet("background-color: #76b5ff;");
     }
-    if(board->getClearSelected()!=64){
-        int row = board->getClearSelected() / 8;
-        int col = board->getClearSelected() % 8;
+    if(clearSelected!=64){
+        int row = clearSelected / 8;
+        int col = clearSelected % 8;
 
         // Zmieniamy kolor tła na podstawie naprzemiennych kolorów na planszy szachowej
         if ((row + col) % 2 == 0) {
-            chessTiles[board->getClearSelected()]->setStyleSheet("background-color: #7aad7e;");
+            chessTiles[clearSelected]->setStyleSheet("background-color: #7aad7e;");
         } else {
-            chessTiles[board->getClearSelected()]->setStyleSheet("background-color: #b9efbd;");
+            chessTiles[clearSelected]->setStyleSheet("background-color: #b9efbd;");
         }
     }
     for (int i = 0; i < 64; ++i) {
         QString pieceName;
-        if (board->getClearMoves() & (1ULL << i)) {
+        if (clearMoves & (1ULL << i)) {
             int row = i / 8;
             int col = i % 8;
 
@@ -186,8 +213,15 @@ void ChessBoard::printSelection(){
             }
         }
 
-        if(board->getMoves() & (1ULL << i)) {
+        if(moves & (1ULL << i)) {
             chessTiles[i]->setStyleSheet("background-color: #f59e9e;");
         }
     }
+}
+
+void ChessBoard::printOutcome(QString outcome) {
+    FinalMessage *popup = new FinalMessage(outcome, windowSize, this);
+    popup->move(0, windowSize/3);
+    gameEnded=true;
+    popup->show();
 }

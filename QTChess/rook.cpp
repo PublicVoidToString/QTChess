@@ -1,6 +1,7 @@
 #include "rook.h"
 
-unsigned long long Rook::legalMoves(int positionId, const Board& board) {
+
+unsigned long long Rook::allMoves(int positionId, const Board& board) {
     unsigned long long legalMovesBitmap = 0; // Bitboard dla możliwych ruchów
 
     // Kierunki ruchu wieży: w prawo, w lewo, w górę, w dół

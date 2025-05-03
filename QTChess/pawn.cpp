@@ -1,11 +1,11 @@
 #include "pawn.h"
 
-unsigned long long Pawn::legalMoves(int positionId, const Board& board) {
+unsigned long long Pawn::allMoves(int positionId, const Board& board, bool isWhite) {
 
     unsigned long long legalMovesBitmap = 0;
 
     // TODO - promotion, en passant
-    if (board.isWhiteMove()) {
+    if (isWhite) {
         if (positionId + 8 < 64 && !board.isOccupied(positionId + 8)) {  // Jeden ruch do przodu
             legalMovesBitmap |= (1ULL << (positionId + 8));
         }
